@@ -6,9 +6,10 @@ struct NutritionView: View {
     @Query(sort: \FoodEntry.date, order: .reverse) private var allEntries: [FoodEntry]
 
     @AppStorage("userName") private var userName = ""
-    @StateObject private var vm       = NutritionViewModel()
-    @State private var showCamera     = false
-    @State private var showAddFood    = false
+    @StateObject private var vm    = NutritionViewModel()
+    @State private var showCamera  = false
+    @State private var showSearch  = false
+    @State private var showManual  = false
     @State private var activeMeal: MealType = .breakfast
 
     var body: some View {
@@ -27,14 +28,19 @@ struct NutritionView: View {
                         fat:         vm.totalFat(from: allEntries),     fatGoal:     vm.goal.fat
                     )
 
-                    Button { showCamera = true } label: {
-                        Label("Scan food with camera", systemImage: "camera.fill")
-                            .font(.system(size: 15, weight: .medium))
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 14)
-                            .background(Color.primary)
-                            .foregroundStyle(Color(uiColor: .systemBackground))
-                            .clipShape(RoundedRectangle(cornerRadius: 14))
+                    // Action buttons
+                    HStack(spacing: 10) {
+                        ActionButton(icon: "camera.fill", label: "Scan") {
+                            showCamera = true
+                        }
+                        ActionButton(icon: "magnifyingglass", label: "Search") {
+                            activeMeal = .breakfast
+                            showSearch = true
+                        }
+                        ActionButton(icon: "square.and.pencil", label: "Manual") {
+                            activeMeal = .breakfast
+                            showManual = true
+                        }
                     }
                     .padding(.horizontal)
 
@@ -45,7 +51,7 @@ struct NutritionView: View {
                             totalCalories: vm.mealCalories(for: meal, from: allEntries)
                         ) {
                             activeMeal = meal
-                            showAddFood = true
+                            showSearch = true
                         } onDelete: { entry in
                             context.delete(entry)
                         }
@@ -57,23 +63,45 @@ struct NutritionView: View {
             .navigationBarTitleDisplayMode(.large)
             .sheet(isPresented: $showCamera) {
                 FoodCameraView { result in
-                    let entry = FoodEntry(
-                        name:        result.name,
-                        calories:    result.calories,
-                        protein:     result.protein,
-                        carbs:       result.carbs,
-                        fat:         result.fat,
-                        servingSize: result.servingSize,
-                        mealType:    activeMeal
-                    )
+                    context.insert(FoodEntry(
+                        name: result.name, calories: result.calories,
+                        protein: result.protein, carbs: result.carbs, fat: result.fat,
+                        servingSize: result.servingSize, mealType: activeMeal
+                    ))
+                }
+            }
+            .sheet(isPresented: $showSearch) {
+                FoodSearchView(mealType: activeMeal) { entry in
                     context.insert(entry)
                 }
             }
-            .sheet(isPresented: $showAddFood) {
+            .sheet(isPresented: $showManual) {
                 AddFoodView(mealType: activeMeal) { entry in
                     context.insert(entry)
                 }
             }
+        }
+    }
+}
+
+private struct ActionButton: View {
+    let icon:   String
+    let label:  String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 6) {
+                Image(systemName: icon)
+                    .font(.system(size: 20))
+                Text(label)
+                    .font(.system(size: 12, weight: .medium))
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 14)
+            .background(Color(uiColor: .secondarySystemBackground))
+            .foregroundStyle(.primary)
+            .clipShape(RoundedRectangle(cornerRadius: 14))
         }
     }
 }

@@ -116,7 +116,7 @@ struct ProfileView: View {
 
         let weightKg = editUnit == .lbs ? weightVal * 0.453592 : weightVal
 
-        var newGoal = MacroCalculator.calculate(
+        let newGoal = MacroCalculator.calculate(
             age:           ageVal,
             weightKg:      weightKg,
             heightCm:      heightVal,
