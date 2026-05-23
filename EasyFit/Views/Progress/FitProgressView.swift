@@ -116,8 +116,8 @@ struct LogCalendarView: View {
             Text(monthTitle).font(.system(size: 15, weight: .semibold))
 
             HStack(spacing: 0) {
-                ForEach(weekdaySymbols, id: \.self) { sym in
-                    Text(sym)
+                ForEach(weekdaySymbols.indices, id: \.self) { i in
+                    Text(weekdaySymbols[i])
                         .font(.system(size: 11, weight: .medium))
                         .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity)

@@ -3,17 +3,22 @@ import Combine
 
 @MainActor
 final class WorkoutViewModel: ObservableObject {
-    @Published var plans:            [WorkoutPlan] = []
-    @Published var showAddExercise:  Bool          = false
+    @Published var plans:           [WorkoutPlan] = []
+    @Published var showAddExercise: Bool          = false
 
     var todayPlan: WorkoutPlan? {
         let weekday = Calendar.current.component(.weekday, from: .now)
-        let mapped  = weekday == 1 ? 7 : weekday - 1   // Sun=1 → 7, Mon=2 → 1 …
+        let mapped  = weekday == 1 ? 7 : weekday - 1
         return plans.first { $0.weekday.rawValue == mapped }
     }
 
-    func addPlan(_ plan: WorkoutPlan) { plans.append(plan) }
+    func addPlan(_ plan: WorkoutPlan)    { plans.append(plan) }
     func deletePlan(_ plan: WorkoutPlan) { plans.removeAll { $0.id == plan.id } }
+
+    func updatePlan(_ plan: WorkoutPlan) {
+        guard let i = plans.firstIndex(where: { $0.id == plan.id }) else { return }
+        plans[i] = plan
+    }
 
     func toggleExercise(planId: UUID, exerciseId: UUID) {
         guard let pi = plans.firstIndex(where: { $0.id == planId }),
