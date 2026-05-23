@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 
 @main
 struct FitTrackApp: App {
@@ -9,5 +10,6 @@ struct FitTrackApp: App {
             ContentView()
                 .environmentObject(appState)
         }
+        .modelContainer(for: [FoodEntry.self, WorkoutPlan.self, Exercise.self, BodyWeightEntry.self])
     }
 }

@@ -1,38 +1,45 @@
 import Foundation
+import SwiftData
 
 // MARK: - Nutrition
 
-struct FoodEntry: Identifiable, Codable {
-    let id: UUID
+@Model
+final class FoodEntry {
+    var id: UUID
     var name: String
     var calories: Int
-    var protein: Double    // grams
-    var carbs: Double      // grams
-    var fat: Double        // grams
+    var protein: Double
+    var carbs: Double
+    var fat: Double
     var servingSize: String
-    var mealType: MealType
+    var mealTypeRaw: String
     var date: Date
 
     init(
         id: UUID = UUID(),
         name: String,
         calories: Int,
-        protein: Double,
-        carbs: Double,
-        fat: Double,
-        servingSize: String,
+        protein: Double = 0,
+        carbs: Double = 0,
+        fat: Double = 0,
+        servingSize: String = "1 serving",
         mealType: MealType,
         date: Date = .now
     ) {
-        self.id = id
-        self.name = name
-        self.calories = calories
-        self.protein = protein
-        self.carbs = carbs
-        self.fat = fat
+        self.id          = id
+        self.name        = name
+        self.calories    = calories
+        self.protein     = protein
+        self.carbs       = carbs
+        self.fat         = fat
         self.servingSize = servingSize
-        self.mealType = mealType
-        self.date = date
+        self.mealTypeRaw = mealType.rawValue
+        self.date        = date
+    }
+
+    var mealType: MealType {
+        get { MealType(rawValue: mealTypeRaw) ?? .breakfast }
+        set { mealTypeRaw = newValue.rawValue }
     }
 }
 
@@ -43,37 +50,60 @@ enum MealType: String, Codable, CaseIterable {
     case snack     = "Snack"
 }
 
+// MARK: - Nutrition Goal (UserDefaults — single record, not a collection)
+
 struct DailyNutritionGoal: Codable {
-    var calories: Int  = 2100
-    var protein: Double = 160   // grams
-    var carbs: Double   = 200   // grams
-    var fat: Double     = 65    // grams
+    var calories: Int    = 2100
+    var protein:  Double = 160
+    var carbs:    Double = 200
+    var fat:      Double = 65
+
+    static var current: DailyNutritionGoal {
+        get {
+            guard let data = UserDefaults.standard.data(forKey: "nutritionGoal"),
+                  let goal = try? JSONDecoder().decode(DailyNutritionGoal.self, from: data)
+            else { return DailyNutritionGoal() }
+            return goal
+        }
+        set {
+            let data = try? JSONEncoder().encode(newValue)
+            UserDefaults.standard.set(data, forKey: "nutritionGoal")
+        }
+    }
 }
 
 // MARK: - Workout
 
-struct WorkoutPlan: Identifiable, Codable {
-    let id: UUID
-    var name: String          // e.g. "Push Day"
-    var weekday: Weekday
-    var exercises: [Exercise]
+@Model
+final class WorkoutPlan {
+    var id: UUID
+    var name: String
+    var weekdayRaw: Int
+    @Relationship(deleteRule: .cascade) var exercises: [Exercise]
 
-    init(id: UUID = UUID(), name: String, weekday: Weekday, exercises: [Exercise]) {
-        self.id = id
-        self.name = name
-        self.weekday = weekday
-        self.exercises = exercises
+    init(id: UUID = UUID(), name: String, weekday: Weekday, exercises: [Exercise] = []) {
+        self.id          = id
+        self.name        = name
+        self.weekdayRaw  = weekday.rawValue
+        self.exercises   = exercises
+    }
+
+    var weekday: Weekday {
+        get { Weekday(rawValue: weekdayRaw) ?? .monday }
+        set { weekdayRaw = newValue.rawValue }
     }
 }
 
-struct Exercise: Identifiable, Codable {
-    let id: UUID
+@Model
+final class Exercise {
+    var id: UUID
     var name: String
     var sets: Int
     var reps: Int
-    var weight: Double?        // nil = bodyweight
-    var unit: WeightUnit
+    var weight: Double?
+    var unitRaw: String
     var isCompleted: Bool
+    var order: Int
 
     init(
         id: UUID = UUID(),
@@ -82,21 +112,26 @@ struct Exercise: Identifiable, Codable {
         reps: Int,
         weight: Double? = nil,
         unit: WeightUnit = .lbs,
-        isCompleted: Bool = false
+        isCompleted: Bool = false,
+        order: Int = 0
     ) {
-        self.id = id
-        self.name = name
-        self.sets = sets
-        self.reps = reps
-        self.weight = weight
-        self.unit = unit
+        self.id          = id
+        self.name        = name
+        self.sets        = sets
+        self.reps        = reps
+        self.weight      = weight
+        self.unitRaw     = unit.rawValue
         self.isCompleted = isCompleted
+        self.order       = order
+    }
+
+    var unit: WeightUnit {
+        get { WeightUnit(rawValue: unitRaw) ?? .lbs }
+        set { unitRaw = newValue.rawValue }
     }
 
     var displayWeight: String {
-        if let w = weight {
-            return "\(Int(w)) \(unit.rawValue)"
-        }
+        if let w = weight { return "\(Int(w)) \(unit.rawValue)" }
         return "BW"
     }
 }
@@ -124,16 +159,22 @@ enum Weekday: Int, Codable, CaseIterable {
 
 // MARK: - Progress
 
-struct BodyWeightEntry: Identifiable, Codable {
-    let id: UUID
+@Model
+final class BodyWeightEntry {
+    var id: UUID
     var weight: Double
-    var unit: WeightUnit
+    var unitRaw: String
     var date: Date
 
     init(id: UUID = UUID(), weight: Double, unit: WeightUnit = .lbs, date: Date = .now) {
-        self.id = id
-        self.weight = weight
-        self.unit = unit
-        self.date = date
+        self.id      = id
+        self.weight  = weight
+        self.unitRaw = unit.rawValue
+        self.date    = date
+    }
+
+    var unit: WeightUnit {
+        get { WeightUnit(rawValue: unitRaw) ?? .lbs }
+        set { unitRaw = newValue.rawValue }
     }
 }

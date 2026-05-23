@@ -1,15 +1,25 @@
 import SwiftUI
+import SwiftData
 
 struct FitProgressView: View {
-    @StateObject private var vm = FitProgressViewModel.preview()
+    @Environment(\.modelContext) private var context
+    @Query(sort: \BodyWeightEntry.date) private var allEntries: [BodyWeightEntry]
+
+    @StateObject private var vm = FitProgressViewModel()
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 20) {
-                    StreakCard(streak: vm.currentStreak, longestStreak: vm.longestStreak)
-                    LogCalendarView(loggedDates: vm.loggedDates)
-                    WeightGraphCard(entries: vm.last30DaysEntries)
+                    StreakCard(
+                        streak:        vm.currentStreak(from: allEntries),
+                        longestStreak: vm.longestStreak(from: allEntries)
+                    )
+                    LogCalendarView(loggedDates: vm.loggedDates(from: allEntries))
+                    WeightGraphCard(
+                        entries: vm.last30Days(from: allEntries),
+                        delta:   vm.weightDelta(from: allEntries)
+                    )
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
@@ -26,7 +36,9 @@ struct FitProgressView: View {
                 }
             }
             .sheet(isPresented: $vm.showAddWeight) {
-                AddWeightView { entry in vm.addWeight(entry) }
+                AddWeightView { entry in
+                    context.insert(entry)
+                }
             }
         }
     }
@@ -82,15 +94,14 @@ struct LogCalendarView: View {
     let loggedDates: Set<DateComponents>
 
     private let calendar = Calendar.current
-    private let columns = Array(repeating: GridItem(.flexible(), spacing: 6), count: 7)
+    private let columns  = Array(repeating: GridItem(.flexible(), spacing: 6), count: 7)
     private let weekdaySymbols = ["S","M","T","W","T","F","S"]
 
     private var currentMonth: Date {
         calendar.date(from: calendar.dateComponents([.year, .month], from: .now))!
     }
-
     private var daysInMonth: [Date?] {
-        let range = calendar.range(of: .day, in: .month, for: currentMonth)!
+        let range        = calendar.range(of: .day, in: .month, for: currentMonth)!
         let firstWeekday = calendar.component(.weekday, from: currentMonth) - 1
         var days: [Date?] = Array(repeating: nil, count: firstWeekday)
         for day in range {
@@ -98,7 +109,6 @@ struct LogCalendarView: View {
         }
         return days
     }
-
     private var monthTitle: String {
         currentMonth.formatted(.dateTime.month(.wide).year())
     }
@@ -106,10 +116,7 @@ struct LogCalendarView: View {
     func isLogged(_ date: Date) -> Bool {
         loggedDates.contains(calendar.dateComponents([.year, .month, .day], from: date))
     }
-
-    func isToday(_ date: Date) -> Bool {
-        calendar.isDateInToday(date)
-    }
+    func isToday(_ date: Date) -> Bool { calendar.isDateInToday(date) }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -127,7 +134,7 @@ struct LogCalendarView: View {
             LazyVGrid(columns: columns, spacing: 6) {
                 ForEach(daysInMonth.indices, id: \.self) { i in
                     CalendarDayCell(
-                        date: daysInMonth[i],
+                        date:     daysInMonth[i],
                         isLogged: daysInMonth[i].map { isLogged($0) } ?? false,
                         isToday:  daysInMonth[i].map { isToday($0)  } ?? false,
                         day:      daysInMonth[i].map { calendar.component(.day, from: $0) } ?? 0
@@ -167,14 +174,10 @@ private struct CalendarDayCell: View {
 
 struct WeightGraphCard: View {
     let entries: [BodyWeightEntry]
+    let delta: Double?
 
     private var minW: Double { (entries.map(\.weight).min() ?? 170) - 2 }
     private var maxW: Double { (entries.map(\.weight).max() ?? 180) + 2 }
-    private var latestWeight: Double? { entries.last?.weight }
-    private var delta: Double? {
-        guard let f = entries.first?.weight, let l = latestWeight else { return nil }
-        return l - f
-    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -188,7 +191,7 @@ struct WeightGraphCard: View {
                     }
                 }
                 Spacer()
-                if let latest = latestWeight {
+                if let latest = entries.last?.weight {
                     Text(String(format: "%.1f lb", latest))
                         .font(.system(size: 22, weight: .bold, design: .rounded))
                 }
@@ -220,7 +223,7 @@ struct WeightGraphCard: View {
     }
 }
 
-// MARK: - Line Graph (no ViewBuilder declarations)
+// MARK: - Line Graph
 
 struct LineGraph: View {
     let entries: [BodyWeightEntry]
@@ -266,7 +269,6 @@ private struct LineGraphCanvas: View {
                 }
                 .stroke(Color.secondary.opacity(0.1), lineWidth: 1)
             }
-
             if points.count > 1 {
                 Path { p in
                     p.move(to: CGPoint(x: points[0].x, y: h))
@@ -280,7 +282,6 @@ private struct LineGraphCanvas: View {
                     startPoint: .top, endPoint: .bottom
                 ))
             }
-
             if points.count > 1 {
                 Path { p in
                     p.move(to: points[0])
@@ -288,7 +289,6 @@ private struct LineGraphCanvas: View {
                 }
                 .stroke(Color.primary, style: StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
             }
-
             if let last = points.last {
                 Circle()
                     .fill(Color.primary)
@@ -323,12 +323,14 @@ struct AddWeightView: View {
                         if let w = Double(weightText) { onSave(BodyWeightEntry(weight: w)) }
                         dismiss()
                     }
-                    .disabled(Double(weightText) == nil)
-                    .fontWeight(.semibold)
+                    .disabled(Double(weightText) == nil).fontWeight(.semibold)
                 }
             }
         }
     }
 }
 
-#Preview { FitProgressView() }
+#Preview {
+    FitProgressView()
+        .modelContainer(for: BodyWeightEntry.self, inMemory: true)
+}
