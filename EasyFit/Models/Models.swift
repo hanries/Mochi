@@ -58,6 +58,13 @@ struct DailyNutritionGoal: Codable {
     var carbs:    Double = 200
     var fat:      Double = 65
 
+    init(calories: Int = 2100, protein: Double = 160, carbs: Double = 200, fat: Double = 65) {
+        self.calories = calories
+        self.protein  = protein
+        self.carbs    = carbs
+        self.fat      = fat
+    }
+
     static var current: DailyNutritionGoal {
         get {
             guard let data = UserDefaults.standard.data(forKey: "nutritionGoal"),

@@ -5,6 +5,7 @@ struct NutritionView: View {
     @Environment(\.modelContext) private var context
     @Query(sort: \FoodEntry.date, order: .reverse) private var allEntries: [FoodEntry]
 
+    @AppStorage("userName") private var userName = ""
     @StateObject private var vm       = NutritionViewModel()
     @State private var showCamera     = false
     @State private var showAddFood    = false
@@ -52,7 +53,7 @@ struct NutritionView: View {
                 }
                 .padding(.vertical)
             }
-            .navigationTitle("Nutrition")
+            .navigationTitle(userName.isEmpty ? "Nutrition" : "Hi, \(userName) 👋")
             .navigationBarTitleDisplayMode(.large)
             .sheet(isPresented: $showCamera) {
                 FoodCameraView { result in

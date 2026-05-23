@@ -16,6 +16,10 @@ struct ContentView: View {
             FitProgressView()
                 .tabItem { Label("Progress", systemImage: "chart.line.uptrend.xyaxis") }
                 .tag(AppState.Tab.progress)
+
+            ProfileView()
+                .tabItem { Label("Profile", systemImage: "person.crop.circle") }
+                .tag(AppState.Tab.profile)
         }
         .tint(.primary)
     }
