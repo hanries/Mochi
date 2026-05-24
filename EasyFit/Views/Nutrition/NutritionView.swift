@@ -6,11 +6,18 @@ struct NutritionView: View {
     @Query(sort: \FoodEntry.date, order: .reverse) private var allEntries: [FoodEntry]
 
     @AppStorage("userName") private var userName = ""
-    @StateObject private var vm    = NutritionViewModel()
-    @State private var showCamera  = false
-    @State private var showSearch  = false
-    @State private var showManual  = false
+    @StateObject private var vm         = NutritionViewModel()
+    @StateObject private var healthKit  = HealthKitService.shared
+    @State private var showCamera       = false
+    @State private var showSearch       = false
+    @State private var showManual       = false
+    @State private var showLogBurn      = false
+    @State private var manualBurned     = 0
     @State private var activeMeal: MealType = .breakfast
+
+    var totalBurned: Int {
+        healthKit.isAuthorized ? healthKit.totalBurnedToday : manualBurned
+    }
 
     var body: some View {
         NavigationStack {
@@ -19,8 +26,10 @@ struct NutritionView: View {
                     CalorieRingView(
                         consumed: vm.totalCalories(from: allEntries),
                         goal:     vm.goal.calories,
-                        burned:   0
-                    )
+                        burned:   totalBurned
+                    ) {
+                        showLogBurn = true
+                    }
 
                     MacroSummaryView(
                         protein:     vm.totalProtein(from: allEntries), proteinGoal: vm.goal.protein,
@@ -28,19 +37,10 @@ struct NutritionView: View {
                         fat:         vm.totalFat(from: allEntries),     fatGoal:     vm.goal.fat
                     )
 
-                    // Action buttons
                     HStack(spacing: 10) {
-                        ActionButton(icon: "camera.fill", label: "Scan") {
-                            showCamera = true
-                        }
-                        ActionButton(icon: "magnifyingglass", label: "Search") {
-                            activeMeal = .breakfast
-                            showSearch = true
-                        }
-                        ActionButton(icon: "square.and.pencil", label: "Manual") {
-                            activeMeal = .breakfast
-                            showManual = true
-                        }
+                        ActionButton(icon: "camera.fill",       label: "Scan")   { showCamera = true }
+                        ActionButton(icon: "magnifyingglass",   label: "Search") { activeMeal = .breakfast; showSearch = true }
+                        ActionButton(icon: "square.and.pencil", label: "Manual") { activeMeal = .breakfast; showManual = true }
                     }
                     .padding(.horizontal)
 
@@ -50,8 +50,7 @@ struct NutritionView: View {
                             entries:       vm.entries(for: meal, from: allEntries),
                             totalCalories: vm.mealCalories(for: meal, from: allEntries)
                         ) {
-                            activeMeal = meal
-                            showSearch = true
+                            activeMeal = meal; showSearch = true
                         } onDelete: { entry in
                             context.delete(entry)
                         }
@@ -61,6 +60,7 @@ struct NutritionView: View {
             }
             .navigationTitle(userName.isEmpty ? "Nutrition" : "Hi, \(userName) 👋")
             .navigationBarTitleDisplayMode(.large)
+            .task { await healthKit.fetchTodayCalories() }
             .sheet(isPresented: $showCamera) {
                 FoodCameraView { result in
                     context.insert(FoodEntry(
@@ -71,13 +71,14 @@ struct NutritionView: View {
                 }
             }
             .sheet(isPresented: $showSearch) {
-                FoodSearchView(mealType: activeMeal) { entry in
-                    context.insert(entry)
-                }
+                FoodSearchView(mealType: activeMeal) { entry in context.insert(entry) }
             }
             .sheet(isPresented: $showManual) {
-                AddFoodView(mealType: activeMeal) { entry in
-                    context.insert(entry)
+                AddFoodView(mealType: activeMeal) { entry in context.insert(entry) }
+            }
+            .sheet(isPresented: $showLogBurn) {
+                LogBurnView(healthKit: healthKit) { kcal in
+                    manualBurned += kcal
                 }
             }
         }
@@ -85,17 +86,12 @@ struct NutritionView: View {
 }
 
 private struct ActionButton: View {
-    let icon:   String
-    let label:  String
-    let action: () -> Void
-
+    let icon: String; let label: String; let action: () -> Void
     var body: some View {
         Button(action: action) {
             VStack(spacing: 6) {
-                Image(systemName: icon)
-                    .font(.system(size: 20))
-                Text(label)
-                    .font(.system(size: 12, weight: .medium))
+                Image(systemName: icon).font(.system(size: 20))
+                Text(label).font(.system(size: 12, weight: .medium))
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)

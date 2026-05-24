@@ -18,7 +18,7 @@ struct FoodSearchResult: Identifiable {
 
 // MARK: - Open Food Facts API service
 
-actor FoodSearchService {
+final class FoodSearchService {
     static let shared = FoodSearchService()
 
     private let baseURL = "https://world.openfoodfacts.org/cgi/search.pl"
