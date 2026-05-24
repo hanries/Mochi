@@ -4,6 +4,7 @@ struct MealSectionView: View {
     let meal: MealType
     let entries: [FoodEntry]
     let totalCalories: Int
+    var isEditable: Bool = true
     let onAdd: () -> Void
     let onDelete: (FoodEntry) -> Void
 
@@ -24,23 +25,27 @@ struct MealSectionView: View {
                 ForEach(entries) { entry in
                     FoodRow(entry: entry)
                         .swipeActions(edge: .trailing) {
-                            Button(role: .destructive) { onDelete(entry) } label: {
-                                Label("Delete", systemImage: "trash")
+                            if isEditable {
+                                Button(role: .destructive) { onDelete(entry) } label: {
+                                    Label("Delete", systemImage: "trash")
+                                }
                             }
                         }
                     Divider().padding(.leading, 56)
                 }
 
-                Button(action: onAdd) {
-                    HStack {
-                        Image(systemName: "plus")
-                            .font(.system(size: 13, weight: .medium))
-                        Text("Add food")
-                            .font(.system(size: 14))
+                if isEditable {
+                    Button(action: onAdd) {
+                        HStack {
+                            Image(systemName: "plus")
+                                .font(.system(size: 13, weight: .medium))
+                            Text("Add food")
+                                .font(.system(size: 14))
+                        }
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
                     }
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
                 }
             }
             .background(Color(uiColor: .secondarySystemBackground))
