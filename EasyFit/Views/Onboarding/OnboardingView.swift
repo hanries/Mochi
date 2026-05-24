@@ -49,6 +49,9 @@ struct OnboardingView: View {
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
             .animation(.easeInOut, value: currentPage)
+            .onChange(of: currentPage) { _, _ in
+                UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+            }
 
             // Bottom controls — always visible below scroll content
             VStack(spacing: 16) {
