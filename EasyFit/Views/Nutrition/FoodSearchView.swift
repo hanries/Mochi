@@ -30,7 +30,7 @@ struct FoodSearchView: View {
                                 errorMessage = nil
                             } else {
                                 searchTask = Task {
-                                    try? await Task.sleep(nanoseconds: 500_000_000)
+                                    try? await Task.sleep(nanoseconds: 300_000_000)
                                     guard !Task.isCancelled else { return }
                                     await MainActor.run { runSearch() }
                                 }
@@ -56,9 +56,25 @@ struct FoodSearchView: View {
                     Spacer()
                 } else if let error = errorMessage {
                     Spacer()
-                    VStack(spacing: 8) {
+                    VStack(spacing: 16) {
                         Image(systemName: "wifi.slash").font(.system(size: 36)).foregroundStyle(.secondary)
-                        Text(error).font(.system(size: 14)).foregroundStyle(.secondary).multilineTextAlignment(.center)
+                        Text(error)
+                            .font(.system(size: 14))
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 32)
+                        Button {
+                            errorMessage = nil
+                            runSearch()
+                        } label: {
+                            Label("Try Again", systemImage: "arrow.clockwise")
+                                .font(.system(size: 14, weight: .medium))
+                                .padding(.horizontal, 20)
+                                .padding(.vertical, 10)
+                                .background(Color.primary)
+                                .foregroundStyle(Color(uiColor: .systemBackground))
+                                .clipShape(Capsule())
+                        }
                     }
                     .padding(32)
                     Spacer()
@@ -78,7 +94,7 @@ struct FoodSearchView: View {
                         Image(systemName: "magnifyingglass").font(.system(size: 40)).foregroundStyle(.secondary)
                         Text("Search the food database")
                             .font(.system(size: 16, weight: .medium))
-                        Text("Powered by Open Food Facts\n5 million+ products worldwide")
+                        Text("Powered by USDA FoodData Central\nMillions of verified foods")
                             .font(.system(size: 13)).foregroundStyle(.secondary).multilineTextAlignment(.center)
                     }
                     Spacer()
@@ -159,11 +175,11 @@ private struct FoodResultRow: View {
             .clipShape(RoundedRectangle(cornerRadius: 10))
 
             VStack(alignment: .leading, spacing: 3) {
-                Text(food.displayName)
+                Text(food.name)
                     .font(.system(size: 14, weight: .medium))
                     .lineLimit(2)
-                if !food.displayBrand.isEmpty {
-                    Text(food.displayBrand)
+                if let brand = food.brand, !brand.isEmpty {
+                    Text(brand)
                         .font(.system(size: 12))
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
@@ -230,11 +246,11 @@ struct FoodDetailSheet: View {
                 VStack(spacing: 20) {
                     // Header
                     VStack(spacing: 4) {
-                        Text(food.displayName)
+                        Text(food.name)
                             .font(.system(size: 20, weight: .bold))
                             .multilineTextAlignment(.center)
-                        if !food.displayBrand.isEmpty {
-                            Text(food.displayBrand)
+                        if let brand = food.brand, !brand.isEmpty {
+                            Text(food.brand ?? "")
                                 .font(.system(size: 14))
                                 .foregroundStyle(.secondary)
                         }
@@ -329,7 +345,7 @@ struct FoodDetailSheet: View {
                     // Add button
                     Button {
                         onAdd(FoodEntry(
-                            name:        food.displayName,
+                            name:        food.name,
                             calories:    scaledCalories,
                             protein:     scaledProtein,
                             carbs:       scaledCarbs,

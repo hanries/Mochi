@@ -109,7 +109,7 @@ enum ScanServiceFactory {
     static func make() -> any FoodScanServiceProtocol {
         useMock
             ? MockFoodScanService()
-            : FoodScanService(apiKey: "YOUR_API_KEY")
+            : FoodScanService(apiKey: Config.anthropicAPIKey)
     }
 }
 

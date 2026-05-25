@@ -11,57 +11,121 @@ struct FoodSearchResult: Identifiable {
     let carbs: Double
     let fat: Double
     let servingSize: String
-
-    var displayName: String { name }
-    var displayBrand: String { brand ?? "" }
 }
 
-// MARK: - Open Food Facts API service
+// MARK: - Food Search Service (USDA FoodData Central)
 
 final class FoodSearchService {
     static let shared = FoodSearchService()
 
-    private let baseURL = "https://world.openfoodfacts.org/cgi/search.pl"
+    private var apiKey: String { Config.usdaAPIKey }
+    private let baseURL  = "https://api.nal.usda.gov/fdc/v1"
+    private let maxRetries = 3
+
+    // In-memory cache
+    private var cache: [String: [FoodSearchResult]] = [:]
 
     func search(query: String) async throws -> [FoodSearchResult] {
-        guard !query.trimmingCharacters(in: .whitespaces).isEmpty else { return [] }
+        let key = query.lowercased().trimmingCharacters(in: .whitespaces)
+        guard !key.isEmpty else { return [] }
+        if let cached = cache[key] { return cached }
 
-        var components = URLComponents(string: baseURL)!
-        components.queryItems = [
-            URLQueryItem(name: "search_terms",   value: query),
-            URLQueryItem(name: "search_simple",  value: "1"),
-            URLQueryItem(name: "action",         value: "process"),
-            URLQueryItem(name: "json",           value: "1"),
-            URLQueryItem(name: "page_size",      value: "25"),
-            URLQueryItem(name: "fields",         value: "id,product_name,brands,nutriments,serving_size,serving_quantity")
-        ]
+        let results = try await withRetry(maxAttempts: maxRetries) {
+            try await self.fetchFromUSDA(query: query, key: key)
+        }
 
-        let request = URLRequest(url: components.url!, timeoutInterval: 10)
-        let (data, _) = try await URLSession.shared.data(for: request)
-        let response  = try JSONDecoder().decode(OFFResponse.self, from: data)
-
-        return response.products.compactMap { parse($0) }
+        cache[key] = results
+        return results
     }
 
-    private func parse(_ p: OFFProduct) -> FoodSearchResult? {
-        guard let name = p.product_name, !name.isEmpty else { return nil }
+    private func fetchFromUSDA(query: String, key: String) async throws -> [FoodSearchResult] {
+        var comps = URLComponents(string: "\(baseURL)/foods/search")!
+        comps.queryItems = [
+            URLQueryItem(name: "query",     value: query),
+            URLQueryItem(name: "api_key",   value: apiKey),
+            URLQueryItem(name: "pageSize",  value: "25"),
+            URLQueryItem(name: "dataType",  value: "Branded,SR Legacy,Survey (FNDDS)"),
+            URLQueryItem(name: "sortBy",    value: "dataType.keyword"),
+            URLQueryItem(name: "sortOrder", value: "asc"),
+        ]
 
-        let n = p.nutriments
-        // OFF nutriments are per 100g by default; use _serving variants if available
-        let cal     = n?.energy_kcal_serving ?? n?.energy_kcal_100g ?? 0
-        let protein = n?.proteins_serving    ?? n?.proteins_100g    ?? 0
-        let carbs   = n?.carbohydrates_serving ?? n?.carbohydrates_100g ?? 0
-        let fat     = n?.fat_serving         ?? n?.fat_100g         ?? 0
+        var request = URLRequest(url: comps.url!, timeoutInterval: 12)
+        request.cachePolicy = .returnCacheDataElseLoad
 
-        // Skip entries with no nutritional data
+        let (data, response) = try await URLSession.shared.data(for: request)
+
+        guard let http = response as? HTTPURLResponse else { throw SearchError.noResponse }
+        switch http.statusCode {
+        case 200:        break
+        case 429:        throw SearchError.rateLimited
+        case 500, 503:   throw SearchError.serverError
+        default:         throw SearchError.badStatus(http.statusCode)
+        }
+
+        let decoded = try JSONDecoder().decode(USDASearchResponse.self, from: data)
+        let results = decoded.foods.compactMap { parse($0) }
+
+        return results.sorted { a, b in
+            let aMatch = a.name.lowercased().hasPrefix(key)
+            let bMatch = b.name.lowercased().hasPrefix(key)
+            if aMatch != bMatch { return aMatch }
+            return a.name.count < b.name.count
+        }
+    }
+
+    // MARK: - Retry helper
+
+    private func withRetry<T>(
+        maxAttempts: Int,
+        delay: TimeInterval = 1.0,
+        _ operation: () async throws -> T
+    ) async throws -> T {
+        var lastError: Error?
+        for attempt in 1...maxAttempts {
+            do {
+                return try await operation()
+            } catch SearchError.rateLimited {
+                throw SearchError.rateLimited   // don't retry rate limits
+            } catch {
+                lastError = error
+                if attempt < maxAttempts {
+                    let backoff = UInt64(delay * Double(attempt) * 1_000_000_000)
+                    try? await Task.sleep(nanoseconds: backoff)
+                }
+            }
+        }
+        throw lastError ?? SearchError.noResponse
+    }
+
+    // MARK: - Parse
+
+    private func parse(_ food: USDAFood) -> FoodSearchResult? {
+        guard let name = food.description, !name.isEmpty else { return nil }
+
+        func nutrient(_ id: Int) -> Double {
+            food.foodNutrients?.first { $0.nutrientId == id }?.value ?? 0
+        }
+
+        let cal     = nutrient(1008)
+        let protein = nutrient(1003)
+        let carbs   = nutrient(1005)
+        let fat     = nutrient(1004)
+
         guard cal > 0 else { return nil }
 
-        let serving = p.serving_size ?? "100g"
+        let serving: String
+        if let qty = food.servingSize, let unit = food.servingSizeUnit {
+            serving = "\(Int(qty))\(unit)"
+        } else {
+            serving = "100g"
+        }
+
+        let brand = food.brandOwner?.isEmpty == false ? food.brandOwner : food.brandName
 
         return FoodSearchResult(
-            id:          p.id ?? UUID().uuidString,
+            id:          "\(food.fdcId ?? 0)",
             name:        name.capitalized,
-            brand:       p.brands.flatMap { $0.isEmpty ? nil : $0 },
+            brand:       brand,
             calories:    Int(cal.rounded()),
             protein:     (protein * 10).rounded() / 10,
             carbs:       (carbs   * 10).rounded() / 10,
@@ -71,44 +135,41 @@ final class FoodSearchService {
     }
 }
 
-// MARK: - Decodable response shapes
+// MARK: - Errors
 
-private struct OFFResponse: Decodable {
-    let products: [OFFProduct]
-}
+enum SearchError: LocalizedError {
+    case noResponse
+    case badStatus(Int)
+    case rateLimited
+    case serverError
 
-private struct OFFProduct: Decodable {
-    let id:           String?
-    let product_name: String?
-    let brands:       String?
-    let serving_size: String?
-    let serving_quantity: Double?
-    let nutriments:   OFFNutriments?
-
-    enum CodingKeys: String, CodingKey {
-        case id = "_id"
-        case product_name, brands, serving_size, serving_quantity, nutriments
+    var errorDescription: String? {
+        switch self {
+        case .noResponse:    return "No response from server. Check your connection."
+        case .badStatus(let c): return "Server returned error \(c). Try again."
+        case .rateLimited:   return "Too many requests — wait a moment and try again."
+        case .serverError:   return "The food database is temporarily unavailable. Try again in a few seconds."
+        }
     }
 }
 
-private struct OFFNutriments: Decodable {
-    let energy_kcal_100g:        Double?
-    let energy_kcal_serving:     Double?
-    let proteins_100g:           Double?
-    let proteins_serving:        Double?
-    let carbohydrates_100g:      Double?
-    let carbohydrates_serving:   Double?
-    let fat_100g:                Double?
-    let fat_serving:             Double?
+// MARK: - USDA response shapes
 
-    enum CodingKeys: String, CodingKey {
-        case energy_kcal_100g        = "energy-kcal_100g"
-        case energy_kcal_serving     = "energy-kcal_serving"
-        case proteins_100g           = "proteins_100g"
-        case proteins_serving        = "proteins_serving"
-        case carbohydrates_100g      = "carbohydrates_100g"
-        case carbohydrates_serving   = "carbohydrates_serving"
-        case fat_100g                = "fat_100g"
-        case fat_serving             = "fat_serving"
-    }
+private struct USDASearchResponse: Decodable {
+    let foods: [USDAFood]
+}
+
+private struct USDAFood: Decodable {
+    let fdcId:           Int?
+    let description:     String?
+    let brandOwner:      String?
+    let brandName:       String?
+    let servingSize:     Double?
+    let servingSizeUnit: String?
+    let foodNutrients:   [USDANutrient]?
+}
+
+private struct USDANutrient: Decodable {
+    let nutrientId: Int?
+    let value:      Double?
 }

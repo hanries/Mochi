@@ -29,9 +29,22 @@
 		3A54BAEB2FC110CE008A6010 /* EasyFitUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = EasyFitUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		3AFB72BE2FC3C8DB0036C8A9 /* Exceptions for "EasyFit" folder in "EasyFit" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 3A54BAD32FC110CB008A6010 /* EasyFit */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		3A54BAD62FC110CB008A6010 /* EasyFit */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				3AFB72BE2FC3C8DB0036C8A9 /* Exceptions for "EasyFit" folder in "EasyFit" target */,
+			);
 			path = EasyFit;
 			sourceTree = "<group>";
 		};
@@ -271,6 +284,8 @@
 /* Begin XCBuildConfiguration section */
 		3A54BAF32FC110CE008A6010 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReferenceAnchor = 3A54BAD62FC110CB008A6010 /* EasyFit */;
+			baseConfigurationReferenceRelativePath = Config.xcconfig;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -335,6 +350,8 @@
 		};
 		3A54BAF42FC110CE008A6010 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReferenceAnchor = 3A54BAD62FC110CB008A6010 /* EasyFit */;
+			baseConfigurationReferenceRelativePath = Config.xcconfig;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -392,6 +409,8 @@
 		};
 		3A54BAF62FC110CE008A6010 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReferenceAnchor = 3A54BAD62FC110CB008A6010 /* EasyFit */;
+			baseConfigurationReferenceRelativePath = Config.xcconfig;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -401,6 +420,7 @@
 				DEVELOPMENT_TEAM = 4U2M65374F;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = EasyFit/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "EasyFit uses your camera to scan food and estimate calories.";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "EasyFit reads your burned calories and body weight from Apple Health.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "EasyFit saves burned calories and body weight to Apple Health.";
@@ -428,6 +448,8 @@
 		};
 		3A54BAF72FC110CE008A6010 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReferenceAnchor = 3A54BAD62FC110CB008A6010 /* EasyFit */;
+			baseConfigurationReferenceRelativePath = Config.xcconfig;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -437,6 +459,7 @@
 				DEVELOPMENT_TEAM = 4U2M65374F;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = EasyFit/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "EasyFit uses your camera to scan food and estimate calories.";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "EasyFit reads your burned calories and body weight from Apple Health.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "EasyFit saves burned calories and body weight to Apple Health.";
@@ -464,6 +487,8 @@
 		};
 		3A54BAF92FC110CE008A6010 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReferenceAnchor = 3A54BAD62FC110CB008A6010 /* EasyFit */;
+			baseConfigurationReferenceRelativePath = Config.xcconfig;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
@@ -486,6 +511,8 @@
 		};
 		3A54BAFA2FC110CE008A6010 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReferenceAnchor = 3A54BAD62FC110CB008A6010 /* EasyFit */;
+			baseConfigurationReferenceRelativePath = Config.xcconfig;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
@@ -508,6 +535,8 @@
 		};
 		3A54BAFC2FC110CE008A6010 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReferenceAnchor = 3A54BAD62FC110CB008A6010 /* EasyFit */;
+			baseConfigurationReferenceRelativePath = Config.xcconfig;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -528,6 +557,8 @@
 		};
 		3A54BAFD2FC110CE008A6010 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReferenceAnchor = 3A54BAD62FC110CB008A6010 /* EasyFit */;
+			baseConfigurationReferenceRelativePath = Config.xcconfig;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
