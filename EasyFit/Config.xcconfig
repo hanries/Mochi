@@ -1,0 +1,6 @@
+// EasyFit Build Configuration
+// Never commit this file — it's in .gitignore
+
+EDAMAM_APP_ID  = e0b226da
+EDAMAM_APP_KEY = e780633c293c93e5811bc6e7b69d7c88
+ANTHROPIC_API_KEY = your_anthropic_key_here
