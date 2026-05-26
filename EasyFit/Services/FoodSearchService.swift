@@ -1,23 +1,38 @@
 import Foundation
 
+// MARK: - Serving option
+
+struct ServingOption: Identifiable {
+    let id: String
+    let label: String
+    let weightGrams: Double  // how many grams this serving weighs
+}
+
 // MARK: - Search result model
 
 struct FoodSearchResult: Identifiable {
     let id: String
     let name: String
-    let brand: String?
-    let calories: Int
-    let protein: Double
-    let carbs: Double
-    let fat: Double
-    let servingSize: String
+    let brandName: String?
+    // All nutrients are per 100g from Edamam
+    let caloriesPer100g: Double
+    let proteinPer100g:  Double
+    let carbsPer100g:    Double
+    let fatPer100g:      Double
+    // Available serving options
+    let servingOptions:  [ServingOption]
+    // Default serving
+    let defaultServing:  ServingOption
+
+    // Convenience for list display (based on default serving)
+    var calories: Int    { Int((caloriesPer100g * defaultServing.weightGrams / 100).rounded()) }
+    var protein:  Double { (proteinPer100g  * defaultServing.weightGrams / 100 * 10).rounded() / 10 }
+    var carbs:    Double { (carbsPer100g    * defaultServing.weightGrams / 100 * 10).rounded() / 10 }
+    var fat:      Double { (fatPer100g      * defaultServing.weightGrams / 100 * 10).rounded() / 10 }
+    var servingSize: String { defaultServing.label }
 }
 
-// MARK: - Food Search Service (Edamam Food Database API)
-// Sign up free at: developer.edamam.com → Food Database API
-// Add to Config.xcconfig:
-//   EDAMAM_APP_ID  = your_app_id
-//   EDAMAM_APP_KEY = your_app_key
+// MARK: - Food Search Service (Edamam)
 
 final class FoodSearchService {
     static let shared = FoodSearchService()
@@ -36,19 +51,18 @@ final class FoodSearchService {
         let results = try await withRetry(maxAttempts: maxRetries) {
             try await self.fetchEdamam(query: query)
         }
-
         cache[key] = results
         return results
     }
 
-    // MARK: - Edamam fetch
+    // MARK: - Fetch
 
     private func fetchEdamam(query: String) async throws -> [FoodSearchResult] {
         var comps = URLComponents(string: baseURL)!
         comps.queryItems = [
-            URLQueryItem(name: "app_id",      value: appId),
-            URLQueryItem(name: "app_key",     value: appKey),
-            URLQueryItem(name: "ingr",        value: query),
+            URLQueryItem(name: "app_id",         value: appId),
+            URLQueryItem(name: "app_key",        value: appKey),
+            URLQueryItem(name: "ingr",           value: query),
             URLQueryItem(name: "nutrition-type", value: "logging"),
         ]
 
@@ -60,76 +74,104 @@ final class FoodSearchService {
 
         guard let http = response as? HTTPURLResponse else { throw SearchError.noResponse }
         switch http.statusCode {
-        case 200:           break
-        case 401, 403:      throw SearchError.unauthorized
-        case 429:           throw SearchError.rateLimited
-        case 500, 503:      throw SearchError.serverError
-        default:
-            throw SearchError.badStatus(http.statusCode)
+        case 200:      break
+        case 401, 403: throw SearchError.unauthorized
+        case 429:      throw SearchError.rateLimited
+        case 500, 503: throw SearchError.serverError
+        default:       throw SearchError.badStatus(http.statusCode)
         }
 
         let decoded = try JSONDecoder().decode(EdamamResponse.self, from: data)
 
         var results = [FoodSearchResult]()
+        var seen    = Set<String>()
 
-        // Parsed ingredient (exact match for whole foods like "2 eggs")
-        if let parsed = decoded.parsed {
-            for item in parsed {
-                if let r = parseHint(item.food) { results.append(r) }
+        let allHints = decoded.hints ?? []
+        let parsed   = decoded.parsed?.map { EdamamHint(food: $0.food, measures: $0.measures) } ?? []
+
+        for hint in parsed + allHints {
+            guard let r = parse(hint) else { continue }
+            if !seen.contains(r.name.lowercased()) {
+                seen.insert(r.name.lowercased())
+                results.append(r)
             }
         }
 
-        // Hints (search suggestions — branded + whole foods)
-        if let hints = decoded.hints {
-            for hint in hints {
-                if let r = parseHint(hint.food) { results.append(r) }
-            }
-        }
+        return rank(results, query: query)
+    }
 
-        // Deduplicate by name
-        var seen = Set<String>()
-        var deduped = [FoodSearchResult]()
-        for r in results {
-            let k = r.name.lowercased()
-            if !seen.contains(k) { seen.insert(k); deduped.append(r) }
-        }
+    // MARK: - Ranking
 
-        return deduped
+    private func rank(_ results: [FoodSearchResult], query: String) -> [FoodSearchResult] {
+        let words = query.lowercased().split(separator: " ").map { String($0) }
+        return results.sorted { score($0, query: query, words: words) > score($1, query: query, words: words) }
+    }
+
+    private func score(_ r: FoodSearchResult, query: String, words: [String]) -> Int {
+        let name = r.name.lowercased()
+        var s = 0
+        if name == query                                    { s += 100 }
+        if name.hasPrefix(query)                            { s += 70  }
+        if words.allSatisfy({ name.contains($0) })          { s += 50  }
+        if let first = words.first, name.hasPrefix(first)  { s += 30  }
+        let nameWords = name.components(separatedBy: " ")
+        for word in words where nameWords.contains(word)    { s += 25  }
+        if r.brandName == nil                               { s += 40  }
+        if name.contains(",")                               { s -= 30  }
+        s -= min(name.count, 30)
+        if name.count > 40                                  { s -= 20  }
+        let extraWords = nameWords.filter { !words.contains($0) }.count
+        if extraWords == 0                                  { s += 20  }
+        if extraWords <= 1                                  { s += 10  }
+        return s
     }
 
     // MARK: - Parse
 
-    private func parseHint(_ food: EdamamFood?) -> FoodSearchResult? {
-        guard let food = food,
-              let label = food.label, !label.isEmpty else { return nil }
+    private func parse(_ hint: EdamamHint) -> FoodSearchResult? {
+        guard let food   = hint.food,
+              let label  = food.label, !label.isEmpty,
+              let nutrients = food.nutrients else { return nil }
 
-        let nutrients = food.nutrients
-        let cal = nutrients?.ENERC_KCAL ?? 0
+        let cal = nutrients.ENERC_KCAL ?? 0
         guard cal > 0 else { return nil }
 
-        // Edamam nutrients are per 100g — find a sensible serving
-        let serving: String
-        if let measures = food.measures, let first = measures.first(where: {
-            $0.label != "Gram" && $0.label != "Ounce"
-        }) {
-            serving = first.label ?? "1 serving"
-        } else {
-            serving = "100g"
+        // Build serving options from measures, excluding Gram/Ounce/Pound/Kilogram
+        let unitMeasures = hint.measures?.filter { m in
+            let l = m.label ?? ""
+            return !["Gram", "Ounce", "Pound", "Kilogram", "Liter", "Milliliter"].contains(l)
+                && (m.weight ?? 0) > 0
+        } ?? []
+
+        var options = unitMeasures.map { m in
+            ServingOption(
+                id:           m.uri ?? m.label ?? UUID().uuidString,
+                label:        m.label ?? "Serving",
+                weightGrams:  m.weight ?? 100
+            )
         }
 
+        // Always add a 100g option as fallback
+        options.append(ServingOption(id: "100g", label: "100g", weightGrams: 100))
+
+        // Pick default: prefer Whole > Serving > first option
+        let default_ = options.first { $0.label == "Whole" }
+            ?? options.first { $0.label == "Serving" }
+            ?? options.first
+            ?? ServingOption(id: "100g", label: "100g", weightGrams: 100)
+
         return FoodSearchResult(
-            id:          food.foodId ?? UUID().uuidString,
-            name:        label.capitalized,
-            brand:       food.brand,
-            calories:    Int(cal.rounded()),
-            protein:     round10(nutrients?.PROCNT ?? 0),
-            carbs:       round10(nutrients?.CHOCDF ?? 0),
-            fat:         round10(nutrients?.FAT    ?? 0),
-            servingSize: serving
+            id:              food.foodId ?? UUID().uuidString,
+            name:            label.capitalized,
+            brandName:       food.brand,
+            caloriesPer100g: cal,
+            proteinPer100g:  nutrients.PROCNT ?? 0,
+            carbsPer100g:    nutrients.CHOCDF ?? 0,
+            fatPer100g:      nutrients.FAT    ?? 0,
+            servingOptions:  options,
+            defaultServing:  default_
         )
     }
-
-    private func round10(_ v: Double) -> Double { (v * 10).rounded() / 10 }
 
     // MARK: - Retry
 
@@ -137,8 +179,7 @@ final class FoodSearchService {
         var last: Error?
         for attempt in 1...maxAttempts {
             do { return try await op() }
-            catch SearchError.rateLimited  { throw SearchError.rateLimited  }
-            catch SearchError.unauthorized { throw SearchError.unauthorized }
+            catch SearchError.rateLimited, SearchError.unauthorized { throw last ?? SearchError.noResponse }
             catch {
                 last = error
                 if attempt < maxAttempts {
@@ -160,7 +201,7 @@ enum SearchError: LocalizedError {
         case .badStatus(let c): return "Server error \(c). Try again."
         case .rateLimited:      return "Too many requests — wait a moment and try again."
         case .serverError:      return "Food database temporarily unavailable. Try again."
-        case .unauthorized:     return "Invalid Edamam API credentials. Check your keys in Config.xcconfig."
+        case .unauthorized:     return "Invalid API credentials."
         }
     }
 }
@@ -172,25 +213,32 @@ private struct EdamamResponse: Decodable {
     let hints:  [EdamamHint]?
 }
 
-private struct EdamamParsed: Decodable { let food: EdamamFood? }
-private struct EdamamHint:   Decodable { let food: EdamamFood? }
+private struct EdamamParsed: Decodable {
+    let food:     EdamamFood?
+    let measures: [EdamamMeasure]?
+}
 
-private struct EdamamFood: Decodable {
+struct EdamamHint: Decodable {
+    let food:     EdamamFood?
+    let measures: [EdamamMeasure]?
+}
+
+struct EdamamFood: Decodable {
     let foodId:    String?
     let label:     String?
     let brand:     String?
     let nutrients: EdamamNutrients?
-    let measures:  [EdamamMeasure]?
 }
 
-private struct EdamamNutrients: Decodable {
-    let ENERC_KCAL: Double?   // calories
-    let PROCNT:     Double?   // protein
-    let CHOCDF:     Double?   // carbs
-    let FAT:        Double?   // fat
+struct EdamamNutrients: Decodable {
+    let ENERC_KCAL: Double?
+    let PROCNT:     Double?
+    let CHOCDF:     Double?
+    let FAT:        Double?
 }
 
-private struct EdamamMeasure: Decodable {
-    let label: String?
+struct EdamamMeasure: Decodable {
+    let uri:    String?
+    let label:  String?
     let weight: Double?
 }

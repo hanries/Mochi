@@ -178,7 +178,7 @@ private struct FoodResultRow: View {
                 Text(food.name)
                     .font(.system(size: 14, weight: .medium))
                     .lineLimit(2)
-                if let brand = food.brand, !brand.isEmpty {
+                if let brand = food.brandName, !brand.isEmpty {
                     Text(brand)
                         .font(.system(size: 12))
                         .foregroundStyle(.secondary)
@@ -215,6 +215,27 @@ private struct MacroPill: View {
     }
 }
 
+
+// MARK: - Nutrient row
+
+private struct NutrientRow: View {
+    let label: String
+    let value: Double
+    let color: Color
+    var body: some View {
+        HStack {
+            HStack(spacing: 8) {
+                RoundedRectangle(cornerRadius: 3).fill(color).frame(width: 4, height: 18)
+                Text(label).font(.system(size: 15, weight: .medium))
+            }
+            Spacer()
+            Text(String(format: "%.1fg", value))
+                .font(.system(size: 15, weight: .semibold))
+        }
+        .padding(.horizontal, 16).padding(.vertical, 12)
+    }
+}
+
 // MARK: - Food detail / confirm sheet
 
 struct FoodDetailSheet: View {
@@ -223,22 +244,25 @@ struct FoodDetailSheet: View {
     let mealType: MealType
     let onAdd: (FoodEntry) -> Void
 
-    @State private var selectedMeal: MealType
-    @State private var servings: String = "1"
+    @State private var selectedMeal:    MealType
+    @State private var quantity:        String = "1"
+    @State private var selectedServing: ServingOption
 
     init(food: FoodSearchResult, mealType: MealType, onAdd: @escaping (FoodEntry) -> Void) {
-        self.food     = food
+        self.food    = food
         self.mealType = mealType
-        self.onAdd    = onAdd
-        _selectedMeal = State(initialValue: mealType)
+        self.onAdd   = onAdd
+        _selectedMeal    = State(initialValue: mealType)
+        _selectedServing = State(initialValue: food.defaultServing)
     }
 
-    var multiplier: Double { Double(servings) ?? 1.0 }
+    var qty: Double { Double(quantity) ?? 1.0 }
 
-    var scaledCalories: Int    { Int((Double(food.calories) * multiplier).rounded()) }
-    var scaledProtein:  Double { (food.protein * multiplier * 10).rounded() / 10 }
-    var scaledCarbs:    Double { (food.carbs   * multiplier * 10).rounded() / 10 }
-    var scaledFat:      Double { (food.fat     * multiplier * 10).rounded() / 10 }
+    // Scale nutrients: per100g × (servingWeight × qty) / 100
+    var scaledCalories: Int    { Int((food.caloriesPer100g * selectedServing.weightGrams * qty / 100).rounded()) }
+    var scaledProtein:  Double { round1dp(food.proteinPer100g * selectedServing.weightGrams * qty / 100) }
+    var scaledCarbs:    Double { round1dp(food.carbsPer100g   * selectedServing.weightGrams * qty / 100) }
+    var scaledFat:      Double { round1dp(food.fatPer100g     * selectedServing.weightGrams * qty / 100) }
 
     var body: some View {
         NavigationStack {
@@ -249,15 +273,87 @@ struct FoodDetailSheet: View {
                         Text(food.name)
                             .font(.system(size: 20, weight: .bold))
                             .multilineTextAlignment(.center)
-                        if let brand = food.brand, !brand.isEmpty {
-                            Text(food.brand ?? "")
+                        if let brand = food.brandName, !brand.isEmpty {
+                            Text(brand)
                                 .font(.system(size: 14))
                                 .foregroundStyle(.secondary)
                         }
                     }
                     .padding(.top, 8)
 
-                    // Calorie + macros
+                    // Serving picker
+                    VStack(spacing: 0) {
+                        // Serving unit
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("Serving unit")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundStyle(.secondary)
+                                .textCase(.uppercase)
+                                .tracking(0.5)
+                                .padding(.horizontal, 16)
+                                .padding(.top, 12)
+
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack(spacing: 8) {
+                                    ForEach(food.servingOptions) { option in
+                                        let isSelected = selectedServing.id == option.id
+                                        Button {
+                                            selectedServing = option
+                                            quantity = "1"
+                                        } label: {
+                                            Text(option.label)
+                                                .font(.system(size: 14, weight: .medium))
+                                                .padding(.horizontal, 14)
+                                                .padding(.vertical, 8)
+                                                .background(isSelected ? Color.primary : Color(uiColor: .tertiarySystemBackground))
+                                                .foregroundStyle(isSelected ? Color(uiColor: .systemBackground) : .primary)
+                                                .clipShape(Capsule())
+                                        }
+                                    }
+                                }
+                                .padding(.horizontal, 16)
+                                .padding(.bottom, 12)
+                            }
+                        }
+                        .background(Color(uiColor: .secondarySystemBackground))
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
+
+                        // Quantity stepper
+                        HStack {
+                            Text("Quantity")
+                                .font(.system(size: 15, weight: .medium))
+                            Spacer()
+                            HStack(spacing: 0) {
+                                Button {
+                                    let v = (Double(quantity) ?? 1) - 0.5
+                                    if v > 0 { quantity = v.truncatingRemainder(dividingBy: 1) == 0 ? "\(Int(v))" : "\(v)" }
+                                } label: {
+                                    Image(systemName: "minus").frame(width: 36, height: 36)
+                                }
+                                TextField("1", text: $quantity)
+                                    .keyboardType(.decimalPad)
+                                    .multilineTextAlignment(.center)
+                                    .font(.system(size: 15, weight: .semibold))
+                                    .frame(width: 44)
+                                Button {
+                                    let v = (Double(quantity) ?? 1) + 0.5
+                                    quantity = v.truncatingRemainder(dividingBy: 1) == 0 ? "\(Int(v))" : "\(v)"
+                                } label: {
+                                    Image(systemName: "plus").frame(width: 36, height: 36)
+                                }
+                            }
+                            .foregroundStyle(.primary)
+                            .background(Color(uiColor: .tertiarySystemBackground))
+                            .clipShape(RoundedRectangle(cornerRadius: 10))
+                        }
+                        .padding(.horizontal, 16).padding(.vertical, 12)
+                        .background(Color(uiColor: .secondarySystemBackground))
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                        .padding(.top, 10)
+                    }
+                    .padding(.horizontal, 16)
+
+                    // Nutrition facts (scaled)
                     VStack(spacing: 0) {
                         HStack {
                             Text("Calories")
@@ -268,89 +364,40 @@ struct FoodDetailSheet: View {
                         }
                         .padding(.horizontal, 16).padding(.vertical, 14)
                         Divider().padding(.leading, 16)
-                        NutrientRow(label: "Protein", value: scaledProtein,
-                                    color: Color(red: 0.3, green: 0.71, blue: 0.67))
+                        NutrientRow(label: "Protein", value: scaledProtein, color: Color(red: 0.3, green: 0.71, blue: 0.67))
                         Divider().padding(.leading, 16)
-                        NutrientRow(label: "Carbs",   value: scaledCarbs,
-                                    color: Color(red: 1.0, green: 0.72, blue: 0.3))
+                        NutrientRow(label: "Carbs",   value: scaledCarbs,   color: Color(red: 1.0, green: 0.72, blue: 0.3))
                         Divider().padding(.leading, 16)
-                        NutrientRow(label: "Fat",     value: scaledFat,
-                                    color: Color(red: 0.9, green: 0.35, blue: 0.35))
+                        NutrientRow(label: "Fat",     value: scaledFat,     color: Color(red: 0.9, green: 0.35, blue: 0.35))
                     }
                     .background(Color(uiColor: .secondarySystemBackground))
                     .clipShape(RoundedRectangle(cornerRadius: 16))
                     .padding(.horizontal, 16)
 
-                    // Servings + meal picker
-                    VStack(spacing: 0) {
-                        HStack {
-                            Text("Servings")
-                                .font(.system(size: 15, weight: .medium))
-                            Spacer()
-                            HStack(spacing: 0) {
-                                Button {
-                                    let v = (Double(servings) ?? 1) - 0.5
-                                    if v > 0 {
-                                        servings = v.truncatingRemainder(dividingBy: 1) == 0 ? "\(Int(v))" : "\(v)"
-                                    }
-                                } label: {
-                                    Image(systemName: "minus").frame(width: 36, height: 36)
-                                }
-                                TextField("1", text: $servings)
-                                    .keyboardType(.decimalPad)
-                                    .multilineTextAlignment(.center)
-                                    .font(.system(size: 15, weight: .semibold))
-                                    .frame(width: 44)
-                                Button {
-                                    let v = (Double(servings) ?? 1) + 0.5
-                                    servings = v.truncatingRemainder(dividingBy: 1) == 0 ? "\(Int(v))" : "\(v)"
-                                } label: {
-                                    Image(systemName: "plus").frame(width: 36, height: 36)
-                                }
-                            }
-                            .foregroundStyle(.primary)
-                            .background(Color(uiColor: .tertiarySystemBackground))
-                            .clipShape(RoundedRectangle(cornerRadius: 10))
+                    // Meal picker
+                    HStack {
+                        Text("Meal")
+                            .font(.system(size: 15, weight: .medium))
+                        Spacer()
+                        Picker("Meal", selection: $selectedMeal) {
+                            ForEach(MealType.allCases, id: \.self) { Text($0.rawValue).tag($0) }
                         }
-                        .padding(.horizontal, 16).padding(.vertical, 12)
-
-                        Divider().padding(.leading, 16)
-
-                        HStack {
-                            Text("Serving size")
-                                .font(.system(size: 15, weight: .medium))
-                            Spacer()
-                            Text(food.servingSize)
-                                .font(.system(size: 14))
-                                .foregroundStyle(.secondary)
-                        }
-                        .padding(.horizontal, 16).padding(.vertical, 12)
-
-                        Divider().padding(.leading, 16)
-
-                        HStack {
-                            Text("Meal")
-                                .font(.system(size: 15, weight: .medium))
-                            Spacer()
-                            Picker("Meal", selection: $selectedMeal) {
-                                ForEach(MealType.allCases, id: \.self) { Text($0.rawValue).tag($0) }
-                            }
-                        }
-                        .padding(.horizontal, 16).padding(.vertical, 4)
                     }
+                    .padding(.horizontal, 16).padding(.vertical, 4)
                     .background(Color(uiColor: .secondarySystemBackground))
                     .clipShape(RoundedRectangle(cornerRadius: 16))
                     .padding(.horizontal, 16)
 
                     // Add button
                     Button {
+                        let servingLabel = "\(quantity) × \(selectedServing.label)"
                         onAdd(FoodEntry(
                             name:        food.name,
                             calories:    scaledCalories,
                             protein:     scaledProtein,
                             carbs:       scaledCarbs,
                             fat:         scaledFat,
-                            servingSize: "\(servings) × \(food.servingSize)",
+                            servingSize: servingLabel,
                             mealType:    selectedMeal
                         ))
                     } label: {
@@ -373,25 +420,10 @@ struct FoodDetailSheet: View {
             }
         }
     }
+
+    private func round1dp(_ v: Double) -> Double { (v * 10).rounded() / 10 }
 }
 
-private struct NutrientRow: View {
-    let label: String
-    let value: Double
-    let color: Color
-    var body: some View {
-        HStack {
-            HStack(spacing: 8) {
-                RoundedRectangle(cornerRadius: 3).fill(color).frame(width: 4, height: 18)
-                Text(label).font(.system(size: 15, weight: .medium))
-            }
-            Spacer()
-            Text(String(format: "%.1fg", value))
-                .font(.system(size: 15, weight: .semibold))
-        }
-        .padding(.horizontal, 16).padding(.vertical, 12)
-    }
-}
 
 #Preview {
     FoodSearchView(mealType: .lunch) { _ in }
