@@ -39,7 +39,7 @@ struct NutritionView: View {
                         CalorieRingView(
                             consumed: vm.totalCalories(from: allEntries),
                             goal:     vm.goal.calories,
-                            burned:   totalBurned
+                            burned:   healthKit.isAuthorized ? healthKit.totalBurnedToday : manualBurned
                         ) {
                             if isToday { showLogBurn = true }
                         }
