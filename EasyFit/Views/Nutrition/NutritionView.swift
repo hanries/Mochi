@@ -13,15 +13,11 @@ struct NutritionView: View {
     @State private var showManual      = false
     @State private var showLogBurn     = false
     @State private var showDatePicker  = false
+    @State private var editingEntry:   FoodEntry? = nil
     @State private var manualBurned    = 0
-    @State private var activeMeal: MealType = .breakfast
+    @State private var activeMeal:     MealType = .breakfast
 
     var isToday: Bool { Calendar.current.isDateInToday(vm.selectedDate) }
-
-    var totalBurned: Int {
-        // Only show live burn for today
-        isToday ? (healthKit.isAuthorized ? healthKit.totalBurnedToday : manualBurned) : 0
-    }
 
     var navTitle: String {
         if isToday { return userName.isEmpty ? "Nutrition" : "Hi, \(userName) 👋" }
@@ -31,7 +27,6 @@ struct NutritionView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                // Date strip
                 DateNavigationBar(selectedDate: $vm.selectedDate, showDatePicker: $showDatePicker)
 
                 ScrollView {
@@ -50,7 +45,6 @@ struct NutritionView: View {
                             fat:         vm.totalFat(from: allEntries),     fatGoal:     vm.goal.fat
                         )
 
-                        // Only show add buttons for today
                         if isToday {
                             HStack(spacing: 10) {
                                 ActionButton(icon: "camera.fill",       label: "Scan")   { showCamera = true }
@@ -67,9 +61,12 @@ struct NutritionView: View {
                                 totalCalories: vm.mealCalories(for: meal, from: allEntries),
                                 isEditable:    isToday
                             ) {
-                                activeMeal = meal; showSearch = true
+                                activeMeal = meal
+                                showSearch = true
                             } onDelete: { entry in
                                 context.delete(entry)
+                            } onEdit: { entry in
+                                editingEntry = entry
                             }
                         }
                     }
@@ -80,9 +77,7 @@ struct NutritionView: View {
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        showDatePicker.toggle()
-                    } label: {
+                    Button { showDatePicker.toggle() } label: {
                         Image(systemName: "calendar")
                             .font(.system(size: 16, weight: .medium))
                     }
@@ -115,6 +110,13 @@ struct NutritionView: View {
             .sheet(isPresented: $showManual) {
                 AddFoodView(mealType: activeMeal) { entry in context.insert(entry) }
             }
+            .sheet(item: $editingEntry) { entry in
+                EditFoodEntryView(
+                    entry: entry,
+                    onSave: { _ in },       // SwiftData auto-saves @Model mutations
+                    onDelete: { e in context.delete(e) }
+                )
+            }
             .sheet(isPresented: $showLogBurn) {
                 LogBurnView(healthKit: healthKit) { kcal in manualBurned += kcal }
             }
@@ -122,19 +124,16 @@ struct NutritionView: View {
     }
 }
 
-// MARK: - Date navigation bar (swipe left/right between days)
+// MARK: - Date navigation bar
 
 struct DateNavigationBar: View {
     @Binding var selectedDate: Date
     @Binding var showDatePicker: Bool
-
     private let cal = Calendar.current
-
     var isToday: Bool { cal.isDateInToday(selectedDate) }
 
     var body: some View {
         HStack(spacing: 0) {
-            // Previous day
             Button {
                 withAnimation(.easeInOut(duration: 0.2)) {
                     selectedDate = cal.date(byAdding: .day, value: -1, to: selectedDate)!
@@ -148,10 +147,7 @@ struct DateNavigationBar: View {
 
             Spacer()
 
-            // Date label — tap to open picker
-            Button {
-                showDatePicker = true
-            } label: {
+            Button { showDatePicker = true } label: {
                 VStack(spacing: 2) {
                     Text(isToday ? "Today" : selectedDate.formatted(.dateTime.weekday(.wide)))
                         .font(.system(size: 13, weight: .semibold))
@@ -164,7 +160,6 @@ struct DateNavigationBar: View {
 
             Spacer()
 
-            // Next day — disabled for future dates
             Button {
                 withAnimation(.easeInOut(duration: 0.2)) {
                     selectedDate = cal.date(byAdding: .day, value: 1, to: selectedDate)!
@@ -191,22 +186,16 @@ struct DatePickerSheet: View {
 
     var body: some View {
         NavigationStack {
-            DatePicker(
-                "Select date",
-                selection: $selectedDate,
-                in: ...Date.now,
-                displayedComponents: .date
-            )
-            .datePickerStyle(.graphical)
-            .padding()
-            .navigationTitle("Select Date")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Done") { dismiss() }
-                        .fontWeight(.semibold)
+            DatePicker("Select date", selection: $selectedDate, in: ...Date.now, displayedComponents: .date)
+                .datePickerStyle(.graphical)
+                .padding()
+                .navigationTitle("Select Date")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button("Done") { dismiss() }.fontWeight(.semibold)
+                    }
                 }
-            }
         }
         .presentationDetents([.medium])
     }
