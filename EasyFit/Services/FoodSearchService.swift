@@ -123,6 +123,9 @@ final class FoodSearchService {
         let extraWords = nameWords.filter { !words.contains($0) }.count
         if extraWords == 0                                  { s += 20  }
         if extraWords <= 1                                  { s += 10  }
+        // Boost previously logged foods — max +80 so history can surface familiar foods
+        let historyCount = SearchHistoryService.shared.score(for: r.name)
+        s += min(historyCount * 20, 80)
         return s
     }
 

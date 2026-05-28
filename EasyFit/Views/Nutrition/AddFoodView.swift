@@ -57,6 +57,7 @@ struct AddFoodView: View {
                             servingSize: servingSize.isEmpty ? "1 serving" : servingSize,
                             mealType:    mealType
                         )
+                        SearchHistoryService.shared.record(foodName: name)
                         onSave(entry)
                         dismiss()
                     }
