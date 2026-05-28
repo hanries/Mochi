@@ -14,6 +14,7 @@ final class FoodEntry {
     var servingSize: String
     var mealTypeRaw: String
     var date: Date
+    var isCustom: Bool
 
     init(
         id: UUID = UUID(),
@@ -24,7 +25,8 @@ final class FoodEntry {
         fat: Double = 0,
         servingSize: String = "1 serving",
         mealType: MealType,
-        date: Date = .now
+        date: Date = .now,
+        isCustom: Bool = false
     ) {
         self.id          = id
         self.name        = name
@@ -35,6 +37,7 @@ final class FoodEntry {
         self.servingSize = servingSize
         self.mealTypeRaw = mealType.rawValue
         self.date        = date
+        self.isCustom    = isCustom
     }
 
     var mealType: MealType {
