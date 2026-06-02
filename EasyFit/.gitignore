@@ -36,3 +36,6 @@ fastlane/test_output
 
 # Contains API keys
 EasyFit/Services/FoodSearchService.swift
+
+EasyFit/Services/FoodScanService.swift
+EasyFit/config.xcconfig

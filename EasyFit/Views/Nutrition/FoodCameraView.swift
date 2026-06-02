@@ -1,190 +1,9 @@
 import SwiftUI
 import UIKit
 
-struct FoodCameraView: View {
-    @Environment(\.dismiss) private var dismiss
+struct FoodCameraView: UIViewControllerRepresentable {
     let onResult: (FoodScanResult) -> Void
-
-    @State private var showImagePicker = false
-    @State private var selectedImage: UIImage?
-    @State private var scanResult: FoodScanResult?
-    @State private var isScanning = false
-    @State private var errorMessage: String?
-    @State private var mealType: MealType = .lunch
-
-    // Replace with your actual API key or load from config
-    private let service: any FoodScanServiceProtocol = ScanServiceFactory.make()
-
-    var body: some View {
-        NavigationStack {
-            VStack(spacing: 24) {
-                // Image preview / placeholder
-                ZStack {
-                    RoundedRectangle(cornerRadius: 20)
-                        .fill(Color(uiColor: .secondarySystemBackground))
-                        .frame(height: 260)
-
-                    if let img = selectedImage {
-                        Image(uiImage: img)
-                            .resizable()
-                            .scaledToFill()
-                            .frame(height: 260)
-                            .clipShape(RoundedRectangle(cornerRadius: 20))
-                    } else {
-                        VStack(spacing: 12) {
-                            Image(systemName: "camera.viewfinder")
-                                .font(.system(size: 48))
-                                .foregroundStyle(.secondary)
-                            Text("Take a photo of your food")
-                                .font(.system(size: 14))
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-
-                    if isScanning {
-                        RoundedRectangle(cornerRadius: 20)
-                            .fill(Color.black.opacity(0.4))
-                            .frame(height: 260)
-                        ProgressView("Analyzing…")
-                            .tint(.white)
-                            .foregroundStyle(.white)
-                    }
-                }
-                .padding(.horizontal)
-
-                // Scan result
-                if let result = scanResult {
-                    ScanResultCard(result: result, mealType: $mealType)
-                        .padding(.horizontal)
-                }
-
-                if let error = errorMessage {
-                    Text(error)
-                        .font(.system(size: 13))
-                        .foregroundStyle(.red)
-                        .padding(.horizontal)
-                }
-
-                Spacer()
-
-                // Actions
-                VStack(spacing: 12) {
-                    Button {
-                        showImagePicker = true
-                    } label: {
-                        Label(selectedImage == nil ? "Open Camera" : "Retake", systemImage: "camera.fill")
-                            .font(.system(size: 15, weight: .medium))
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 14)
-                            .background(Color.primary)
-                            .foregroundStyle(Color(uiColor: .systemBackground))
-                            .clipShape(RoundedRectangle(cornerRadius: 14))
-                    }
-
-                    if scanResult != nil {
-                        Button {
-                            if let result = scanResult {
-                                onResult(result)
-                                dismiss()
-                            }
-                        } label: {
-                            Text("Add to log")
-                                .font(.system(size: 15, weight: .medium))
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 14)
-                                .background(Color.green.opacity(0.15))
-                                .foregroundStyle(.green)
-                                .clipShape(RoundedRectangle(cornerRadius: 14))
-                        }
-                    }
-                }
-                .padding(.horizontal)
-                .padding(.bottom)
-            }
-            .navigationTitle("Scan Food")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("Cancel") { dismiss() }
-                }
-            }
-            .sheet(isPresented: $showImagePicker) {
-                ImagePicker(image: $selectedImage)
-            }
-            .onChange(of: selectedImage) { _, image in
-                guard let image else { return }
-                Task { await scanImage(image) }
-            }
-        }
-    }
-
-    private func scanImage(_ image: UIImage) async {
-        isScanning   = true
-        errorMessage = nil
-        scanResult   = nil
-        do {
-            scanResult = try await service.scan(image: image)
-        } catch {
-            errorMessage = error.localizedDescription
-        }
-        isScanning = false
-    }
-}
-
-private struct ScanResultCard: View {
-    let result: FoodScanResult
-    @Binding var mealType: MealType
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(result.name).font(.system(size: 16, weight: .semibold))
-                    Text(result.servingSize).font(.system(size: 13)).foregroundStyle(.secondary)
-                }
-                Spacer()
-                Text("\(result.calories) kcal")
-                    .font(.system(size: 20, weight: .bold))
-            }
-
-            HStack(spacing: 0) {
-                MacroChip(label: "P", value: result.protein, color: Color(red: 0.3, green: 0.71, blue: 0.67))
-                MacroChip(label: "C", value: result.carbs,   color: Color(red: 1.0,  green: 0.72, blue: 0.3))
-                MacroChip(label: "F", value: result.fat,     color: Color(red: 0.9,  green: 0.35, blue: 0.35))
-            }
-
-            Picker("Meal", selection: $mealType) {
-                ForEach(MealType.allCases, id: \.self) { Text($0.rawValue).tag($0) }
-            }
-            .pickerStyle(.segmented)
-        }
-        .padding(14)
-        .background(Color(uiColor: .secondarySystemBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 16))
-    }
-}
-
-private struct MacroChip: View {
-    let label: String
-    let value: Double
-    let color: Color
-    var body: some View {
-        HStack(spacing: 4) {
-            Text(label).font(.system(size: 11, weight: .bold)).foregroundStyle(color)
-            Text(String(format: "%.0fg", value)).font(.system(size: 12))
-        }
-        .padding(.horizontal, 8).padding(.vertical, 4)
-        .background(color.opacity(0.1))
-        .clipShape(Capsule())
-        .padding(.trailing, 6)
-    }
-}
-
-// MARK: - UIKit image picker wrapper
-
-struct ImagePicker: UIViewControllerRepresentable {
-    @Binding var image: UIImage?
-    @Environment(\.dismiss) private var dismiss
+    let onDismiss: () -> Void
 
     func makeUIViewController(context: Context) -> UIImagePickerController {
         let picker = UIImagePickerController()
@@ -198,15 +17,247 @@ struct ImagePicker: UIViewControllerRepresentable {
     func makeCoordinator() -> Coordinator { Coordinator(self) }
 
     class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
-        let parent: ImagePicker
-        init(_ parent: ImagePicker) { self.parent = parent }
+        let parent: FoodCameraView
+        private let service: any FoodScanServiceProtocol = ScanServiceFactory.make()
 
-        func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
-            parent.image = info[.originalImage] as? UIImage
-            parent.dismiss()
-        }
+        init(_ parent: FoodCameraView) { self.parent = parent }
+
         func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
-            parent.dismiss()
+            parent.onDismiss()
         }
+
+        func imagePickerController(_ picker: UIImagePickerController,
+                                   didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
+            guard let image = info[.originalImage] as? UIImage else {
+                parent.onDismiss()
+                return
+            }
+
+            // Show scanning overlay on top of picker
+            let overlay = ScanningOverlayViewController()
+            picker.present(overlay, animated: false)
+
+            Task {
+                do {
+                    let result = try await service.scan(image: image)
+                    await MainActor.run {
+                        overlay.dismiss(animated: false) {
+                            // Show result sheet on top of picker
+                            let resultVC = UIHostingController(
+                                rootView: ScanResultView(
+                                    image:  image,
+                                    result: result,
+                                    onAdd: { entry in
+                                        picker.dismiss(animated: true)
+                                        self.parent.onResult(result)
+                                        self.parent.onDismiss()
+                                    },
+                                    onRetake: {
+                                        overlay.dismiss(animated: true)
+                                    },
+                                    onCancel: {
+                                        picker.dismiss(animated: true)
+                                        self.parent.onDismiss()
+                                    }
+                                )
+                            )
+                            resultVC.modalPresentationStyle = .pageSheet
+                            picker.present(resultVC, animated: true)
+                        }
+                    }
+                } catch {
+                    await MainActor.run {
+                        overlay.dismiss(animated: false) {
+                            let alert = UIAlertController(
+                                title: "Scan Failed",
+                                message: error.localizedDescription,
+                                preferredStyle: .alert
+                            )
+                            alert.addAction(UIAlertAction(title: "Retake", style: .default))
+                            alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in
+                                picker.dismiss(animated: true)
+                                self.parent.onDismiss()
+                            })
+                            picker.present(alert, animated: true)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Scanning overlay (shown while AI processes)
+
+class ScanningOverlayViewController: UIViewController {
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = UIColor.black.withAlphaComponent(0.6)
+
+        let stack = UIStackView()
+        stack.axis = .vertical
+        stack.spacing = 16
+        stack.alignment = .center
+        stack.translatesAutoresizingMaskIntoConstraints = false
+
+        let spinner = UIActivityIndicatorView(style: .large)
+        spinner.color = .white
+        spinner.startAnimating()
+
+        let label = UILabel()
+        label.text = "Analyzing your food…"
+        label.textColor = .white
+        label.font = .systemFont(ofSize: 16, weight: .medium)
+
+        stack.addArrangedSubview(spinner)
+        stack.addArrangedSubview(label)
+        view.addSubview(stack)
+
+        NSLayoutConstraint.activate([
+            stack.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            stack.centerYAnchor.constraint(equalTo: view.centerYAnchor)
+        ])
+    }
+}
+
+// MARK: - Result view shown after scan
+
+private struct ScanResultView: View {
+    let image:    UIImage
+    let result:   FoodScanResult
+    let onAdd:    (FoodScanResult) -> Void
+    let onRetake: () -> Void
+    let onCancel: () -> Void
+
+    @State private var mealType: MealType = .lunch
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: 20) {
+                    // Photo preview
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(height: 220)
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                        .padding(.horizontal)
+                        .padding(.top, 8)
+
+                    // Result card
+                    VStack(spacing: 0) {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(result.name)
+                                    .font(.system(size: 18, weight: .bold))
+                                Text(result.servingSize)
+                                    .font(.system(size: 13))
+                                    .foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            VStack(alignment: .trailing, spacing: 2) {
+                                Text("\(result.calories)")
+                                    .font(.system(size: 26, weight: .bold))
+                                Text("kcal")
+                                    .font(.system(size: 12))
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        .padding(16)
+
+                        Divider().padding(.horizontal)
+
+                        HStack(spacing: 0) {
+                            MacroCell(label: "Protein", value: result.protein, color: Color(red: 0.3, green: 0.71, blue: 0.67))
+                            Divider().frame(height: 40)
+                            MacroCell(label: "Carbs",   value: result.carbs,   color: Color(red: 1.0, green: 0.72, blue: 0.3))
+                            Divider().frame(height: 40)
+                            MacroCell(label: "Fat",     value: result.fat,     color: Color(red: 0.9, green: 0.35, blue: 0.35))
+                        }
+                        .padding(.vertical, 8)
+
+                        Divider().padding(.horizontal)
+
+                        // Confidence indicator
+                        HStack {
+                            Image(systemName: result.confidence > 0.7 ? "checkmark.seal.fill" : "exclamationmark.triangle.fill")
+                                .foregroundStyle(result.confidence > 0.7 ? .green : .orange)
+                                .font(.system(size: 14))
+                            Text(result.confidence > 0.7 ? "High confidence" : "Low confidence — please verify")
+                                .font(.system(size: 13))
+                                .foregroundStyle(.secondary)
+                            Spacer()
+                            Text("\(Int(result.confidence * 100))%")
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundStyle(.secondary)
+                        }
+                        .padding(16)
+                    }
+                    .background(Color(uiColor: .secondarySystemBackground))
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                    .padding(.horizontal)
+
+                    // Meal picker
+                    HStack {
+                        Text("Meal").font(.system(size: 15, weight: .medium))
+                        Spacer()
+                        Picker("Meal", selection: $mealType) {
+                            ForEach(MealType.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+                        }
+                    }
+                    .padding(.horizontal, 16).padding(.vertical, 4)
+                    .background(Color(uiColor: .secondarySystemBackground))
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                    .padding(.horizontal)
+
+                    // Buttons
+                    VStack(spacing: 10) {
+                        Button { onAdd(result) } label: {
+                            Text("Add to \(mealType.rawValue)")
+                                .font(.system(size: 16, weight: .semibold))
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 16)
+                                .background(Color.primary)
+                                .foregroundStyle(Color(uiColor: .systemBackground))
+                                .clipShape(RoundedRectangle(cornerRadius: 16))
+                        }
+                        Button { onRetake() } label: {
+                            Text("Retake")
+                                .font(.system(size: 15, weight: .medium))
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 14)
+                                .background(Color(uiColor: .secondarySystemBackground))
+                                .foregroundStyle(.primary)
+                                .clipShape(RoundedRectangle(cornerRadius: 16))
+                        }
+                    }
+                    .padding(.horizontal)
+                    .padding(.bottom, 24)
+                }
+            }
+            .navigationTitle("Scan Result")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Cancel") { onCancel() }
+                }
+            }
+        }
+    }
+}
+
+private struct MacroCell: View {
+    let label: String; let value: Double; let color: Color
+    var body: some View {
+        VStack(spacing: 4) {
+            Text(String(format: "%.1fg", value))
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(color)
+            Text(label)
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 8)
     }
 }

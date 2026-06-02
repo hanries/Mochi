@@ -95,14 +95,18 @@ struct NutritionView: View {
             .sheet(isPresented: $showDatePicker) {
                 DatePickerSheet(selectedDate: $vm.selectedDate)
             }
-            .sheet(isPresented: $showCamera) {
-                FoodCameraView { result in
-                    context.insert(FoodEntry(
-                        name: result.name, calories: result.calories,
-                        protein: result.protein, carbs: result.carbs, fat: result.fat,
-                        servingSize: result.servingSize, mealType: activeMeal
-                    ))
-                }
+            .fullScreenCover(isPresented: $showCamera) {
+                FoodCameraView(
+                    onResult: { result in
+                        context.insert(FoodEntry(
+                            name: result.name, calories: result.calories,
+                            protein: result.protein, carbs: result.carbs, fat: result.fat,
+                            servingSize: result.servingSize, mealType: activeMeal
+                        ))
+                    },
+                    onDismiss: { showCamera = false }
+                )
+                .ignoresSafeArea()
             }
             .sheet(isPresented: $showSearch) {
                 FoodSearchView(mealType: activeMeal) { entry in context.insert(entry) }

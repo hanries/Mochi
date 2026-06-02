@@ -1,21 +1,24 @@
 import Foundation
 
 enum Config {
+    static var anthropicAPIKey: String {
+        value(for: "ANTHROPIC_API_KEY")
+    }
+
     static var edamamAppId: String {
-        if let key = Bundle.main.infoDictionary?["EDAMAM_APP_ID"] as? String,
-           !key.isEmpty, !key.hasPrefix("$") { return key }
-        return ""
+        value(for: "EDAMAM_APP_ID")
     }
 
     static var edamamAppKey: String {
-        if let key = Bundle.main.infoDictionary?["EDAMAM_APP_KEY"] as? String,
-           !key.isEmpty, !key.hasPrefix("$") { return key }
-        return ""
+        value(for: "EDAMAM_APP_KEY")
     }
 
-    static var anthropicAPIKey: String {
-        if let key = Bundle.main.infoDictionary?["ANTHROPIC_API_KEY"] as? String,
-           !key.isEmpty, !key.hasPrefix("$") { return key }
-        return ""
+    private static func value(for key: String) -> String {
+        guard let val = Bundle.main.infoDictionary?[key] as? String,
+              !val.isEmpty,
+              !val.hasPrefix("$") else {
+            return ""
+        }
+        return val
     }
 }

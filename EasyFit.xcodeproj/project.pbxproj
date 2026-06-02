@@ -419,7 +419,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 4U2M65374F;
 				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = EasyFit/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "EasyFit uses your camera to scan food and estimate calories.";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "EasyFit reads your burned calories and body weight from Apple Health.";
@@ -458,7 +458,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 4U2M65374F;
 				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = EasyFit/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "EasyFit uses your camera to scan food and estimate calories.";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "EasyFit reads your burned calories and body weight from Apple Health.";
