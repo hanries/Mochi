@@ -1,5 +1,7 @@
 import Foundation
 import SwiftData
+import UIKit
+
 
 // MARK: - Nutrition
 
@@ -186,5 +188,27 @@ final class BodyWeightEntry {
     var unit: WeightUnit {
         get { WeightUnit(rawValue: unitRaw) ?? .lbs }
         set { unitRaw = newValue.rawValue }
+    }
+}
+
+// MARK: - Journal
+
+@Model
+final class JournalEntry {
+    var id:       UUID
+    var date:     Date
+    var note:     String
+    var imageData: Data?   // stored locally, never synced
+
+    init(id: UUID = UUID(), date: Date = .now, note: String = "", imageData: Data? = nil) {
+        self.id        = id
+        self.date      = date
+        self.note      = note
+        self.imageData = imageData
+    }
+
+    var image: UIImage? {
+        guard let data = imageData else { return nil }
+        return UIImage(data: data)
     }
 }

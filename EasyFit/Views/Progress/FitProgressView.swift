@@ -4,8 +4,10 @@ import SwiftData
 struct FitProgressView: View {
     @Environment(\.modelContext) private var context
     @Query(sort: \BodyWeightEntry.date) private var allEntries: [BodyWeightEntry]
+    @Query(sort: \JournalEntry.date, order: .reverse) private var journalEntries: [JournalEntry]
 
     @StateObject private var vm = FitProgressViewModel()
+    @State private var showAddJournal = false
 
     var body: some View {
         NavigationStack {
@@ -19,6 +21,11 @@ struct FitProgressView: View {
                     WeightGraphCard(
                         entries: vm.last30Days(from: allEntries),
                         delta:   vm.weightDelta(from: allEntries)
+                    )
+
+                    JournalCalendarView(
+                        journalEntries: journalEntries,
+                        onAddEntry:     { showAddJournal = true }
                     )
                 }
                 .padding(.horizontal, 16)
@@ -39,6 +46,9 @@ struct FitProgressView: View {
                 AddWeightView { entry in
                     context.insert(entry)
                 }
+            }
+            .sheet(isPresented: $showAddJournal) {
+                AddJournalEntryView()
             }
         }
     }
