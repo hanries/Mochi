@@ -1,8 +1,6 @@
 import Foundation
 import SwiftData
 import UIKit
-
-
 // MARK: - Nutrition
 
 @Model

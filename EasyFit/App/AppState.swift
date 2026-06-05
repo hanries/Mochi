@@ -5,6 +5,6 @@ final class AppState: ObservableObject {
     @Published var selectedTab: Tab = .nutrition
 
     enum Tab {
-        case nutrition, workout, progress, profile
+        case nutrition, workout, progress, journal, profile
     }
 }

@@ -17,6 +17,10 @@ struct ContentView: View {
                 .tabItem { Label("Progress", systemImage: "chart.line.uptrend.xyaxis") }
                 .tag(AppState.Tab.progress)
 
+            JournalTabView()
+                .tabItem { Label("Journal", systemImage: "camera.fill") }
+                .tag(AppState.Tab.journal)
+
             ProfileView()
                 .tabItem { Label("Profile", systemImage: "person.crop.circle") }
                 .tag(AppState.Tab.profile)
