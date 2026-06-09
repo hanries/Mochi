@@ -2,25 +2,42 @@ import SwiftUI
 
 // MARK: - Single source of truth for Mochi's appearance
 //
-// Views never reference symbol names or images directly — they call
+// Views never reference image/symbol names directly — they call
 // mochiView(for:size:). Swapping placeholders for real art or
 // Lottie/Rive animations happens here only.
+//
+// Art lookup order per state: "hamster_<state>" asset → "hamster_idle"
+// asset → SF Symbol badge. Dropping a new state image into the asset
+// catalog picks it up with no code changes.
 
 enum MochiAssetProvider {
 
-    /// Placeholder Mochi: a warm circular badge with an SF Symbol per state.
     @ViewBuilder
     static func mochiView(for state: MochiState, size: CGFloat) -> some View {
-        ZStack {
-            Circle()
-                .fill(tint(for: state).opacity(0.16))
-            Circle()
-                .strokeBorder(tint(for: state).opacity(0.35), lineWidth: 1.5)
-            Image(systemName: symbolName(for: state))
-                .font(.system(size: size * 0.42, weight: .medium))
-                .foregroundStyle(tint(for: state))
+        if let name = assetName(for: state) {
+            Image(name)
+                .resizable()
+                .scaledToFit()
+                .frame(width: size, height: size)
+        } else {
+            ZStack {
+                Circle()
+                    .fill(tint(for: state).opacity(0.16))
+                Circle()
+                    .strokeBorder(tint(for: state).opacity(0.35), lineWidth: 1.5)
+                Image(systemName: symbolName(for: state))
+                    .font(.system(size: size * 0.42, weight: .medium))
+                    .foregroundStyle(tint(for: state))
+            }
+            .frame(width: size, height: size)
         }
-        .frame(width: size, height: size)
+    }
+
+    static func assetName(for state: MochiState) -> String? {
+        let preferred = "hamster_\(state.rawValue.lowercased())"
+        if UIImage(named: preferred) != nil { return preferred }
+        if UIImage(named: "hamster_idle") != nil { return "hamster_idle" }
+        return nil
     }
 
     static func symbolName(for state: MochiState) -> String {

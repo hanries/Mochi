@@ -2,9 +2,9 @@ import Foundation
 import Combine
 
 final class AppState: ObservableObject {
-    @Published var selectedTab: Tab = .camera
+    @Published var selectedTab: Tab = .home
 
     enum Tab {
-        case camera, log, workout, profile
+        case home, log, workout, profile
     }
 }

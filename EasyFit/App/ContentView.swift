@@ -5,9 +5,9 @@ struct ContentView: View {
 
     var body: some View {
         TabView(selection: $appState.selectedTab) {
-            CameraHomeView()
-                .tabItem { Label("Home", systemImage: "camera.fill") }
-                .tag(AppState.Tab.camera)
+            MochiHomeView()
+                .tabItem { Label("Home", systemImage: "pawprint.fill") }
+                .tag(AppState.Tab.home)
 
             LogView()
                 .tabItem { Label("Log", systemImage: "chart.bar.fill") }
