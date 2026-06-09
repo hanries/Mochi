@@ -15,6 +15,8 @@ struct MochiDashboardView: View {
     @State private var showManual  = false
     @State private var showCamera  = false
     @State private var showWorkout = false
+    @State private var activeMeal: MealType = .breakfast
+    @State private var editingEntry: FoodEntry? = nil
     @State private var cardOffset: CGFloat = 40
     @State private var cardOpacity: Double = 0
 
@@ -80,41 +82,56 @@ struct MochiDashboardView: View {
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 0) {
 
-                    // MARK: - Mochi Hero Section
-                    ZStack(alignment: .bottom) {
-                        // Background gradient
-                        LinearGradient(
-                            colors: [
-                                Color(red: 1.0, green: 0.92, blue: 0.7).opacity(0.6),
-                                Color(uiColor: .systemBackground)
-                            ],
-                            startPoint: .top,
-                            endPoint:   .bottom
-                        )
-                        .frame(height: 340)
-                        .ignoresSafeArea(edges: .top)
+                    // MARK: - Mochi Full-Screen Hero
+                    GeometryReader { geo in
+                        ZStack {
+                            // Background gradient fills entire screen
+                            LinearGradient(
+                                colors: [
+                                    Color(red: 1.0, green: 0.92, blue: 0.7).opacity(0.7),
+                                    Color(uiColor: .systemBackground)
+                                ],
+                                startPoint: .top,
+                                endPoint:   .bottom
+                            )
+                            .ignoresSafeArea(edges: .top)
 
-                        VStack(spacing: 8) {
-                            // Greeting
-                            Text(greeting)
-                                .font(.system(size: 16, weight: .medium))
-                                .foregroundStyle(.secondary)
+                            VStack(spacing: 12) {
+                                // Greeting
+                                Text(greeting)
+                                    .font(.system(size: 18, weight: .medium))
+                                    .foregroundStyle(.secondary)
 
-                            // Mochi
-                            HamsterView(state: hamsterState, size: 150)
-                                .animation(.spring(response: 0.6, dampingFraction: 0.7), value: hamsterState)
+                                // Mochi — large, center stage
+                                HamsterView(state: hamsterState, size: 220)
+                                    .animation(.spring(response: 0.6, dampingFraction: 0.7), value: hamsterState)
 
-                            // State message
-                            Text(hamsterState.message)
-                                .font(.system(size: 14, weight: .medium))
-                                .foregroundStyle(.secondary)
-                                .multilineTextAlignment(.center)
-                                .padding(.horizontal, 40)
-                                .transition(.opacity.combined(with: .scale(scale: 0.95)))
-                                .animation(.easeInOut(duration: 0.4), value: hamsterState)
+                                // State message
+                                Text(hamsterState.message)
+                                    .font(.system(size: 15, weight: .medium))
+                                    .foregroundStyle(.secondary)
+                                    .multilineTextAlignment(.center)
+                                    .padding(.horizontal, 48)
+                                    .transition(.opacity.combined(with: .scale(scale: 0.95)))
+                                    .animation(.easeInOut(duration: 0.4), value: hamsterState)
+
+                                Spacer()
+
+                                // Scroll hint
+                                VStack(spacing: 4) {
+                                    Text("scroll to log meals")
+                                        .font(.system(size: 12, weight: .medium))
+                                        .foregroundStyle(.tertiary)
+                                    Image(systemName: "chevron.down")
+                                        .font(.system(size: 12, weight: .semibold))
+                                        .foregroundStyle(.tertiary)
+                                }
+                                .padding(.bottom, 24)
+                            }
+                            .frame(width: geo.size.width, height: geo.size.height)
                         }
-                        .padding(.bottom, 20)
                     }
+                    .frame(height: UIScreen.main.bounds.height)
 
                     // MARK: - Cards
                     VStack(spacing: 16) {
@@ -253,8 +270,31 @@ struct MochiDashboardView: View {
                         // Quick log buttons
                         HStack(spacing: 10) {
                             QuickButton(icon: "camera.fill", label: "Scan") { showCamera = true }
-                            QuickButton(icon: "magnifyingglass", label: "Search") { showSearch = true }
-                            QuickButton(icon: "square.and.pencil", label: "Manual") { showManual = true }
+                            QuickButton(icon: "magnifyingglass", label: "Search") { activeMeal = .breakfast; showSearch = true }
+                            QuickButton(icon: "square.and.pencil", label: "Manual") { activeMeal = .breakfast; showManual = true }
+                        }
+
+                        // Divider before meals
+                        Rectangle()
+                            .fill(Color.secondary.opacity(0.15))
+                            .frame(height: 1)
+                            .padding(.vertical, 8)
+
+                        // Meal sections
+                        ForEach(MealType.allCases, id: \.self) { meal in
+                            MealSectionView(
+                                meal:          meal,
+                                entries:       vm.entries(for: meal, from: allEntries),
+                                totalCalories: vm.mealCalories(for: meal, from: allEntries),
+                                isEditable:    true
+                            ) {
+                                activeMeal = meal
+                                showSearch = true
+                            } onDelete: { entry in
+                                context.delete(entry)
+                            } onEdit: { entry in
+                                editingEntry = entry
+                            }
                         }
                     }
                     .padding(.horizontal, 16)
@@ -274,10 +314,17 @@ struct MochiDashboardView: View {
             .navigationBarHidden(true)
             .task { await healthKit.fetchTodayCalories() }
             .sheet(isPresented: $showSearch) {
-                FoodSearchView(mealType: .lunch) { entry in context.insert(entry) }
+                FoodSearchView(mealType: activeMeal) { entry in context.insert(entry) }
             }
             .sheet(isPresented: $showManual) {
-                AddFoodView(mealType: .lunch) { entry in context.insert(entry) }
+                AddFoodView(mealType: activeMeal) { entry in context.insert(entry) }
+            }
+            .sheet(item: $editingEntry) { entry in
+                EditFoodEntryView(
+                    entry:    entry,
+                    onSave:   { _ in },
+                    onDelete: { e in context.delete(e) }
+                )
             }
             .fullScreenCover(isPresented: $showCamera) {
                 FoodCameraView(

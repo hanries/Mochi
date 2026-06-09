@@ -24,6 +24,19 @@ struct NutritionView: View {
         return vm.selectedDate.formatted(.dateTime.weekday(.wide).month(.abbreviated).day())
     }
 
+    var hamsterState: HamsterState {
+        let consumed = vm.totalCalories(from: allEntries)
+        let goal     = vm.goal.calories
+        let progress = Double(consumed) / Double(max(goal, 1))
+        let hour     = Calendar.current.component(.hour, from: .now)
+        if consumed == 0 && hour >= 19 { return .sad      }
+        if consumed == 0               { return .sleeping }
+        if progress >= 1.0             { return .excited  }
+        if progress >= 0.8             { return .focused  }
+        if consumed > 0                { return .happy    }
+        return .idle
+    }
+
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
@@ -31,6 +44,11 @@ struct NutritionView: View {
 
                 ScrollView {
                     VStack(spacing: 24) {
+
+                        // Hamster mascot
+                        HamsterView(state: isToday ? hamsterState : .idle, size: 110)
+                            .animation(.spring(response: 0.5), value: hamsterState)
+
                         CalorieRingView(
                             consumed: vm.totalCalories(from: allEntries),
                             goal:     vm.goal.calories,
@@ -116,8 +134,8 @@ struct NutritionView: View {
             }
             .sheet(item: $editingEntry) { entry in
                 EditFoodEntryView(
-                    entry: entry,
-                    onSave: { _ in },       // SwiftData auto-saves @Model mutations
+                    entry:    entry,
+                    onSave:   { _ in },
                     onDelete: { e in context.delete(e) }
                 )
             }
@@ -148,9 +166,7 @@ struct DateNavigationBar: View {
                     .frame(width: 44, height: 44)
                     .foregroundStyle(.primary)
             }
-
             Spacer()
-
             Button { showDatePicker = true } label: {
                 VStack(spacing: 2) {
                     Text(isToday ? "Today" : selectedDate.formatted(.dateTime.weekday(.wide)))
@@ -161,9 +177,7 @@ struct DateNavigationBar: View {
                         .foregroundStyle(.secondary)
                 }
             }
-
             Spacer()
-
             Button {
                 withAnimation(.easeInOut(duration: 0.2)) {
                     selectedDate = cal.date(byAdding: .day, value: 1, to: selectedDate)!
@@ -187,7 +201,6 @@ struct DateNavigationBar: View {
 struct DatePickerSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Binding var selectedDate: Date
-
     var body: some View {
         NavigationStack {
             DatePicker("Select date", selection: $selectedDate, in: ...Date.now, displayedComponents: .date)

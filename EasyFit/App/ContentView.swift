@@ -5,21 +5,17 @@ struct ContentView: View {
 
     var body: some View {
         TabView(selection: $appState.selectedTab) {
-            NutritionView()
-                .tabItem { Label("Nutrition", systemImage: "fork.knife") }
-                .tag(AppState.Tab.nutrition)
+            HomeView()
+                .tabItem { Label("Home", systemImage: "house.fill") }
+                .tag(AppState.Tab.home)
+
+            LogView()
+                .tabItem { Label("Log", systemImage: "chart.bar.fill") }
+                .tag(AppState.Tab.log)
 
             WorkoutView()
                 .tabItem { Label("Workout", systemImage: "dumbbell") }
                 .tag(AppState.Tab.workout)
-
-            FitProgressView()
-                .tabItem { Label("Progress", systemImage: "chart.line.uptrend.xyaxis") }
-                .tag(AppState.Tab.progress)
-
-            JournalTabView()
-                .tabItem { Label("Journal", systemImage: "camera.fill") }
-                .tag(AppState.Tab.journal)
 
             ProfileView()
                 .tabItem { Label("Profile", systemImage: "person.crop.circle") }
@@ -30,6 +26,5 @@ struct ContentView: View {
 }
 
 #Preview {
-    ContentView()
-        .environmentObject(AppState())
+    ContentView().environmentObject(AppState())
 }

@@ -11,14 +11,17 @@ enum HamsterState {
     case focused
 
     var imageName: String {
+        let preferred: String
         switch self {
-        case .idle:     return "hamster_idle"
-        case .sleeping: return "hamster_sleeping"
-        case .happy:    return "hamster_happy"
-        case .excited:  return "hamster_excited"
-        case .sad:      return "hamster_sad"
-        case .focused:  return "hamster_focused"
+        case .idle:     preferred = "hamster_idle"
+        case .sleeping: preferred = "hamster_sleeping"
+        case .happy:    preferred = "hamster_happy"
+        case .excited:  preferred = "hamster_excited"
+        case .sad:      preferred = "hamster_sad"
+        case .focused:  preferred = "hamster_focused"
         }
+        // Fall back to idle if specific image not in assets yet
+        return UIImage(named: preferred) != nil ? preferred : "hamster_idle"
     }
 
     var glowColor: Color {
