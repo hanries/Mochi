@@ -7,40 +7,36 @@ struct FitProgressView: View {
     @StateObject private var vm = FitProgressViewModel()
 
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(spacing: 20) {
-                    StreakCard(
-                        streak:        vm.currentStreak(from: allEntries),
-                        longestStreak: vm.longestStreak(from: allEntries)
-                    )
-                    LogCalendarView(loggedDates: vm.loggedDates(from: allEntries))
-                    WeightGraphCard(
-                        entries: vm.last30Days(from: allEntries),
-                        delta:   vm.weightDelta(from: allEntries)
-                    )
-
-                }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
+        ScrollView(showsIndicators: false) {
+            VStack(spacing: 16) {
+                StreakCard(
+                    streak:        vm.currentStreak(from: allEntries),
+                    longestStreak: vm.longestStreak(from: allEntries)
+                )
+                LogCalendarView(loggedDates: vm.loggedDates(from: allEntries))
+                WeightGraphCard(
+                    entries: vm.last30Days(from: allEntries),
+                    delta:   vm.weightDelta(from: allEntries)
+                )
             }
-            .navigationTitle("Progress")
-            .navigationBarTitleDisplayMode(.large)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        vm.showAddWeight = true
-                    } label: {
-                        Image(systemName: "plus").fontWeight(.semibold)
-                    }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+        }
+        .background(Theme.bg)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    vm.showAddWeight = true
+                } label: {
+                    Image(systemName: "plus")
+                        .fontWeight(.semibold)
+                        .foregroundStyle(Theme.teal)
                 }
             }
-            .sheet(isPresented: $vm.showAddWeight) {
-                AddWeightView { entry in
-                    context.insert(entry)
-                }
-            }
-
+        }
+        .sheet(isPresented: $vm.showAddWeight) {
+            AddWeightView { entry in context.insert(entry) }
+                .preferredColorScheme(.dark)
         }
     }
 }
@@ -52,7 +48,7 @@ struct StreakCard: View {
     let longestStreak: Int
 
     var flameColor: Color {
-        streak >= 7 ? .orange : streak >= 3 ? Color(red: 1, green: 0.6, blue: 0.2) : .secondary
+        streak >= 7 ? .orange : streak >= 3 ? Color(red: 1, green: 0.6, blue: 0.2) : Theme.textTertiary
     }
 
     var body: some View {
@@ -61,6 +57,7 @@ struct StreakCard: View {
                 HStack(alignment: .top, spacing: 4) {
                     Text("\(streak)")
                         .font(.system(size: 52, weight: .bold, design: .rounded))
+                        .foregroundStyle(Theme.textPrimary)
                     Image(systemName: "flame.fill")
                         .font(.system(size: 22))
                         .foregroundStyle(flameColor)
@@ -68,24 +65,26 @@ struct StreakCard: View {
                 }
                 Text("day streak")
                     .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Theme.textSecondary)
             }
             .frame(maxWidth: .infinity)
 
-            Divider().frame(height: 60)
+            Rectangle()
+                .fill(Theme.textTertiary.opacity(0.3))
+                .frame(width: 1, height: 60)
 
             VStack(spacing: 6) {
                 Text("\(longestStreak)")
                     .font(.system(size: 52, weight: .bold, design: .rounded))
+                    .foregroundStyle(Theme.textPrimary)
                 Text("best streak")
                     .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Theme.textSecondary)
             }
             .frame(maxWidth: .infinity)
         }
         .padding(.vertical, 20)
-        .background(Color(uiColor: .secondarySystemBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 20))
+        .darkCard()
     }
 }
 
@@ -121,20 +120,22 @@ struct LogCalendarView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text(monthTitle).font(.system(size: 15, weight: .semibold))
+            Text(monthTitle)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(Theme.textPrimary)
 
             HStack(spacing: 0) {
                 ForEach(weekdaySymbols.indices, id: \.self) { i in
                     Text(weekdaySymbols[i])
                         .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Theme.textTertiary)
                         .frame(maxWidth: .infinity)
                 }
             }
 
             LazyVGrid(columns: columns, spacing: 6) {
                 ForEach(daysInMonth.indices, id: \.self) { i in
-                    CalendarDayCell(
+                    DarkCalendarDayCell(
                         date:     daysInMonth[i],
                         isLogged: daysInMonth[i].map { isLogged($0) } ?? false,
                         isToday:  daysInMonth[i].map { isToday($0)  } ?? false,
@@ -144,12 +145,11 @@ struct LogCalendarView: View {
             }
         }
         .padding(16)
-        .background(Color(uiColor: .secondarySystemBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 20))
+        .darkCard()
     }
 }
 
-private struct CalendarDayCell: View {
+private struct DarkCalendarDayCell: View {
     let date: Date?
     let isLogged: Bool
     let isToday: Bool
@@ -158,11 +158,14 @@ private struct CalendarDayCell: View {
     var body: some View {
         if date != nil {
             ZStack {
-                Circle()
-                    .fill(isLogged ? Color.primary : isToday ? Color.primary.opacity(0.08) : Color.clear)
+                if isLogged {
+                    Circle().fill(Theme.teal)
+                } else if isToday {
+                    Circle().strokeBorder(Theme.teal, lineWidth: 1.5)
+                }
                 Text("\(day)")
                     .font(.system(size: 13, weight: isLogged || isToday ? .semibold : .regular))
-                    .foregroundStyle(isLogged ? Color(uiColor: .systemBackground) : .primary)
+                    .foregroundStyle(isLogged ? Color.black : Theme.textPrimary)
             }
             .frame(height: 34)
         } else {
@@ -184,7 +187,9 @@ struct WeightGraphCard: View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(alignment: .firstTextBaseline) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Weight").font(.system(size: 15, weight: .semibold))
+                    Text("Weight")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(Theme.textPrimary)
                     if let d = delta {
                         Text(String(format: "%+.1f lb this month", d))
                             .font(.system(size: 12))
@@ -195,13 +200,14 @@ struct WeightGraphCard: View {
                 if let latest = entries.last?.weight {
                     Text(String(format: "%.1f lb", latest))
                         .font(.system(size: 22, weight: .bold, design: .rounded))
+                        .foregroundStyle(Theme.teal)
                 }
             }
 
             if entries.isEmpty {
                 Text("Log your weight to see the graph")
                     .font(.system(size: 13))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Theme.textSecondary)
                     .frame(maxWidth: .infinity, minHeight: 120, alignment: .center)
             } else {
                 LineGraph(entries: entries, minW: minW, maxW: maxW)
@@ -211,16 +217,15 @@ struct WeightGraphCard: View {
             if entries.count > 1 {
                 HStack {
                     Text(entries.first!.date, format: .dateTime.month(.abbreviated).day())
-                        .font(.system(size: 11)).foregroundStyle(.secondary)
+                        .font(.system(size: 11)).foregroundStyle(Theme.textTertiary)
                     Spacer()
                     Text(entries.last!.date, format: .dateTime.month(.abbreviated).day())
-                        .font(.system(size: 11)).foregroundStyle(.secondary)
+                        .font(.system(size: 11)).foregroundStyle(Theme.textTertiary)
                 }
             }
         }
         .padding(16)
-        .background(Color(uiColor: .secondarySystemBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 20))
+        .darkCard()
     }
 }
 
@@ -268,7 +273,7 @@ private struct LineGraphCanvas: View {
                     p.move(to: CGPoint(x: 0, y: gridLineYs[i]))
                     p.addLine(to: CGPoint(x: w, y: gridLineYs[i]))
                 }
-                .stroke(Color.secondary.opacity(0.1), lineWidth: 1)
+                .stroke(Theme.textTertiary.opacity(0.3), lineWidth: 1)
             }
             if points.count > 1 {
                 Path { p in
@@ -279,7 +284,7 @@ private struct LineGraphCanvas: View {
                     p.closeSubpath()
                 }
                 .fill(LinearGradient(
-                    colors: [Color.primary.opacity(0.12), Color.primary.opacity(0.01)],
+                    colors: [Theme.teal.opacity(0.18), Theme.teal.opacity(0.0)],
                     startPoint: .top, endPoint: .bottom
                 ))
             }
@@ -288,11 +293,11 @@ private struct LineGraphCanvas: View {
                     p.move(to: points[0])
                     for pt in points.dropFirst() { p.addLine(to: pt) }
                 }
-                .stroke(Color.primary, style: StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
+                .stroke(Theme.teal, style: StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
             }
             if let last = points.last {
                 Circle()
-                    .fill(Color.primary)
+                    .fill(Theme.teal)
                     .frame(width: 8, height: 8)
                     .position(last)
             }
@@ -334,4 +339,5 @@ struct AddWeightView: View {
 #Preview {
     FitProgressView()
         .modelContainer(for: BodyWeightEntry.self, inMemory: true)
+        .preferredColorScheme(.dark)
 }

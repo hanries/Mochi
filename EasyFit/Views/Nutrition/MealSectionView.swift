@@ -1,130 +1,7 @@
 import SwiftUI
 
-struct MealSectionView: View {
-    let meal:          MealType
-    let entries:       [FoodEntry]
-    let totalCalories: Int
-    var isEditable:    Bool = true
-    let onAdd:         () -> Void
-    let onDelete:      (FoodEntry) -> Void
-    let onEdit:        (FoodEntry) -> Void
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            HStack {
-                Text(meal.rawValue)
-                    .font(.system(size: 15, weight: .semibold))
-                Spacer()
-                Text(totalCalories > 0 ? "\(totalCalories) kcal" : "—")
-                    .font(.system(size: 13))
-                    .foregroundStyle(.secondary)
-            }
-            .padding(.horizontal)
-            .padding(.bottom, 8)
-
-            VStack(spacing: 0) {
-                // Use List for native swipe actions
-                if !entries.isEmpty {
-                    List {
-                        ForEach(entries) { entry in
-                            FoodRow(entry: entry, isEditable: isEditable) {
-                                onEdit(entry)
-                            }
-                            .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
-                            .listRowBackground(Color(uiColor: .secondarySystemBackground))
-                            .listRowSeparator(.hidden)
-                            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                                if isEditable {
-                                    Button {
-                                        onDelete(entry)
-                                    } label: {
-                                        Label("Delete", systemImage: "trash")
-                                    }
-                                    .tint(.red)
-                                    Button {
-                                        onEdit(entry)
-                                    } label: {
-                                        Label("Edit", systemImage: "pencil")
-                                    }
-                                    .tint(.orange)
-                                }
-                            }
-                        }
-                    }
-                    .listStyle(.plain)
-                    .scrollDisabled(true)
-                    .scrollContentBackground(.hidden)
-                    .frame(height: CGFloat(entries.count) * 58)
-                }
-
-                if isEditable {
-                    Divider()
-                    Button(action: onAdd) {
-                        HStack {
-                            Image(systemName: "plus")
-                                .font(.system(size: 13, weight: .medium))
-                            Text("Add food")
-                                .font(.system(size: 14))
-                        }
-                        .foregroundStyle(.secondary)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
-                    }
-                }
-            }
-            .background(Color(uiColor: .secondarySystemBackground))
-            .clipShape(RoundedRectangle(cornerRadius: 16))
-            .padding(.horizontal)
-        }
-    }
-}
-
-// MARK: - Food Row
-
-private struct FoodRow: View {
-    let entry:      FoodEntry
-    let isEditable: Bool
-    let onEdit:     () -> Void
-
-    var emoji: String {
-        switch entry.mealType {
-        case .breakfast: return "🥚"
-        case .lunch:     return "🍗"
-        case .dinner:    return "🥗"
-        case .snack:     return "🍎"
-        }
-    }
-
-    var body: some View {
-        HStack(spacing: 10) {
-            Text(emoji)
-                .font(.system(size: 18))
-                .frame(width: 36, height: 36)
-                .background(Color.secondary.opacity(0.1))
-                .clipShape(RoundedRectangle(cornerRadius: 10))
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(entry.name).font(.system(size: 14))
-                Text(entry.servingSize).font(.system(size: 12)).foregroundStyle(.secondary)
-            }
-
-            Spacer()
-
-            Text("\(entry.calories) kcal")
-                .font(.system(size: 13, weight: .medium))
-
-            if isEditable {
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 11))
-                    .foregroundStyle(.tertiary)
-            }
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
-        .contentShape(Rectangle())
-        .onTapGesture { if isEditable { onEdit() } }
-    }
-}
+// MealSectionView is no longer used directly — NutritionView uses DarkFoodCard inline.
+// This file retains EditFoodEntryView and the shared EditFoodEntry sheet.
 
 // MARK: - Edit Food Entry Sheet
 
@@ -151,11 +28,11 @@ struct EditFoodEntryView: View {
         self.entry    = entry
         self.onSave   = onSave
         self.onDelete = onDelete
-        _name             = State(initialValue: entry.name)
-        _mealType         = State(initialValue: entry.mealType)
-        _quantity         = State(initialValue: 1.0)
-        _selectedServing  = State(initialValue: entry.servingSize)
-        _customServing    = State(initialValue: entry.servingSize)
+        _name            = State(initialValue: entry.name)
+        _mealType        = State(initialValue: entry.mealType)
+        _quantity        = State(initialValue: 1.0)
+        _selectedServing = State(initialValue: entry.servingSize)
+        _customServing   = State(initialValue: entry.servingSize)
         baseCal     = Double(entry.calories)
         baseProtein = entry.protein
         baseCarbs   = entry.carbs
@@ -185,7 +62,6 @@ struct EditFoodEntryView: View {
                         ForEach(MealType.allCases, id: \.self) { Text($0.rawValue).tag($0) }
                     }
                 }
-
                 Section("Serving") {
                     HStack {
                         Text("Quantity")
@@ -199,13 +75,11 @@ struct EditFoodEntryView: View {
                                     .foregroundStyle(quantity > 0.5 ? .primary : .secondary)
                             }
                             .buttonStyle(.plain)
-
                             Text(quantity.truncatingRemainder(dividingBy: 1) == 0
                                  ? "\(Int(quantity))" : String(format: "%.1f", quantity))
                                 .font(.system(size: 16, weight: .semibold))
                                 .frame(minWidth: 32)
                                 .multilineTextAlignment(.center)
-
                             Button {
                                 quantity = ((quantity + 0.5) * 10).rounded() / 10
                             } label: {
@@ -216,31 +90,24 @@ struct EditFoodEntryView: View {
                             .buttonStyle(.plain)
                         }
                     }
-
                     Picker("Serving size", selection: $selectedServing) {
                         ForEach(servingUnits, id: \.self) { Text($0).tag($0) }
                         Text("Custom…").tag("Custom…")
                     }
-                    .onChange(of: selectedServing) { _, val in
-                        showCustom = (val == "Custom…")
-                    }
-
+                    .onChange(of: selectedServing) { _, val in showCustom = (val == "Custom…") }
                     if showCustom {
                         TextField("e.g. 1 cup, 30g", text: $customServing)
                     }
                 }
-
                 Section("Nutrition (scaled)") {
                     NutritionInfoRow(label: "Calories", value: "\(scaledCalories) kcal")
                     NutritionInfoRow(label: "Protein",  value: String(format: "%.1fg", scaledProtein))
                     NutritionInfoRow(label: "Carbs",    value: String(format: "%.1fg", scaledCarbs))
                     NutritionInfoRow(label: "Fat",      value: String(format: "%.1fg", scaledFat))
                 }
-
                 Section {
                     Button(role: .destructive) {
-                        onDelete(entry)
-                        dismiss()
+                        onDelete(entry); dismiss()
                     } label: {
                         HStack {
                             Spacer()
@@ -253,9 +120,7 @@ struct EditFoodEntryView: View {
             .navigationTitle("Edit Entry")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("Cancel") { dismiss() }
-                }
+                ToolbarItem(placement: .topBarLeading)  { Button("Cancel") { dismiss() } }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Save") {
                         let qtyStr = quantity.truncatingRemainder(dividingBy: 1) == 0
@@ -278,8 +143,7 @@ struct EditFoodEntryView: View {
 }
 
 private struct NutritionInfoRow: View {
-    let label: String
-    let value: String
+    let label: String; let value: String
     var body: some View {
         HStack {
             Text(label).foregroundStyle(.secondary)
