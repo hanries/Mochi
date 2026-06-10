@@ -5,19 +5,31 @@ import SwiftData
 struct FitTrackApp: App {
     @StateObject private var appState = AppState()
     @StateObject private var mochi = MochiViewModel()
+    @Environment(\.scenePhase) private var scenePhase
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
 
     var body: some Scene {
         WindowGroup {
-            if hasCompletedOnboarding {
-                ContentView()
-                    .environmentObject(appState)
-                    .environmentObject(mochi)
-                    .preferredColorScheme(.dark)
-            } else {
-                OnboardingView()
-                    .environmentObject(mochi)
-                    .preferredColorScheme(.dark)
+            Group {
+                if hasCompletedOnboarding {
+                    ContentView()
+                        .environmentObject(appState)
+                        .environmentObject(mochi)
+                        .preferredColorScheme(.dark)
+                } else {
+                    OnboardingView()
+                        .environmentObject(mochi)
+                        .preferredColorScheme(.dark)
+                }
+            }
+            .onChange(of: scenePhase) { _, phase in
+                if phase == .background {
+                    let logged = mochi.loggedToday
+                    Task {
+                        await MochiNotificationService.shared.refreshAuthorizationStatus()
+                        MochiNotificationService.shared.reschedule(loggedToday: logged)
+                    }
+                }
             }
         }
         .modelContainer(for: [FoodEntry.self, WorkoutPlan.self, Exercise.self, BodyWeightEntry.self, JournalEntry.self])

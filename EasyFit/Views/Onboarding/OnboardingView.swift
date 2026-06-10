@@ -524,6 +524,8 @@ private struct FirstLogPage: View {
     let name: String
     let calories: String
 
+    @StateObject private var notifications = MochiNotificationService.shared
+
     var body: some View {
         VStack(spacing: 0) {
             Spacer()
@@ -556,10 +558,39 @@ private struct FirstLogPage: View {
                 .padding(.vertical, 12)
                 .background(Theme.card)
                 .clipShape(Capsule())
+
+                // Optional daily check-in (max one per day, always gentle)
+                Button {
+                    Task {
+                        if await notifications.requestPermission() {
+                            notifications.reschedule(loggedToday: false)
+                        }
+                    }
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: notifications.isAuthorized ? "bell.badge.fill" : "bell")
+                            .font(.system(size: 14, weight: .semibold))
+                        Text(notifications.isAuthorized
+                             ? "Mochi will check in once a day"
+                             : "Let Mochi check in once a day?")
+                            .font(.system(size: 13, weight: .medium))
+                        if notifications.isAuthorized {
+                            Image(systemName: "checkmark")
+                                .font(.system(size: 12, weight: .bold))
+                        }
+                    }
+                    .foregroundStyle(notifications.isAuthorized ? Theme.teal : Theme.textSecondary)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
+                    .background(Theme.card)
+                    .clipShape(Capsule())
+                }
+                .disabled(notifications.isAuthorized)
             }
             Spacer()
             Spacer()
         }
+        .task { await notifications.refreshAuthorizationStatus() }
     }
 }
 

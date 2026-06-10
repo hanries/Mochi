@@ -18,6 +18,8 @@ struct ProfileView: View {
 
     @State private var showingEdit = false
 
+    @StateObject private var notifications = MochiNotificationService.shared
+
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
 
     private var initials: String {
@@ -185,6 +187,28 @@ struct ProfileView: View {
                                 SettingsRow(icon: "scalemass.fill", iconColor: .blue,  label: "Weight Unit") {
                                     Text(weightUnitRaw.uppercased()).font(.system(size: 13)).foregroundStyle(.secondary)
                                 }
+                                Divider().padding(.leading, 52)
+                                Button {
+                                    Task {
+                                        if notifications.isDenied {
+                                            // Permission lives in system Settings once denied
+                                            if let url = URL(string: UIApplication.openSettingsURLString) {
+                                                await UIApplication.shared.open(url)
+                                            }
+                                        } else if !notifications.isAuthorized {
+                                            if await notifications.requestPermission() {
+                                                notifications.reschedule(loggedToday: false)
+                                            }
+                                        }
+                                    }
+                                } label: {
+                                    SettingsRow(icon: "bell.fill", iconColor: Theme.teal, label: "Mochi Check-ins") {
+                                        Text(notifications.isAuthorized ? "Once a day"
+                                             : notifications.isDenied ? "Enable in Settings" : "Off")
+                                            .font(.system(size: 13)).foregroundStyle(.secondary)
+                                    }
+                                }
+                                .buttonStyle(.plain)
                             }
                             .background(Color(uiColor: .secondarySystemBackground))
                             .clipShape(RoundedRectangle(cornerRadius: 16))
@@ -237,6 +261,7 @@ struct ProfileView: View {
                 editUnit     = WeightUnit(rawValue: weightUnitRaw) ?? .lbs
                 editGender   = Gender(rawValue: userGender) ?? .male
             }
+            .task { await notifications.refreshAuthorizationStatus() }
         }
     }
 
