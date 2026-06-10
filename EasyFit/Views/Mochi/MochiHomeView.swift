@@ -15,6 +15,7 @@ struct MochiHomeView: View {
     @Query(sort: \FoodEntry.date, order: .reverse) private var allEntries: [FoodEntry]
     @StateObject private var vm = NutritionViewModel()
     @AppStorage("userName") private var userName = ""
+    @AppStorage("pendingFirstLog") private var pendingFirstLog = false
 
     @State private var showFoodCamera  = false
     @State private var showNutrition   = false
@@ -24,6 +25,9 @@ struct MochiHomeView: View {
     @State private var mochiBounce: CGFloat = 1.0
     @State private var bubbleLine: String? = nil
     @State private var bubbleTask: Task<Void, Never>? = nil
+
+    // First-log walkthrough hint
+    @State private var hintPulse = false
 
     private let refreshTimer = Timer.publish(every: 60, on: .main, in: .common).autoconnect()
 
@@ -81,6 +85,13 @@ struct MochiHomeView: View {
                     .background(Theme.teal)
                     .clipShape(Capsule())
                 }
+                .scaleEffect(hintPulse ? 1.04 : 1.0)
+                .animation(
+                    pendingFirstLog
+                        ? .easeInOut(duration: 0.8).repeatForever(autoreverses: true)
+                        : .default,
+                    value: hintPulse
+                )
                 .padding(.horizontal, 24)
 
                 Button {
@@ -104,8 +115,20 @@ struct MochiHomeView: View {
                 .onTapGesture { showNutrition = true }
             }
         }
-        .onAppear { mochi.refresh(entries: allEntries) }
-        .onChange(of: allEntries) { _, entries in mochi.refresh(entries: entries) }
+        .onAppear {
+            mochi.refresh(entries: allEntries)
+            if pendingFirstLog {
+                hintPulse = true
+                showBubble("I can't wait to see your first meal! 🐹")
+            }
+        }
+        .onChange(of: allEntries) { _, entries in
+            mochi.refresh(entries: entries)
+            if pendingFirstLog && !entries.isEmpty {
+                pendingFirstLog = false
+                hintPulse = false
+            }
+        }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active { mochi.refresh(entries: allEntries) }
         }
@@ -195,8 +218,12 @@ struct MochiHomeView: View {
             }
         }
 
+        showBubble(mochi.dialogueLine())
+    }
+
+    private func showBubble(_ line: String) {
         withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
-            bubbleLine = mochi.dialogueLine()
+            bubbleLine = line
         }
         bubbleTask?.cancel()
         bubbleTask = Task {

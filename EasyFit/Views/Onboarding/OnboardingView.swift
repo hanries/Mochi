@@ -1,9 +1,14 @@
 import SwiftUI
 
 // MARK: - Main Onboarding Container
+//
+// Four Mochi-led pages: meet Mochi → how it works (+ goal) → about you →
+// first-log walkthrough. Mochi frames the app as "take care of Mochi by
+// taking care of yourself"; targets still come from MacroCalculator.
 
 struct OnboardingView: View {
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
+    @AppStorage("pendingFirstLog") private var pendingFirstLog = false
 
     @State private var currentPage = 0
 
@@ -22,7 +27,7 @@ struct OnboardingView: View {
     @State private var activityLevel: ActivityLevel = .moderatelyActive
     @State private var weightUnit:    WeightUnit    = .lbs
 
-    // Page 4 — Calculated macros (editable)
+    // Calculated macros (defaults used when stats are skipped)
     @State private var calories = "2100"
     @State private var protein  = "160"
     @State private var carbs    = "200"
@@ -31,66 +36,65 @@ struct OnboardingView: View {
     let totalPages = 4
 
     var body: some View {
-        VStack(spacing: 0) {
-            TabView(selection: $currentPage) {
-                NamePage(name: $name).tag(0)
-                GoalPage(selectedGoal: $selectedGoal).tag(1)
-                StatsPage(
-                    age: $age, bodyWeight: $bodyWeight,
-                    heightCm: $heightCm, heightUnit: $heightUnit,
-                    gender: $gender, activityLevel: $activityLevel,
-                    weightUnit: $weightUnit
-                ).tag(2)
-                MacroResultPage(
-                    goal: selectedGoal,
-                    calories: $calories, protein: $protein,
-                    carbs: $carbs, fat: $fat
-                ).tag(3)
-            }
-            .tabViewStyle(.page(indexDisplayMode: .never))
-            .animation(.easeInOut, value: currentPage)
-            .onChange(of: currentPage) { _, _ in
-                UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-            }
+        ZStack {
+            Theme.bg.ignoresSafeArea()
 
-            // Bottom controls — always visible below scroll content
-            VStack(spacing: 16) {
-                HStack(spacing: 8) {
-                    ForEach(0..<totalPages, id: \.self) { i in
-                        Capsule()
-                            .fill(i == currentPage ? Color.primary : Color.secondary.opacity(0.3))
-                            .frame(width: i == currentPage ? 20 : 8, height: 8)
-                            .animation(.spring(response: 0.3), value: currentPage)
+            VStack(spacing: 0) {
+                TabView(selection: $currentPage) {
+                    MeetMochiPage(name: $name).tag(0)
+                    HowItWorksPage(selectedGoal: $selectedGoal).tag(1)
+                    StatsPage(
+                        age: $age, bodyWeight: $bodyWeight,
+                        heightCm: $heightCm, heightUnit: $heightUnit,
+                        gender: $gender, activityLevel: $activityLevel,
+                        weightUnit: $weightUnit
+                    ).tag(2)
+                    FirstLogPage(name: name, calories: calories).tag(3)
+                }
+                .tabViewStyle(.page(indexDisplayMode: .never))
+                .animation(.easeInOut, value: currentPage)
+                .onChange(of: currentPage) { _, _ in
+                    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                }
+
+                // Bottom controls — always visible below scroll content
+                VStack(spacing: 16) {
+                    HStack(spacing: 8) {
+                        ForEach(0..<totalPages, id: \.self) { i in
+                            Capsule()
+                                .fill(i == currentPage ? Theme.teal : Theme.textTertiary)
+                                .frame(width: i == currentPage ? 20 : 8, height: 8)
+                                .animation(.spring(response: 0.3), value: currentPage)
+                        }
+                    }
+
+                    Button(action: advance) {
+                        Text(currentPage == totalPages - 1 ? "Let's go" : "Continue")
+                            .font(.system(size: 17, weight: .semibold))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 16)
+                            .background(canAdvance ? Theme.teal : Theme.card)
+                            .foregroundStyle(canAdvance ? Color.black : Theme.textTertiary)
+                            .clipShape(Capsule())
+                    }
+                    .disabled(!canAdvance)
+                    .padding(.horizontal, 24)
+
+                    if currentPage < totalPages - 1 {
+                        Button("Skip for now") {
+                            if currentPage == 2 { applyCalculatedMacros() }
+                            withAnimation { currentPage += 1 }
+                        }
+                        .font(.system(size: 14))
+                        .foregroundStyle(Theme.textSecondary)
+                    } else {
+                        // Placeholder to keep height consistent on last page
+                        Color.clear.frame(height: 20)
                     }
                 }
-
-                Button(action: advance) {
-                    Text(currentPage == totalPages - 1 ? "Get Started" : "Continue")
-                        .font(.system(size: 17, weight: .semibold))
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
-                        .background(canAdvance ? Color.primary : Color.secondary.opacity(0.3))
-                        .foregroundStyle(Color(uiColor: .systemBackground))
-                        .clipShape(RoundedRectangle(cornerRadius: 16))
-                }
-                .disabled(!canAdvance)
-                .padding(.horizontal, 24)
-
-                if currentPage < totalPages - 1 {
-                    Button("Skip for now") {
-                        if currentPage == 2 { applyCalculatedMacros() }
-                        withAnimation { currentPage += 1 }
-                    }
-                    .font(.system(size: 14))
-                    .foregroundStyle(.secondary)
-                } else {
-                    // Placeholder to keep height consistent on last page
-                    Color.clear.frame(height: 20)
-                }
+                .padding(.top, 12)
+                .padding(.bottom, 36)
             }
-            .padding(.top, 12)
-            .padding(.bottom, 36)
-            .background(Color(uiColor: .systemBackground))
         }
         .ignoresSafeArea(edges: .top)
     }
@@ -101,9 +105,6 @@ struct OnboardingView: View {
         case 2:
             let heightOk = heightUnit.toCm(heightCm) != nil
             return Int(age) != nil && Double(bodyWeight) != nil && heightOk
-        case 3:
-            return Int(calories) != nil && Double(protein) != nil
-                && Double(carbs) != nil && Double(fat) != nil
         default: return true
         }
     }
@@ -147,6 +148,7 @@ struct OnboardingView: View {
         goal.fat      = Double(fat)     ?? 65
         DailyNutritionGoal.current = goal
 
+        pendingFirstLog = true
         hasCompletedOnboarding = true
     }
 }
@@ -276,106 +278,148 @@ enum HeightUnit: String, CaseIterable {
     }
 }
 
-// MARK: - Page 1: Name
+// MARK: - Page 1: Meet Mochi
 
-private struct NamePage: View {
+private struct MeetMochiPage: View {
     @Binding var name: String
-    @FocusState private var focused: Bool
 
     var body: some View {
         VStack(spacing: 0) {
             Spacer()
-            VStack(spacing: 24) {
-                Text("👋").font(.system(size: 64))
-                VStack(spacing: 8) {
-                    Text("Welcome to EasyFit")
+            VStack(spacing: 28) {
+                MochiAssetProvider.mochiView(for: .happy, size: 150)
+
+                VStack(spacing: 10) {
+                    Text("This is Mochi")
                         .font(.system(size: 30, weight: .bold))
-                        .multilineTextAlignment(.center)
-                    Text("Let's personalize your experience.")
+                        .foregroundStyle(Theme.textPrimary)
+                    Text("Take care of Mochi by taking care of yourself.")
                         .font(.system(size: 16))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Theme.textSecondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 40)
                 }
-                TextField("Your first name", text: $name)
-                    .font(.system(size: 17))
-                    .padding(16)
-                    .background(Color(uiColor: .secondarySystemBackground))
-                    .clipShape(RoundedRectangle(cornerRadius: 14))
-                    .padding(.horizontal, 32)
-                    .focused($focused)
+
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("What should Mochi call you?")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(Theme.textSecondary)
+                        .padding(.leading, 4)
+                    TextField("Your first name", text: $name)
+                        .font(.system(size: 17))
+                        .foregroundStyle(Theme.textPrimary)
+                        .padding(16)
+                        .background(Theme.card)
+                        .clipShape(RoundedRectangle(cornerRadius: 14))
+                }
+                .padding(.horizontal, 32)
             }
             Spacer()
             Spacer()
         }
-        .onAppear { focused = true }
     }
 }
 
-// MARK: - Page 2: Goal
+// MARK: - Page 2: How it works (+ goal)
 
-private struct GoalPage: View {
+private struct HowItWorksPage: View {
     @Binding var selectedGoal: FitnessGoal
 
     var body: some View {
-        VStack(spacing: 0) {
-            Spacer()
-            VStack(spacing: 32) {
-                VStack(spacing: 8) {
-                    Text("What's your goal?")
-                        .font(.system(size: 30, weight: .bold))
-                    Text("This shapes your calorie and macro targets.")
-                        .font(.system(size: 16))
-                        .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 32)
-                }
+        ScrollView(showsIndicators: false) {
+            VStack(spacing: 28) {
+                Spacer().frame(height: 70)
+
+                MochiAssetProvider.mochiView(for: .ecstatic, size: 90)
+
+                Text("Log your meals,\nand I'll be happy")
+                    .font(.system(size: 28, weight: .bold))
+                    .foregroundStyle(Theme.textPrimary)
+                    .multilineTextAlignment(.center)
+
                 VStack(spacing: 12) {
-                    ForEach(FitnessGoal.allCases, id: \.self) { goal in
-                        GoalCard(goal: goal, isSelected: selectedGoal == goal) {
-                            selectedGoal = goal
+                    HowItWorksRow(icon: "camera.fill", color: Theme.teal,
+                                  title: "Snap or log any meal",
+                                  detail: "Every log makes Mochi happy.")
+                    HowItWorksRow(icon: "flame.fill", color: Color(red: 1.0, green: 0.72, blue: 0.3),
+                                  title: "Keep a streak going",
+                                  detail: "A few days in a row and Mochi is ecstatic.")
+                    HowItWorksRow(icon: "heart.fill", color: Color(red: 0.95, green: 0.55, blue: 0.6),
+                                  title: "Never judged",
+                                  detail: "Mochi only cares that you showed up — never what or how much you ate.")
+                }
+                .padding(.horizontal, 24)
+
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("YOUR GOAL")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(Theme.textSecondary)
+                        .tracking(0.5)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
+                        ForEach(FitnessGoal.allCases, id: \.self) { goal in
+                            GoalChip(goal: goal, isSelected: selectedGoal == goal) {
+                                selectedGoal = goal
+                            }
                         }
                     }
                 }
                 .padding(.horizontal, 24)
+
+                Spacer().frame(height: 40)
             }
-            Spacer()
-            Spacer()
         }
     }
 }
 
-private struct GoalCard: View {
+private struct HowItWorksRow: View {
+    let icon: String
+    let color: Color
+    let title: String
+    let detail: String
+
+    var body: some View {
+        HStack(spacing: 14) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 12).fill(color.opacity(0.15)).frame(width: 44, height: 44)
+                Image(systemName: icon).font(.system(size: 18, weight: .medium)).foregroundStyle(color)
+            }
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(Theme.textPrimary)
+                Text(detail)
+                    .font(.system(size: 13))
+                    .foregroundStyle(Theme.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer()
+        }
+        .padding(14)
+        .darkCard(cornerRadius: 14)
+    }
+}
+
+private struct GoalChip: View {
     let goal: FitnessGoal
     let isSelected: Bool
     let onTap: () -> Void
 
     var body: some View {
         Button(action: onTap) {
-            HStack(spacing: 16) {
-                Text(goal.emoji)
-                    .font(.system(size: 26))
-                    .frame(width: 44, height: 44)
-                    .background(Color(uiColor: .tertiarySystemBackground))
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(goal.rawValue)
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(.primary)
-                    Text(goal.description)
-                        .font(.system(size: 13))
-                        .foregroundStyle(.secondary)
-                }
-                Spacer()
-                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                    .font(.system(size: 22))
-                    .foregroundStyle(isSelected ? .primary : Color.secondary.opacity(0.4))
+            HStack(spacing: 8) {
+                Text(goal.emoji).font(.system(size: 18))
+                Text(goal.rawValue)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(isSelected ? Color.black : Theme.textPrimary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+                Spacer(minLength: 0)
             }
-            .padding(16)
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(Color(uiColor: .secondarySystemBackground))
-                    .overlay(RoundedRectangle(cornerRadius: 16)
-                        .stroke(isSelected ? Color.primary : Color.clear, lineWidth: 2))
-            )
+            .padding(.horizontal, 14)
+            .padding(.vertical, 14)
+            .background(isSelected ? Theme.teal : Theme.card)
+            .clipShape(RoundedRectangle(cornerRadius: 14))
         }
     }
 }
@@ -402,7 +446,7 @@ private struct StatsPage: View {
                 VStack(spacing: 8) {
                     Text("About you")
                         .font(.system(size: 30, weight: .bold))
-                    Text("We use this to calculate your personal calorie and macro targets.")
+                    Text("Mochi uses this to set your calorie and macro targets. Skip it and friendly defaults are used instead.")
                         .font(.system(size: 16))
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -474,53 +518,48 @@ private struct StatsPage: View {
     }
 }
 
-// MARK: - Page 4: Macro Result
+// MARK: - Page 4: First log walkthrough
 
-private struct MacroResultPage: View {
-    let goal: FitnessGoal
-    @Binding var calories: String
-    @Binding var protein:  String
-    @Binding var carbs:    String
-    @Binding var fat:      String
+private struct FirstLogPage: View {
+    let name: String
+    let calories: String
 
     var body: some View {
-        ScrollView {
+        VStack(spacing: 0) {
+            Spacer()
             VStack(spacing: 28) {
-                Spacer().frame(height: 60)
+                MochiAssetProvider.mochiView(for: .happy, size: 150)
 
-                VStack(spacing: 8) {
-                    Text("Your targets 🎯")
-                        .font(.system(size: 30, weight: .bold))
-                    Text("Calculated based on your stats and goal. Feel free to adjust.")
-                        .font(.system(size: 16))
-                        .foregroundStyle(.secondary)
+                VStack(spacing: 10) {
+                    Text(name.isEmpty
+                         ? "Mochi can't wait to\nsee your first meal"
+                         : "Mochi can't wait to see\nyour first meal, \(name)")
+                        .font(.system(size: 28, weight: .bold))
+                        .foregroundStyle(Theme.textPrimary)
                         .multilineTextAlignment(.center)
-                        .padding(.horizontal, 32)
+                    Text("When you're in, tap “Log a meal” on the home screen and snap whatever you're eating. That's the whole habit.")
+                        .font(.system(size: 16))
+                        .foregroundStyle(Theme.textSecondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 36)
                 }
 
-                VStack(spacing: 0) {
-                    MacroResultRow(label: "Calories", value: $calories, unit: "kcal", color: .primary,                              keyboardType: .numberPad)
-                    Divider().padding(.leading, 16)
-                    MacroResultRow(label: "Protein",  value: $protein,  unit: "g",    color: Color(red: 0.3, green: 0.71, blue: 0.67), keyboardType: .decimalPad)
-                    Divider().padding(.leading, 16)
-                    MacroResultRow(label: "Carbs",    value: $carbs,    unit: "g",    color: Color(red: 1.0, green: 0.72, blue: 0.3),  keyboardType: .decimalPad)
-                    Divider().padding(.leading, 16)
-                    MacroResultRow(label: "Fat",      value: $fat,      unit: "g",    color: Color(red: 0.9, green: 0.35, blue: 0.35), keyboardType: .decimalPad)
+                HStack(spacing: 8) {
+                    Image(systemName: "target")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(Theme.teal)
+                    Text("Daily target set to \(calories) kcal — adjust anytime in Profile.")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(Theme.textSecondary)
                 }
-                .background(Color(uiColor: .secondarySystemBackground))
-                .clipShape(RoundedRectangle(cornerRadius: 16))
-                .padding(.horizontal, 24)
-
-                Text("These targets are based on the Mifflin-St Jeor equation — the gold standard used by dietitians.")
-                    .font(.system(size: 13))
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 32)
-
-                Spacer().frame(height: 40)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .background(Theme.card)
+                .clipShape(Capsule())
             }
+            Spacer()
+            Spacer()
         }
-        .scrollDismissesKeyboard(.interactively)
     }
 }
 
@@ -606,32 +645,6 @@ private struct ActivityCard: View {
     }
 }
 
-private struct MacroResultRow: View {
-    let label: String
-    @Binding var value: String
-    let unit: String
-    let color: Color
-    let keyboardType: UIKeyboardType
-    var body: some View {
-        HStack {
-            HStack(spacing: 8) {
-                RoundedRectangle(cornerRadius: 4).fill(color).frame(width: 4, height: 20)
-                Text(label).font(.system(size: 15, weight: .medium))
-            }
-            Spacer()
-            HStack(spacing: 4) {
-                TextField("0", text: $value)
-                    .keyboardType(keyboardType)
-                    .multilineTextAlignment(.trailing)
-                    .font(.system(size: 17, weight: .semibold))
-                    .frame(width: 70)
-                Text(unit).font(.system(size: 13)).foregroundStyle(.secondary).frame(width: 32, alignment: .leading)
-            }
-        }
-        .padding(.horizontal, 16).padding(.vertical, 14)
-    }
-}
-
 // MARK: - Height Input Section
 
 private struct HeightInputSection: View {
@@ -710,4 +723,7 @@ private struct HeightInputSection: View {
     }
 }
 
-#Preview { OnboardingView() }
+#Preview {
+    OnboardingView()
+        .preferredColorScheme(.dark)
+}
