@@ -3,6 +3,8 @@ import SwiftData
 
 struct NutritionView: View {
     @Environment(\.modelContext) private var context
+    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var mochi: MochiViewModel
     @Query(sort: \FoodEntry.date, order: .reverse) private var allEntries: [FoodEntry]
 
     @AppStorage("userName") private var userName = ""
@@ -197,18 +199,28 @@ struct NutritionView: View {
                             protein: result.protein, carbs: result.carbs, fat: result.fat,
                             servingSize: result.servingSize, mealType: activeMeal
                         ))
+                        mochi.mealLogged()
+                        dismiss()
                     },
                     onDismiss: { showCamera = false }
                 )
                 .ignoresSafeArea()
             }
             .sheet(isPresented: $showSearch) {
-                FoodSearchView(mealType: activeMeal) { entry in context.insert(entry) }
-                    .preferredColorScheme(.dark)
+                FoodSearchView(mealType: activeMeal) { entry in
+                    context.insert(entry)
+                    mochi.mealLogged()
+                    dismiss()
+                }
+                .preferredColorScheme(.dark)
             }
             .sheet(isPresented: $showManual) {
-                AddFoodView(mealType: activeMeal) { entry in context.insert(entry) }
-                    .preferredColorScheme(.dark)
+                AddFoodView(mealType: activeMeal) { entry in
+                    context.insert(entry)
+                    mochi.mealLogged()
+                    dismiss()
+                }
+                .preferredColorScheme(.dark)
             }
             .sheet(item: $editingEntry) { entry in
                 EditFoodEntryView(entry: entry, onSave: { _ in }, onDelete: { e in context.delete(e) })
@@ -519,6 +531,7 @@ struct DatePickerSheet: View {
 
 #Preview {
     NutritionView()
+        .environmentObject(MochiViewModel())
         .modelContainer(for: FoodEntry.self, inMemory: true)
         .preferredColorScheme(.dark)
 }

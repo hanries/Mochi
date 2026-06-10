@@ -500,6 +500,7 @@ struct SearchLogPanel: View {
     let activeMeal: MealType
     @Environment(\.dismiss)      private var dismiss
     @Environment(\.modelContext) private var context
+    @EnvironmentObject           private var mochi: MochiViewModel
     @State private var showSearch = false
     @State private var showManual = false
 
@@ -536,12 +537,20 @@ struct SearchLogPanel: View {
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
         .sheet(isPresented: $showSearch) {
-            FoodSearchView(mealType: activeMeal) { entry in context.insert(entry) }
-                .preferredColorScheme(.dark)
+            FoodSearchView(mealType: activeMeal) { entry in
+                context.insert(entry)
+                mochi.mealLogged()
+                dismiss()
+            }
+            .preferredColorScheme(.dark)
         }
         .sheet(isPresented: $showManual) {
-            AddFoodView(mealType: activeMeal) { entry in context.insert(entry) }
-                .preferredColorScheme(.dark)
+            AddFoodView(mealType: activeMeal) { entry in
+                context.insert(entry)
+                mochi.mealLogged()
+                dismiss()
+            }
+            .preferredColorScheme(.dark)
         }
     }
 }

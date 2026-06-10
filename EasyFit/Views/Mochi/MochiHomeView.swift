@@ -118,6 +118,7 @@ struct MochiHomeView: View {
                         protein: result.protein, carbs: result.carbs, fat: result.fat,
                         servingSize: result.servingSize, mealType: activeMeal
                     ))
+                    mochi.mealLogged()
                 },
                 onDismiss: { showFoodCamera = false }
             )
