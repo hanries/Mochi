@@ -19,17 +19,23 @@ struct MochiHabitatScene: View {
 
     var body: some View {
         GeometryReader { geo in
-            Image(MochiAssetProvider.habitatImageName(night: isNight))
-                .resizable()
-                .scaledToFill()
-                .frame(width: geo.size.width * bleed,
-                       height: geo.size.height * bleed,
-                       alignment: .top)
-                .frame(width: geo.size.width,
-                       height: geo.size.height,
-                       alignment: .top)
-                .clipped()
-                .mask(
+            ZStack {
+                // Keyed by image so a day/night flip crossfades when the
+                // caller animates it (instant under Reduce Motion).
+                Image(MochiAssetProvider.habitatImageName(night: isNight))
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: geo.size.width * bleed,
+                           height: geo.size.height * bleed,
+                           alignment: .top)
+                    .id(MochiAssetProvider.habitatImageName(night: isNight))
+                    .transition(.opacity)
+            }
+            .frame(width: geo.size.width,
+                   height: geo.size.height,
+                   alignment: .top)
+            .clipped()
+            .mask(
                     VStack(spacing: 0) {
                         Rectangle()
                         LinearGradient(colors: [.black, .clear],

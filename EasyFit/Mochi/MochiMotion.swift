@@ -34,6 +34,11 @@ struct MochiMotion {
     var transitionDuration: Double  = 0.35
     var transitionPulseScale: Double = 0.96
 
+    // Habitat day/night window (minutes from midnight) + crossfade
+    var habitatNightStartMinutes: Int = 19 * 60      // 19:00
+    var habitatDayStartMinutes: Int   = 6 * 60 + 30  // 06:30
+    var habitatCrossfade: Double      = 1.0
+
     // Moments (eating after a log, ecstatic on streak milestones)
     var momentDuration: Double          = 2.5
     var momentBounceEating: Double      = 1.12

@@ -11,6 +11,7 @@ import Combine
 struct MochiHomeView: View {
     @Environment(\.modelContext) private var context
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @EnvironmentObject private var mochi: MochiViewModel
     @Query(sort: \FoodEntry.date, order: .reverse) private var allEntries: [FoodEntry]
     @StateObject private var vm = NutritionViewModel()
@@ -29,6 +30,9 @@ struct MochiHomeView: View {
 
     // First-log walkthrough hint
     @State private var hintPulse = false
+
+    // Habitat day/night
+    @State private var isNightHabitat = false
 
     private let refreshTimer = Timer.publish(every: 60, on: .main, in: .common).autoconnect()
 
@@ -108,6 +112,7 @@ struct MochiHomeView: View {
         }
         .onAppear {
             mochi.refresh(entries: allEntries)
+            refreshHabitat(animated: false)
             if pendingFirstLog {
                 hintPulse = true
                 showBubble("I can't wait to see your first meal! 🐹")
@@ -117,6 +122,7 @@ struct MochiHomeView: View {
         }
         .onChange(of: mochi.state) { _, _ in
             showBubble(mochi.dialogueLine())
+            refreshHabitat()
         }
         .onChange(of: allEntries) { _, entries in
             mochi.refresh(entries: entries)
@@ -137,9 +143,15 @@ struct MochiHomeView: View {
             }
         }
         .onChange(of: scenePhase) { _, phase in
-            if phase == .active { mochi.refresh(entries: allEntries) }
+            if phase == .active {
+                mochi.refresh(entries: allEntries)
+                refreshHabitat()
+            }
         }
-        .onReceive(refreshTimer) { _ in mochi.refresh(entries: allEntries) }
+        .onReceive(refreshTimer) { _ in
+            mochi.refresh(entries: allEntries)
+            refreshHabitat()
+        }
         .fullScreenCover(isPresented: $showFoodCamera) {
             FoodCameraView(
                 onResult: { result in
@@ -177,7 +189,7 @@ struct MochiHomeView: View {
         let rugCenterY = height * rugCenterRatio
 
         return ZStack(alignment: .topTrailing) {
-            MochiHabitatScene()
+            MochiHabitatScene(isNight: isNightHabitat)
 
             // Mochi seated on the rug, shadow under his feet
             MochiView(state: mochi.state,
@@ -222,6 +234,26 @@ struct MochiHomeView: View {
     private func showBubble(_ line: String) {
         withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
             bubbleLine = line
+        }
+    }
+
+    /// Night room between 19:00 and 06:30 local time, or whenever Mochi is
+    /// sleepy. Thresholds live in MochiMotion.
+    private func refreshHabitat(now: Date = .now, animated: Bool = true) {
+        let motion = MochiMotion.default
+        let cal = Calendar.current
+        let minutes = cal.component(.hour, from: now) * 60 + cal.component(.minute, from: now)
+        let inNightWindow = minutes >= motion.habitatNightStartMinutes
+                         || minutes < motion.habitatDayStartMinutes
+        let night = mochi.state == .sleepy || inNightWindow
+
+        guard night != isNightHabitat else { return }
+        if animated && !reduceMotion {
+            withAnimation(.easeInOut(duration: motion.habitatCrossfade)) {
+                isNightHabitat = night
+            }
+        } else {
+            isNightHabitat = night
         }
     }
 }
