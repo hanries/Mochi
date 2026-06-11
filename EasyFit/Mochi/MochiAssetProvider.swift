@@ -32,6 +32,11 @@ enum MochiAssetProvider {
     /// Shown briefly after a successful food log.
     static let eatingImageName = "mochi_eating"
 
+    /// The room illustration behind Mochi on the Home tab.
+    static func habitatImageName(night: Bool) -> String {
+        night ? "habitat_night" : "habitat_day"
+    }
+
     static func tint(for state: MochiState) -> Color {
         switch state {
         case .ecstatic:   return Color(red: 1.0, green: 0.72, blue: 0.30)  // warm gold

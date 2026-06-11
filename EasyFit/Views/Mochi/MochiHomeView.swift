@@ -25,8 +25,7 @@ struct MochiHomeView: View {
     @State private var bubbleLine: String? = nil
     @State private var bubbleTask: Task<Void, Never>? = nil
 
-    // Post-log moment accents
-    @State private var glowFlare = false
+    // Post-log moment bookkeeping
     @State private var momentClearTask: Task<Void, Never>? = nil
 
     // First-log walkthrough hint
@@ -42,37 +41,27 @@ struct MochiHomeView: View {
         return .snack
     }
 
-    private var greeting: String {
-        let hour = Calendar.current.component(.hour, from: .now)
-        let name = userName.isEmpty ? "" : ", \(userName)"
-        switch hour {
-        case 0..<12:  return "Good morning\(name)"
-        case 12..<17: return "Good afternoon\(name)"
-        case 17..<21: return "Good evening\(name)"
-        default:      return "Hey\(name)"
-        }
-    }
+    /// Habitat scene takes the top ~55% of the screen (plus the status bar
+    /// area it extends under).
+    private let sceneHeightRatio: CGFloat = 0.55
 
     var body: some View {
-        ZStack {
-            Theme.bg.ignoresSafeArea()
+        GeometryReader { geo in
+            let sceneHeight = geo.size.height * sceneHeightRatio + geo.safeAreaInsets.top
 
-            VStack(spacing: 0) {
-                // Greeting
-                Text(greeting)
-                    .font(.system(size: 17, weight: .semibold))
-                    .foregroundStyle(Theme.textSecondary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, 24)
-                    .padding(.top, 16)
+            ZStack(alignment: .top) {
+                MochiTheme.background.ignoresSafeArea()
 
-                Spacer()
+                VStack(spacing: 0) {
+                    ZStack {
+                        MochiHabitatScene()
+                        habitat   // Mochi + bubble + badge; rug positioning lands in the next phase
+                    }
+                    .frame(height: sceneHeight)
 
-                habitat
+                    Spacer(minLength: MochiTheme.Spacing.lg)
 
-                Spacer()
-
-                // Primary action
+                    // Primary action
                 Button {
                     showFoodCamera = true
                 } label: {
@@ -106,16 +95,18 @@ struct MochiHomeView: View {
                         .padding(.vertical, 12)
                 }
 
-                CompactCalorieCard(
-                    consumed: vm.totalCalories(from: allEntries),
-                    goal:     vm.goal.calories,
-                    protein:  vm.totalProtein(from: allEntries),
-                    carbs:    vm.totalCarbs(from: allEntries),
-                    fat:      vm.totalFat(from: allEntries)
-                )
-                .padding(.horizontal, 24)
-                .padding(.bottom, 16)
-                .onTapGesture { showNutrition = true }
+                    CompactCalorieCard(
+                        consumed: vm.totalCalories(from: allEntries),
+                        goal:     vm.goal.calories,
+                        protein:  vm.totalProtein(from: allEntries),
+                        carbs:    vm.totalCarbs(from: allEntries),
+                        fat:      vm.totalFat(from: allEntries)
+                    )
+                    .padding(.horizontal, 24)
+                    .padding(.bottom, 16)
+                    .onTapGesture { showNutrition = true }
+                }
+                .ignoresSafeArea(edges: .top)
             }
         }
         .onAppear {
@@ -135,12 +126,10 @@ struct MochiHomeView: View {
         .onChange(of: mochi.moment) { _, moment in
             guard let moment else { return }
             showBubble(moment.line)
-            glowFlare = true
             momentClearTask?.cancel()
             momentClearTask = Task {
                 try? await Task.sleep(for: .seconds(MochiMotion.default.momentDuration))
                 guard !Task.isCancelled else { return }
-                glowFlare = false
                 mochi.moment = nil
             }
         }
@@ -187,20 +176,6 @@ struct MochiHomeView: View {
             .padding(.bottom, 8)
 
             ZStack {
-                // Soft warm glow behind Mochi; flares during a moment
-                Circle()
-                    .fill(MochiAssetProvider.tint(for: mochi.state).opacity(glowFlare ? 0.32 : 0.12))
-                    .frame(width: 240, height: 240)
-                    .scaleEffect(glowFlare ? 1.18 : 1.0)
-                    .blur(radius: 30)
-                    .animation(.easeInOut(duration: 0.4), value: glowFlare)
-
-                // Ground
-                Ellipse()
-                    .fill(Theme.cardAlt)
-                    .frame(width: 220, height: 56)
-                    .offset(y: 88)
-
                 MochiView(state: mochi.state, moment: mochi.moment, size: 170) {
                     showBubble(mochi.dialogueLine())
                 }
