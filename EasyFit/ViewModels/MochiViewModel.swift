@@ -1,17 +1,12 @@
 import Foundation
 import Combine
 
-struct CelebrationEvent: Identifiable, Equatable {
-    let id = UUID()
-    let line: String
-}
-
 @MainActor
 final class MochiViewModel: ObservableObject {
     @Published private(set) var state: MochiState = .content
     @Published private(set) var streak: Int = 0
     @Published private(set) var loggedToday = false
-    @Published var celebration: CelebrationEvent? = nil
+    @Published var moment: MochiMoment? = nil
 
     let config: MochiConfig = .default
 
@@ -33,8 +28,13 @@ final class MochiViewModel: ObservableObject {
     }
 
     /// Call after any successful food log. State itself refreshes via @Query.
+    /// Every log earns an eating moment; the first log of a day whose
+    /// resulting streak reaches the ecstatic threshold earns a milestone.
     func mealLogged() {
-        celebration = CelebrationEvent(line: MochiDialogue.celebrationLine())
+        let newStreak = loggedToday ? streak : streak + 1
+        let kind: MochiMoment.Kind =
+            (!loggedToday && newStreak >= config.ecstaticStreak) ? .ecstatic : .eating
+        moment = MochiMoment(kind: kind, line: MochiDialogue.celebrationLine())
         loggedToday = true
         MochiNotificationService.shared.reschedule(loggedToday: true, config: config)
     }

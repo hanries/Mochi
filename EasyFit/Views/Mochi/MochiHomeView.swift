@@ -25,6 +25,10 @@ struct MochiHomeView: View {
     @State private var bubbleLine: String? = nil
     @State private var bubbleTask: Task<Void, Never>? = nil
 
+    // Post-log moment accents
+    @State private var glowFlare = false
+    @State private var momentClearTask: Task<Void, Never>? = nil
+
     // First-log walkthrough hint
     @State private var hintPulse = false
 
@@ -128,6 +132,18 @@ struct MochiHomeView: View {
                 hintPulse = false
             }
         }
+        .onChange(of: mochi.moment) { _, moment in
+            guard let moment else { return }
+            showBubble(moment.line)
+            glowFlare = true
+            momentClearTask?.cancel()
+            momentClearTask = Task {
+                try? await Task.sleep(for: .seconds(MochiMotion.default.momentDuration))
+                guard !Task.isCancelled else { return }
+                glowFlare = false
+                mochi.moment = nil
+            }
+        }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active { mochi.refresh(entries: allEntries) }
         }
@@ -171,11 +187,13 @@ struct MochiHomeView: View {
             .padding(.bottom, 8)
 
             ZStack {
-                // Soft warm glow behind Mochi
+                // Soft warm glow behind Mochi; flares during a moment
                 Circle()
-                    .fill(MochiAssetProvider.tint(for: mochi.state).opacity(0.12))
+                    .fill(MochiAssetProvider.tint(for: mochi.state).opacity(glowFlare ? 0.32 : 0.12))
                     .frame(width: 240, height: 240)
+                    .scaleEffect(glowFlare ? 1.18 : 1.0)
                     .blur(radius: 30)
+                    .animation(.easeInOut(duration: 0.4), value: glowFlare)
 
                 // Ground
                 Ellipse()
@@ -183,7 +201,7 @@ struct MochiHomeView: View {
                     .frame(width: 220, height: 56)
                     .offset(y: 88)
 
-                MochiView(state: mochi.state, size: 170) {
+                MochiView(state: mochi.state, moment: mochi.moment, size: 170) {
                     showBubble(mochi.dialogueLine())
                 }
 
