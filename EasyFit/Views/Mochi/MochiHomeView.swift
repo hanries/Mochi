@@ -44,71 +44,63 @@ struct MochiHomeView: View {
         return .snack
     }
 
-    /// Habitat scene takes the top ~55% of the screen (plus the status bar
-    /// area it extends under).
-    private let sceneHeightRatio: CGFloat = 0.55
-
     var body: some View {
-        GeometryReader { geo in
-            let sceneHeight = geo.size.height * sceneHeightRatio + geo.safeAreaInsets.top
+        ZStack(alignment: .top) {
+            MochiTheme.background.ignoresSafeArea()
 
-            ZStack(alignment: .top) {
-                MochiTheme.background.ignoresSafeArea()
+            VStack(spacing: 0) {
+                // Scene flexes to fill all space above the fixed bottom
+                // stack; the room is bottom-anchored so the rug stays
+                // visible at every height.
+                habitatArea
 
-                VStack(spacing: 0) {
-                    sceneArea(width: geo.size.width,
-                              height: sceneHeight,
-                              topInset: geo.safeAreaInsets.top)
-
-                    Spacer(minLength: MochiTheme.Spacing.lg)
-
-                    // Primary action
-                    Button {
+                // Primary action — fixed 24pt below the scene's fade
+                Button {
                         showFoodCamera = true
-                    } label: {
-                        HStack(spacing: MochiTheme.Spacing.sm) {
-                            Image(systemName: "camera.fill")
-                                .font(.system(size: 17, weight: .semibold))
-                            Text("Feed Mochi · log a meal")
-                                .font(.system(size: 17, weight: .semibold, design: .rounded))
-                        }
-                        .foregroundStyle(MochiTheme.surfaceAlt)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, MochiTheme.Spacing.lg)
-                        .background(MochiTheme.primary)
-                        .clipShape(RoundedRectangle(cornerRadius: MochiTheme.buttonRadius))
+                } label: {
+                    HStack(spacing: MochiTheme.Spacing.sm) {
+                        Image(systemName: "camera.fill")
+                            .font(.system(size: 17, weight: .semibold))
+                        Text("Feed Mochi · log a meal")
+                            .font(.system(size: 17, weight: .semibold, design: .rounded))
                     }
-                    .scaleEffect(hintPulse ? 1.04 : 1.0)
-                    .animation(
-                        pendingFirstLog
-                            ? .easeInOut(duration: 0.8).repeatForever(autoreverses: true)
-                            : .default,
-                        value: hintPulse
-                    )
-                    .padding(.horizontal, MochiTheme.Spacing.xl)
-
-                    Button {
-                        showSearchPanel = true
-                    } label: {
-                        Text("More ways to log")
-                            .font(MochiTheme.caption)
-                            .foregroundStyle(MochiTheme.textSecondary)
-                            .padding(.vertical, MochiTheme.Spacing.md)
-                    }
-
-                    CompactCalorieCard(
-                        consumed: vm.totalCalories(from: allEntries),
-                        goal:     vm.goal.calories,
-                        protein:  vm.totalProtein(from: allEntries),
-                        carbs:    vm.totalCarbs(from: allEntries),
-                        fat:      vm.totalFat(from: allEntries)
-                    )
-                    .padding(.horizontal, 24)
-                    .padding(.bottom, 16)
-                    .onTapGesture { showNutrition = true }
+                    .foregroundStyle(MochiTheme.surfaceAlt)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, MochiTheme.Spacing.lg)
+                    .background(MochiTheme.primary)
+                    .clipShape(RoundedRectangle(cornerRadius: MochiTheme.buttonRadius))
                 }
-                .ignoresSafeArea(edges: .top)
+                .scaleEffect(hintPulse ? 1.04 : 1.0)
+                .animation(
+                    pendingFirstLog
+                        ? .easeInOut(duration: 0.8).repeatForever(autoreverses: true)
+                        : .default,
+                    value: hintPulse
+                )
+                .padding(.horizontal, MochiTheme.Spacing.xl)
+                .padding(.top, MochiTheme.Spacing.xl)
+
+                Button {
+                    showSearchPanel = true
+                } label: {
+                    Text("More ways to log")
+                        .font(MochiTheme.caption)
+                        .foregroundStyle(MochiTheme.textSecondary)
+                        .padding(.vertical, MochiTheme.Spacing.md)
+                }
+
+                CompactCalorieCard(
+                    consumed: vm.totalCalories(from: allEntries),
+                    goal:     vm.goal.calories,
+                    protein:  vm.totalProtein(from: allEntries),
+                    carbs:    vm.totalCarbs(from: allEntries),
+                    fat:      vm.totalFat(from: allEntries)
+                )
+                .padding(.horizontal, MochiTheme.Spacing.xl)
+                .padding(.bottom, MochiTheme.Spacing.lg)
+                .onTapGesture { showNutrition = true }
             }
+            .ignoresSafeArea(edges: .top)
         }
         .onAppear {
             mochi.refresh(entries: allEntries)
@@ -178,35 +170,40 @@ struct MochiHomeView: View {
 
     // MARK: - Habitat scene
 
-    /// Mochi's feet rest at the vertical center of the rug, which occupies
-    /// the lower third of the room illustration.
-    private let rugCenterRatio: CGFloat = 0.83
     /// Mochi's width as a fraction of screen width.
-    private let mochiWidthRatio: CGFloat = 0.48
+    private let mochiWidthRatio: CGFloat = 0.62
 
-    private func sceneArea(width: CGFloat, height: CGFloat, topInset: CGFloat) -> some View {
-        let mochiSize  = width * mochiWidthRatio
-        let rugCenterY = height * rugCenterRatio
+    private var habitatArea: some View {
+        GeometryReader { geo in
+            let width      = geo.size.width
+            let height     = geo.size.height
+            let topInset   = geo.safeAreaInsets.top
+            let mochiSize  = width * mochiWidthRatio
+            // Derived from the habitat image's own geometry so his feet
+            // land on the rug at every device size.
+            let rugCenterY = MochiHabitatScene.rugCenterY(sceneWidth: width, sceneHeight: height)
 
-        return ZStack(alignment: .topTrailing) {
-            MochiHabitatScene(isNight: isNightHabitat)
+            ZStack(alignment: .topTrailing) {
+                MochiHabitatScene(isNight: isNightHabitat)
 
-            // Mochi seated on the rug, shadow under his feet
-            MochiView(state: mochi.state,
-                      moment: mochi.moment,
-                      size: mochiSize,
-                      showShadow: true) {
-                showBubble(mochi.dialogueLine())
-            }
-            .position(x: width / 2, y: rugCenterY - mochiSize / 2)
+                // Mochi seated on the rug, shadow under his feet
+                MochiView(state: mochi.state,
+                          moment: mochi.moment,
+                          size: mochiSize,
+                          showShadow: true) {
+                    showBubble(mochi.dialogueLine())
+                }
+                .position(x: width / 2, y: rugCenterY - mochiSize / 2)
 
-            // Speech bubble above his head — always present
-            if !bubbleLine.isEmpty {
-                MochiSpeechBubble(text: bubbleLine)
-                    .id(bubbleLine)
-                    .position(x: width / 2, y: rugCenterY - mochiSize - 36)
-                    .transition(.scale(scale: 0.85, anchor: .bottom).combined(with: .opacity))
-            }
+                // Speech bubble above his head — always present, clamped
+                // below the status bar on small screens.
+                if !bubbleLine.isEmpty {
+                    MochiSpeechBubble(text: bubbleLine)
+                        .id(bubbleLine)
+                        .position(x: width / 2,
+                                  y: max(topInset + 40, rugCenterY - mochiSize - 36))
+                        .transition(.scale(scale: 0.85, anchor: .bottom).combined(with: .opacity))
+                }
 
             // Streak chip floats top-right of the scene
             if mochi.streak >= 1 {
@@ -226,9 +223,10 @@ struct MochiHomeView: View {
                 .padding(.trailing, MochiTheme.Spacing.lg)
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel("\(mochi.streak) day streak")
+                }
             }
+            .frame(width: width, height: height)
         }
-        .frame(height: height)
     }
 
     private func showBubble(_ line: String) {

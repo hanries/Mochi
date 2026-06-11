@@ -81,10 +81,10 @@ struct MochiView: View {
                 if showShadow {
                     Ellipse()
                         .fill(MochiTheme.textPrimary.opacity(0.12))
-                        .frame(width: size * 0.7, height: size * 0.13)
+                        .frame(width: size * 0.55, height: size * 0.11)
                         .scaleEffect(x: 1 - 0.06 * breath, anchor: .center)
                         .blur(radius: 8)
-                        .offset(y: size * 0.03)
+                        .offset(y: size * 0.02)
                         .accessibilityHidden(true)
                 }
 
