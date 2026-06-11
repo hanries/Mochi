@@ -15,13 +15,11 @@ struct FitTrackApp: App {
                     ContentView()
                         .environmentObject(appState)
                         .environmentObject(mochi)
-                        // Home runs the warm light MochiTheme (dark status bar
-                        // text); other tabs stay dark until the app-wide pass.
-                        .preferredColorScheme(appState.selectedTab == .home ? .light : .dark)
+                        .preferredColorScheme(.light)
                 } else {
                     OnboardingView()
                         .environmentObject(mochi)
-                        .preferredColorScheme(.dark)
+                        .preferredColorScheme(.light)
                 }
             }
             .onChange(of: scenePhase) { _, phase in

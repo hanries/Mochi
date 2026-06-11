@@ -20,6 +20,7 @@ enum MochiTheme {
     static let textSecondary = Color(hex: 0x9A7B5F)
     static let success       = Color(hex: 0x7FA86F)
     static let warning       = Color(hex: 0xE8A21F)
+    static let danger        = Color(hex: 0xC75C4A)  // warm terracotta, destructive/error
 
     // MARK: Typography — SF Rounded
 
