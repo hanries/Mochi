@@ -49,6 +49,7 @@ enum MochiDialogue {
     ]
 
     static let celebrations: [String] = [
+        "Yum!! Thank you!",
         "Yay! Logged it!",
         "Nom nom — got it!",
         "That's one for the books!",

@@ -21,9 +21,8 @@ struct MochiHomeView: View {
     @State private var showNutrition   = false
     @State private var showSearchPanel = false
 
-    // Dialogue bubble
-    @State private var bubbleLine: String? = nil
-    @State private var bubbleTask: Task<Void, Never>? = nil
+    // Dialogue bubble — persistent; re-rolled on state change, tap, or moment
+    @State private var bubbleLine: String = ""
 
     // Post-log moment bookkeeping
     @State private var momentClearTask: Task<Void, Never>? = nil
@@ -112,7 +111,12 @@ struct MochiHomeView: View {
             if pendingFirstLog {
                 hintPulse = true
                 showBubble("I can't wait to see your first meal! 🐹")
+            } else if bubbleLine.isEmpty {
+                bubbleLine = mochi.dialogueLine()
             }
+        }
+        .onChange(of: mochi.state) { _, _ in
+            showBubble(mochi.dialogueLine())
         }
         .onChange(of: allEntries) { _, entries in
             mochi.refresh(entries: entries)
@@ -129,6 +133,7 @@ struct MochiHomeView: View {
                 try? await Task.sleep(for: .seconds(MochiMotion.default.momentDuration))
                 guard !Task.isCancelled else { return }
                 mochi.moment = nil
+                showBubble(mochi.dialogueLine())
             }
         }
         .onChange(of: scenePhase) { _, phase in
@@ -183,28 +188,32 @@ struct MochiHomeView: View {
             }
             .position(x: width / 2, y: rugCenterY - mochiSize / 2)
 
-            // Speech bubble above his head
-            if let line = bubbleLine {
-                MochiSpeechBubble(text: line)
+            // Speech bubble above his head — always present
+            if !bubbleLine.isEmpty {
+                MochiSpeechBubble(text: bubbleLine)
+                    .id(bubbleLine)
                     .position(x: width / 2, y: rugCenterY - mochiSize - 36)
-                    .transition(.scale(scale: 0.6, anchor: .bottom).combined(with: .opacity))
+                    .transition(.scale(scale: 0.85, anchor: .bottom).combined(with: .opacity))
             }
 
-            // Streak badge floats top-right of the scene
+            // Streak chip floats top-right of the scene
             if mochi.streak >= 1 {
-                HStack(spacing: 4) {
+                HStack(spacing: MochiTheme.Spacing.xs) {
                     Image(systemName: "flame.fill")
                         .font(.system(size: 12, weight: .semibold))
-                    Text("\(mochi.streak)")
-                        .font(.system(size: 13, weight: .bold))
+                        .foregroundStyle(MochiTheme.warning)
+                    Text("\(mochi.streak) day\(mochi.streak == 1 ? "" : "s")")
+                        .font(MochiTheme.caption)
+                        .foregroundStyle(MochiTheme.textPrimary)
                 }
-                .foregroundStyle(Color(red: 1.0, green: 0.72, blue: 0.3))
-                .padding(.horizontal, 10)
-                .padding(.vertical, 6)
-                .background(Theme.card)
+                .padding(.horizontal, MochiTheme.Spacing.md)
+                .padding(.vertical, MochiTheme.Spacing.sm)
+                .background(MochiTheme.surfaceAlt)
                 .clipShape(Capsule())
-                .padding(.top, topInset + 8)
-                .padding(.trailing, 16)
+                .padding(.top, topInset + MochiTheme.Spacing.sm)
+                .padding(.trailing, MochiTheme.Spacing.lg)
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel("\(mochi.streak) day streak")
             }
         }
         .frame(height: height)
@@ -213,12 +222,6 @@ struct MochiHomeView: View {
     private func showBubble(_ line: String) {
         withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
             bubbleLine = line
-        }
-        bubbleTask?.cancel()
-        bubbleTask = Task {
-            try? await Task.sleep(for: .seconds(mochi.config.dialogueDuration))
-            guard !Task.isCancelled else { return }
-            withAnimation(.easeOut(duration: 0.3)) { bubbleLine = nil }
         }
     }
 }
@@ -231,19 +234,25 @@ private struct MochiSpeechBubble: View {
     var body: some View {
         VStack(spacing: 0) {
             Text(text)
-                .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(Theme.textPrimary)
+                .font(MochiTheme.body)
+                .foregroundStyle(MochiTheme.textPrimary)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 10)
-                .background(Theme.card)
-                .clipShape(RoundedRectangle(cornerRadius: 16))
+                .padding(.horizontal, MochiTheme.Spacing.lg)
+                .padding(.vertical, MochiTheme.Spacing.md)
+                .background(
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(MochiTheme.surfaceAlt)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 16)
+                                .strokeBorder(MochiTheme.textSecondary.opacity(0.25), lineWidth: 1)
+                        )
+                )
 
             BubbleTail()
-                .fill(Theme.card)
+                .fill(MochiTheme.surfaceAlt)
                 .frame(width: 14, height: 8)
         }
-        .padding(.horizontal, 32)
+        .padding(.horizontal, MochiTheme.Spacing.xxl)
     }
 }
 

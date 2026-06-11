@@ -8,6 +8,17 @@ enum MochiState: String, CaseIterable {
     case content
     case sleepy
     case missingYou
+
+    /// For VoiceOver: "Mochi, your companion, is <description>".
+    var accessibilityDescription: String {
+        switch self {
+        case .ecstatic:   return "ecstatic"
+        case .happy:      return "happy"
+        case .content:    return "content"
+        case .sleepy:     return "getting sleepy"
+        case .missingYou: return "missing you"
+        }
+    }
 }
 
 // MARK: - Pure state engine

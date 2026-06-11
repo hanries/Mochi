@@ -105,6 +105,9 @@ struct MochiView: View {
         .offset(y: hopOffset)
         .contentShape(Rectangle())
         .onTapGesture { handleTap() }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Mochi, your companion, is \(state.accessibilityDescription)")
+        .accessibilityAddTraits(.isButton)
         .onChange(of: state) { _, _ in
             guard !reduceMotion else { return }
             pulseScale = motion.transitionPulseScale
