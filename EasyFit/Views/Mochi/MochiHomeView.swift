@@ -53,11 +53,9 @@ struct MochiHomeView: View {
                 MochiTheme.background.ignoresSafeArea()
 
                 VStack(spacing: 0) {
-                    ZStack {
-                        MochiHabitatScene()
-                        habitat   // Mochi + bubble + badge; rug positioning lands in the next phase
-                    }
-                    .frame(height: sceneHeight)
+                    sceneArea(width: geo.size.width,
+                              height: sceneHeight,
+                              topInset: geo.safeAreaInsets.top)
 
                     Spacer(minLength: MochiTheme.Spacing.lg)
 
@@ -161,43 +159,55 @@ struct MochiHomeView: View {
         }
     }
 
-    // MARK: - Habitat
+    // MARK: - Habitat scene
 
-    private var habitat: some View {
-        VStack(spacing: 0) {
-            // Speech bubble (fixed slot so Mochi doesn't shift)
-            ZStack {
-                if let line = bubbleLine {
-                    MochiSpeechBubble(text: line)
-                        .transition(.scale(scale: 0.6, anchor: .bottom).combined(with: .opacity))
-                }
+    /// Mochi's feet rest at the vertical center of the rug, which occupies
+    /// the lower third of the room illustration.
+    private let rugCenterRatio: CGFloat = 0.83
+    /// Mochi's width as a fraction of screen width.
+    private let mochiWidthRatio: CGFloat = 0.48
+
+    private func sceneArea(width: CGFloat, height: CGFloat, topInset: CGFloat) -> some View {
+        let mochiSize  = width * mochiWidthRatio
+        let rugCenterY = height * rugCenterRatio
+
+        return ZStack(alignment: .topTrailing) {
+            MochiHabitatScene()
+
+            // Mochi seated on the rug, shadow under his feet
+            MochiView(state: mochi.state,
+                      moment: mochi.moment,
+                      size: mochiSize,
+                      showShadow: true) {
+                showBubble(mochi.dialogueLine())
             }
-            .frame(height: 64)
-            .padding(.bottom, 8)
+            .position(x: width / 2, y: rugCenterY - mochiSize / 2)
 
-            ZStack {
-                MochiView(state: mochi.state, moment: mochi.moment, size: 170) {
-                    showBubble(mochi.dialogueLine())
-                }
-
-                // Streak badge lives with Mochi
-                if mochi.streak >= 1 {
-                    HStack(spacing: 4) {
-                        Image(systemName: "flame.fill")
-                            .font(.system(size: 12, weight: .semibold))
-                        Text("\(mochi.streak)")
-                            .font(.system(size: 13, weight: .bold))
-                    }
-                    .foregroundStyle(Color(red: 1.0, green: 0.72, blue: 0.3))
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                    .background(Theme.card)
-                    .clipShape(Capsule())
-                    .offset(x: 86, y: -72)
-                }
+            // Speech bubble above his head
+            if let line = bubbleLine {
+                MochiSpeechBubble(text: line)
+                    .position(x: width / 2, y: rugCenterY - mochiSize - 36)
+                    .transition(.scale(scale: 0.6, anchor: .bottom).combined(with: .opacity))
             }
-            .frame(height: 240)
+
+            // Streak badge floats top-right of the scene
+            if mochi.streak >= 1 {
+                HStack(spacing: 4) {
+                    Image(systemName: "flame.fill")
+                        .font(.system(size: 12, weight: .semibold))
+                    Text("\(mochi.streak)")
+                        .font(.system(size: 13, weight: .bold))
+                }
+                .foregroundStyle(Color(red: 1.0, green: 0.72, blue: 0.3))
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(Theme.card)
+                .clipShape(Capsule())
+                .padding(.top, topInset + 8)
+                .padding(.trailing, 16)
+            }
         }
+        .frame(height: height)
     }
 
     private func showBubble(_ line: String) {

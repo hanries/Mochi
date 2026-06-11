@@ -15,6 +15,7 @@ struct MochiView: View {
     let state: MochiState
     var moment: MochiMoment? = nil
     var size: CGFloat = 170
+    var showShadow: Bool = false
     var onTap: (() -> Void)? = nil
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -74,17 +75,31 @@ struct MochiView: View {
                 ? 0.0
                 : motion.swayAmplitude * sin(2 * .pi * t / motion.swayPeriod + motion.swayPhaseOffset)
 
-            ZStack {
-                Image(displayedImageName)
-                    .resizable()
-                    .scaledToFit()
-                    .id(anchorFrameName)
-                    .transition(.opacity)
+            ZStack(alignment: .bottom) {
+                // Ground-contact shadow: stays on the floor (no sway/stretch),
+                // narrowing slightly as the body breathes upward.
+                if showShadow {
+                    Ellipse()
+                        .fill(MochiTheme.textPrimary.opacity(0.12))
+                        .frame(width: size * 0.7, height: size * 0.13)
+                        .scaleEffect(x: 1 - 0.06 * breath, anchor: .center)
+                        .blur(radius: 8)
+                        .offset(y: size * 0.03)
+                        .accessibilityHidden(true)
+                }
+
+                ZStack {
+                    Image(displayedImageName)
+                        .resizable()
+                        .scaledToFit()
+                        .id(anchorFrameName)
+                        .transition(.opacity)
+                }
+                .frame(width: size, height: size)
+                .animation(.easeInOut(duration: motion.transitionDuration), value: anchorFrameName)
+                .scaleEffect(x: scaleX, y: scaleY, anchor: .bottom)
+                .rotationEffect(.degrees(sway), anchor: .bottom)
             }
-            .frame(width: size, height: size)
-            .animation(.easeInOut(duration: motion.transitionDuration), value: anchorFrameName)
-            .scaleEffect(x: scaleX, y: scaleY, anchor: .bottom)
-            .rotationEffect(.degrees(sway), anchor: .bottom)
         }
         .scaleEffect(pulseScale * tapScale * momentScale, anchor: .bottom)
         .offset(y: hopOffset)
