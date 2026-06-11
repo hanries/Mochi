@@ -287,7 +287,7 @@ private struct MeetMochiPage: View {
         VStack(spacing: 0) {
             Spacer()
             VStack(spacing: 28) {
-                MochiAssetProvider.mochiView(for: .happy, size: 150)
+                MochiView(state: .happy, size: 150)
 
                 VStack(spacing: 10) {
                     Text("This is Mochi")
@@ -330,7 +330,7 @@ private struct HowItWorksPage: View {
             VStack(spacing: 28) {
                 Spacer().frame(height: 70)
 
-                MochiAssetProvider.mochiView(for: .ecstatic, size: 90)
+                MochiView(state: .ecstatic, size: 90)
 
                 Text("Log your meals,\nand I'll be happy")
                     .font(.system(size: 28, weight: .bold))
@@ -530,7 +530,7 @@ private struct FirstLogPage: View {
         VStack(spacing: 0) {
             Spacer()
             VStack(spacing: 28) {
-                MochiAssetProvider.mochiView(for: .happy, size: 150)
+                MochiView(state: .happy, size: 150)
 
                 VStack(spacing: 10) {
                     Text(name.isEmpty

@@ -184,7 +184,7 @@ struct MochiHomeView: View {
                     .frame(width: 220, height: 56)
                     .offset(y: 88)
 
-                MochiAssetProvider.mochiView(for: mochi.state, size: 170)
+                MochiView(state: mochi.state, size: 170)
                     .scaleEffect(mochiBounce)
                     .onTapGesture { reactToTap() }
 

@@ -20,7 +20,7 @@ struct MochiCelebrationView: View {
                 .onTapGesture { onDone() }
 
             VStack(spacing: 18) {
-                MochiAssetProvider.mochiView(for: state, size: 140)
+                MochiView(state: state, size: 140)
                     .scaleEffect(appeared ? 1.0 : 0.3)
                     .rotationEffect(.degrees(appeared ? 0 : -12))
 
