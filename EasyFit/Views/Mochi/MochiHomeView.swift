@@ -59,38 +59,38 @@ struct MochiHomeView: View {
                     Spacer(minLength: MochiTheme.Spacing.lg)
 
                     // Primary action
-                Button {
-                    showFoodCamera = true
-                } label: {
-                    HStack(spacing: 10) {
-                        Image(systemName: "camera.fill")
-                            .font(.system(size: 17, weight: .semibold))
-                        Text("Log a meal")
-                            .font(.system(size: 17, weight: .semibold))
+                    Button {
+                        showFoodCamera = true
+                    } label: {
+                        HStack(spacing: MochiTheme.Spacing.sm) {
+                            Image(systemName: "camera.fill")
+                                .font(.system(size: 17, weight: .semibold))
+                            Text("Feed Mochi · log a meal")
+                                .font(.system(size: 17, weight: .semibold, design: .rounded))
+                        }
+                        .foregroundStyle(MochiTheme.surfaceAlt)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, MochiTheme.Spacing.lg)
+                        .background(MochiTheme.primary)
+                        .clipShape(RoundedRectangle(cornerRadius: MochiTheme.buttonRadius))
                     }
-                    .foregroundStyle(Color.black)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 16)
-                    .background(Theme.teal)
-                    .clipShape(Capsule())
-                }
-                .scaleEffect(hintPulse ? 1.04 : 1.0)
-                .animation(
-                    pendingFirstLog
-                        ? .easeInOut(duration: 0.8).repeatForever(autoreverses: true)
-                        : .default,
-                    value: hintPulse
-                )
-                .padding(.horizontal, 24)
+                    .scaleEffect(hintPulse ? 1.04 : 1.0)
+                    .animation(
+                        pendingFirstLog
+                            ? .easeInOut(duration: 0.8).repeatForever(autoreverses: true)
+                            : .default,
+                        value: hintPulse
+                    )
+                    .padding(.horizontal, MochiTheme.Spacing.xl)
 
-                Button {
-                    showSearchPanel = true
-                } label: {
-                    Text("More ways to log")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundStyle(Theme.textSecondary)
-                        .padding(.vertical, 12)
-                }
+                    Button {
+                        showSearchPanel = true
+                    } label: {
+                        Text("More ways to log")
+                            .font(MochiTheme.caption)
+                            .foregroundStyle(MochiTheme.textSecondary)
+                            .padding(.vertical, MochiTheme.Spacing.md)
+                    }
 
                     CompactCalorieCard(
                         consumed: vm.totalCalories(from: allEntries),
@@ -281,39 +281,40 @@ private struct CompactCalorieCard: View {
     }
 
     var body: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: MochiTheme.Spacing.md) {
             HStack(alignment: .firstTextBaseline) {
                 Text("\(consumed)")
-                    .font(.system(size: 22, weight: .bold))
-                    .foregroundStyle(Theme.textPrimary)
+                    .font(MochiTheme.title)
+                    .foregroundStyle(MochiTheme.textPrimary)
                 Text("/ \(goal) kcal")
-                    .font(.system(size: 14))
-                    .foregroundStyle(Theme.textSecondary)
+                    .font(MochiTheme.caption)
+                    .foregroundStyle(MochiTheme.textSecondary)
                 Spacer()
                 Image(systemName: "chevron.right")
                     .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(Theme.textTertiary)
+                    .foregroundStyle(MochiTheme.textSecondary)
             }
 
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
-                    Capsule().fill(Theme.cardAlt)
+                    Capsule().fill(MochiTheme.surface)
                     Capsule()
-                        .fill(Theme.teal)
+                        .fill(MochiTheme.primary)
                         .frame(width: max(geo.size.width * progress, 6))
                 }
             }
             .frame(height: 6)
 
-            HStack(spacing: 16) {
-                MacroDot(label: "P", value: protein, color: Color(red: 0.3, green: 0.71, blue: 0.67))
-                MacroDot(label: "C", value: carbs,   color: Color(red: 1.0, green: 0.72, blue: 0.3))
-                MacroDot(label: "F", value: fat,     color: Color(red: 0.9, green: 0.35, blue: 0.35))
+            HStack(spacing: MochiTheme.Spacing.lg) {
+                MacroDot(label: "P", value: protein, color: MochiTheme.success)
+                MacroDot(label: "C", value: carbs,   color: MochiTheme.warning)
+                MacroDot(label: "F", value: fat,     color: MochiTheme.accent)
                 Spacer()
             }
         }
-        .padding(16)
-        .darkCard()
+        .padding(MochiTheme.Spacing.lg)
+        .background(MochiTheme.surfaceAlt)
+        .clipShape(RoundedRectangle(cornerRadius: MochiTheme.cardRadius))
         .contentShape(Rectangle())
     }
 }
@@ -324,11 +325,11 @@ private struct MacroDot: View {
     let color: Color
 
     var body: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: MochiTheme.Spacing.xs) {
             Circle().fill(color).frame(width: 7, height: 7)
             Text("\(label) \(Int(value))g")
-                .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(Theme.textSecondary)
+                .font(MochiTheme.caption)
+                .foregroundStyle(MochiTheme.textSecondary)
         }
     }
 }
