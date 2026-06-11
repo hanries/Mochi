@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 // MARK: - The living Mochi character
 //
@@ -12,8 +13,9 @@ import SwiftUI
 
 struct MochiView: View {
     let state: MochiState
+    var moment: MochiMoment? = nil
     var size: CGFloat = 170
-    var onTap: (() -> Void)? = nil   // wired in the tap-reaction phase
+    var onTap: (() -> Void)? = nil
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
@@ -21,15 +23,30 @@ struct MochiView: View {
     @State private var pulseScale: CGFloat = 1.0
     @State private var isBlinking = false
 
+    // Tap reaction
+    @State private var tapScale: CGFloat = 1.0
+    @State private var hopOffset: CGFloat = 0
+
+    // Moment override (eating / milestone ecstatic)
+    @State private var momentFrame: String? = nil
+    @State private var momentScale: CGFloat = 1.0
+    @State private var momentTask: Task<Void, Never>? = nil
+
     private let motion = MochiMotion.default
 
     private var baseImageName: String {
         MochiAssetProvider.baseImageName(for: state)
     }
 
-    /// Blink swaps the frame inside the same view identity, so it's an
-    /// instant swap — only base-frame changes get the crossfade.
+    /// Identity + crossfade key: changes when the base frame or a moment
+    /// override changes — those crossfade. Blinks happen inside the same
+    /// identity and swap instantly.
+    private var anchorFrameName: String {
+        momentFrame ?? baseImageName
+    }
+
     private var displayedImageName: String {
+        if let momentFrame { return momentFrame }
         if isBlinking, let blink = MochiAssetProvider.blinkImageName(for: state) {
             return blink
         }
@@ -61,15 +78,18 @@ struct MochiView: View {
                 Image(displayedImageName)
                     .resizable()
                     .scaledToFit()
-                    .id(baseImageName)
+                    .id(anchorFrameName)
                     .transition(.opacity)
             }
             .frame(width: size, height: size)
-            .animation(.easeInOut(duration: motion.transitionDuration), value: baseImageName)
+            .animation(.easeInOut(duration: motion.transitionDuration), value: anchorFrameName)
             .scaleEffect(x: scaleX, y: scaleY, anchor: .bottom)
             .rotationEffect(.degrees(sway), anchor: .bottom)
         }
-        .scaleEffect(pulseScale, anchor: .bottom)
+        .scaleEffect(pulseScale * tapScale * momentScale, anchor: .bottom)
+        .offset(y: hopOffset)
+        .contentShape(Rectangle())
+        .onTapGesture { handleTap() }
         .onChange(of: state) { _, _ in
             guard !reduceMotion else { return }
             pulseScale = motion.transitionPulseScale
@@ -77,6 +97,14 @@ struct MochiView: View {
                                   dampingFraction: 0.6)) {
                 pulseScale = 1.0
             }
+        }
+        .onChange(of: moment) { _, newMoment in
+            if let newMoment { beginMoment(newMoment) }
+        }
+        .onDisappear {
+            momentTask?.cancel()
+            momentFrame = nil
+            momentScale = 1.0
         }
         // Blink loop: restarts on state change, cancels on disappear.
         .task(id: state) {
@@ -99,6 +127,59 @@ struct MochiView: View {
         isBlinking = true
         try? await Task.sleep(for: .seconds(motion.blinkDuration))
         isBlinking = false
+    }
+
+    // MARK: - Tap reaction
+
+    private func handleTap() {
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        onTap?()
+        guard !reduceMotion else { return }
+
+        withAnimation(.spring(response: motion.tapSpringResponse,
+                              dampingFraction: motion.tapSpringDamping)) {
+            tapScale = motion.tapBounceScale
+            hopOffset = -motion.tapHopHeight
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
+            withAnimation(.spring(response: motion.tapSpringResponse,
+                                  dampingFraction: motion.tapSpringDamping)) {
+                tapScale = 1.0
+                hopOffset = 0
+            }
+        }
+    }
+
+    // MARK: - Moments
+
+    private func beginMoment(_ newMoment: MochiMoment) {
+        momentTask?.cancel()
+
+        momentFrame = newMoment.kind == .eating
+            ? MochiAssetProvider.eatingImageName
+            : MochiAssetProvider.baseImageName(for: .ecstatic)
+
+        if !reduceMotion {
+            let peak = newMoment.kind == .eating
+                ? motion.momentBounceEating
+                : motion.momentBounceEcstatic
+            withAnimation(.spring(response: motion.momentSpringResponse,
+                                  dampingFraction: motion.momentSpringDamping)) {
+                momentScale = peak
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                withAnimation(.spring(response: motion.momentSpringResponse,
+                                      dampingFraction: motion.momentSpringDamping)) {
+                    momentScale = 1.0
+                }
+            }
+        }
+
+        momentTask = Task {
+            try? await Task.sleep(for: .seconds(motion.momentDuration))
+            guard !Task.isCancelled else { return }
+            momentFrame = nil   // crossfades back via anchorFrameName change
+        }
     }
 }
 

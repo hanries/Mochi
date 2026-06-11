@@ -21,8 +21,7 @@ struct MochiHomeView: View {
     @State private var showNutrition   = false
     @State private var showSearchPanel = false
 
-    // Tap reaction
-    @State private var mochiBounce: CGFloat = 1.0
+    // Dialogue bubble
     @State private var bubbleLine: String? = nil
     @State private var bubbleTask: Task<Void, Never>? = nil
 
@@ -184,9 +183,9 @@ struct MochiHomeView: View {
                     .frame(width: 220, height: 56)
                     .offset(y: 88)
 
-                MochiView(state: mochi.state, size: 170)
-                    .scaleEffect(mochiBounce)
-                    .onTapGesture { reactToTap() }
+                MochiView(state: mochi.state, size: 170) {
+                    showBubble(mochi.dialogueLine())
+                }
 
                 // Streak badge lives with Mochi
                 if mochi.streak >= 1 {
@@ -206,19 +205,6 @@ struct MochiHomeView: View {
             }
             .frame(height: 240)
         }
-    }
-
-    private func reactToTap() {
-        withAnimation(.spring(response: 0.2, dampingFraction: 0.35)) {
-            mochiBounce = 1.18
-        }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-            withAnimation(.spring(response: 0.35, dampingFraction: 0.5)) {
-                mochiBounce = 1.0
-            }
-        }
-
-        showBubble(mochi.dialogueLine())
     }
 
     private func showBubble(_ line: String) {
