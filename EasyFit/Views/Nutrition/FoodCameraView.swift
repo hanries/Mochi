@@ -128,7 +128,7 @@ struct FoodCameraView: View {
                         .font(.system(size: 14))
                         .foregroundStyle(.white)
                         .padding(14)
-                        .background(.red.opacity(0.85))
+                        .background(MochiTheme.danger.opacity(0.9))
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                         .padding(.horizontal, 32)
                         .padding(.bottom, 140)
@@ -361,12 +361,12 @@ private struct ScanResultView: View {
                         HStack {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(result.name).font(.system(size: 18, weight: .bold))
-                                Text(result.servingSize).font(.system(size: 13)).foregroundStyle(.secondary)
+                                Text(result.servingSize).font(.system(size: 13)).foregroundStyle(MochiTheme.textSecondary)
                             }
                             Spacer()
                             VStack(alignment: .trailing, spacing: 2) {
                                 Text("\(result.calories)").font(.system(size: 26, weight: .bold))
-                                Text("kcal").font(.system(size: 12)).foregroundStyle(.secondary)
+                                Text("kcal").font(.system(size: 12)).foregroundStyle(MochiTheme.textSecondary)
                             }
                         }
                         .padding(16)
@@ -374,11 +374,11 @@ private struct ScanResultView: View {
                         Divider().padding(.horizontal)
 
                         HStack(spacing: 0) {
-                            MacroCell(label: "Protein", value: result.protein, color: Color(red: 0.3, green: 0.71, blue: 0.67))
+                            MacroCell(label: "Protein", value: result.protein, color: MochiTheme.success)
                             Divider().frame(height: 40)
-                            MacroCell(label: "Carbs",   value: result.carbs,   color: Color(red: 1.0, green: 0.72, blue: 0.3))
+                            MacroCell(label: "Carbs",   value: result.carbs,   color: MochiTheme.warning)
                             Divider().frame(height: 40)
-                            MacroCell(label: "Fat",     value: result.fat,     color: Color(red: 0.9, green: 0.35, blue: 0.35))
+                            MacroCell(label: "Fat",     value: result.fat,     color: MochiTheme.accent)
                         }
                         .padding(.vertical, 8)
 
@@ -386,16 +386,16 @@ private struct ScanResultView: View {
 
                         HStack {
                             Image(systemName: result.confidence > 0.7 ? "checkmark.seal.fill" : "exclamationmark.triangle.fill")
-                                .foregroundStyle(result.confidence > 0.7 ? .green : .orange)
+                                .foregroundStyle(result.confidence > 0.7 ? MochiTheme.success : MochiTheme.warning)
                             Text(result.confidence > 0.7 ? "High confidence" : "Low confidence — verify")
-                                .font(.system(size: 13)).foregroundStyle(.secondary)
+                                .font(.system(size: 13)).foregroundStyle(MochiTheme.textSecondary)
                             Spacer()
                             Text("\(Int(result.confidence * 100))%")
-                                .font(.system(size: 13, weight: .medium)).foregroundStyle(.secondary)
+                                .font(.system(size: 13, weight: .medium)).foregroundStyle(MochiTheme.textSecondary)
                         }
                         .padding(16)
                     }
-                    .background(Color(uiColor: .secondarySystemBackground))
+                    .background(MochiTheme.surfaceAlt)
                     .clipShape(RoundedRectangle(cornerRadius: 16))
                     .padding(.horizontal)
 
@@ -407,31 +407,32 @@ private struct ScanResultView: View {
                         }
                     }
                     .padding(.horizontal, 16).padding(.vertical, 4)
-                    .background(Color(uiColor: .secondarySystemBackground))
+                    .background(MochiTheme.surfaceAlt)
                     .clipShape(RoundedRectangle(cornerRadius: 16))
                     .padding(.horizontal)
 
                     VStack(spacing: 10) {
                         Button { onAdd(result) } label: {
                             Text("Add to \(mealType.rawValue)")
-                                .font(.system(size: 16, weight: .semibold))
+                                .font(.system(size: 16, weight: .semibold, design: .rounded))
                                 .frame(maxWidth: .infinity).padding(.vertical, 16)
-                                .background(Color.primary)
-                                .foregroundStyle(Color(uiColor: .systemBackground))
+                                .background(MochiTheme.primary)
+                                .foregroundStyle(MochiTheme.surfaceAlt)
                                 .clipShape(RoundedRectangle(cornerRadius: 16))
                         }
                         Button { onRetake() } label: {
                             Text("Retake")
                                 .font(.system(size: 15, weight: .medium))
                                 .frame(maxWidth: .infinity).padding(.vertical, 14)
-                                .background(Color(uiColor: .secondarySystemBackground))
-                                .foregroundStyle(.primary)
+                                .background(MochiTheme.surfaceAlt)
+                                .foregroundStyle(MochiTheme.textPrimary)
                                 .clipShape(RoundedRectangle(cornerRadius: 16))
                         }
                     }
                     .padding(.horizontal).padding(.bottom, 24)
                 }
             }
+            .background(MochiTheme.background)
             .navigationTitle("Scan Result").navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) { Button("Cancel") { onCancel() } }
@@ -445,7 +446,7 @@ private struct MacroCell: View {
     var body: some View {
         VStack(spacing: 4) {
             Text(String(format: "%.1fg", value)).font(.system(size: 16, weight: .semibold)).foregroundStyle(color)
-            Text(label).font(.system(size: 11)).foregroundStyle(.secondary)
+            Text(label).font(.system(size: 11)).foregroundStyle(MochiTheme.textSecondary)
         }
         .frame(maxWidth: .infinity).padding(.vertical, 8)
     }

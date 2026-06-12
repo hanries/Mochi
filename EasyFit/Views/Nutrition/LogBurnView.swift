@@ -49,7 +49,7 @@ struct LogBurnView: View {
                                     .font(.system(size: 15))
                             }
                             .padding(14)
-                            .background(Color(uiColor: .secondarySystemBackground))
+                            .background(MochiTheme.surfaceAlt)
                             .clipShape(RoundedRectangle(cornerRadius: 14))
 
                             HStack {
@@ -63,15 +63,15 @@ struct LogBurnView: View {
                                     .frame(width: 70)
                                 Text("kcal")
                                     .font(.system(size: 14))
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(MochiTheme.textSecondary)
                             }
                             .padding(14)
-                            .background(Color(uiColor: .secondarySystemBackground))
+                            .background(MochiTheme.surfaceAlt)
                             .clipShape(RoundedRectangle(cornerRadius: 14))
                         }
 
                         if let err = errorMsg {
-                            Text(err).font(.system(size: 13)).foregroundStyle(.red)
+                            Text(err).font(.system(size: 13)).foregroundStyle(MochiTheme.danger)
                         }
 
                         Button {
@@ -79,16 +79,16 @@ struct LogBurnView: View {
                         } label: {
                             HStack {
                                 if isSaving {
-                                    ProgressView().tint(Color(uiColor: .systemBackground))
+                                    ProgressView().tint(MochiTheme.surfaceAlt)
                                 } else {
                                     Text(healthKit.isAuthorized ? "Save to Health & Log" : "Log Calories")
-                                        .font(.system(size: 15, weight: .semibold))
+                                        .font(.system(size: 15, weight: .semibold, design: .rounded))
                                 }
                             }
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
-                            .background(Int(kcalText) ?? 0 > 0 ? Color.primary : Color.secondary.opacity(0.3))
-                            .foregroundStyle(Color(uiColor: .systemBackground))
+                            .background(Int(kcalText) ?? 0 > 0 ? MochiTheme.primary : MochiTheme.textSecondary.opacity(0.3))
+                            .foregroundStyle(MochiTheme.surfaceAlt)
                             .clipShape(RoundedRectangle(cornerRadius: 14))
                         }
                         .disabled((Int(kcalText) ?? 0) <= 0 || isSaving)
@@ -111,6 +111,7 @@ struct LogBurnView: View {
                 }
                 .padding(.vertical)
             }
+            .background(MochiTheme.background)
             .navigationTitle("Log Burned Calories")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -160,44 +161,44 @@ private struct HealthKitBanner: View {
             if isAuthorized {
                 HStack {
                     Image(systemName: "heart.fill")
-                        .foregroundStyle(.red)
+                        .foregroundStyle(MochiTheme.danger)
                         .font(.system(size: 16))
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Apple Health Connected")
                             .font(.system(size: 13, weight: .semibold))
                         Text("Active: \(activeCalories) kcal  •  Resting: \(restingCalories) kcal today")
                             .font(.system(size: 12))
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(MochiTheme.textSecondary)
                     }
                     Spacer()
                     Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(.green)
+                        .foregroundStyle(MochiTheme.success)
                 }
                 .padding(14)
-                .background(Color.green.opacity(0.08))
+                .background(MochiTheme.success.opacity(0.10))
                 .clipShape(RoundedRectangle(cornerRadius: 14))
                 .padding(.horizontal)
             } else {
                 Button(action: onConnect) {
                     HStack(spacing: 10) {
                         Image(systemName: "heart.fill")
-                            .foregroundStyle(.red)
+                            .foregroundStyle(MochiTheme.danger)
                             .font(.system(size: 18))
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Connect Apple Health")
                                 .font(.system(size: 14, weight: .semibold))
-                                .foregroundStyle(.primary)
+                                .foregroundStyle(MochiTheme.textPrimary)
                             Text("Auto-sync burned calories from your Apple Watch or iPhone")
                                 .font(.system(size: 12))
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(MochiTheme.textSecondary)
                         }
                         Spacer()
                         Image(systemName: "chevron.right")
                             .font(.system(size: 12))
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(MochiTheme.textSecondary)
                     }
                     .padding(14)
-                    .background(Color.red.opacity(0.06))
+                    .background(MochiTheme.danger.opacity(0.08))
                     .clipShape(RoundedRectangle(cornerRadius: 14))
                 }
                 .padding(.horizontal)
@@ -224,16 +225,16 @@ private struct ActivityQuickCard: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(activity.name)
                         .font(.system(size: 13, weight: .medium))
-                        .foregroundStyle(.primary)
+                        .foregroundStyle(MochiTheme.textPrimary)
                         .lineLimit(1)
                     Text("~\(estimatedKcal) kcal / 30 min")
                         .font(.system(size: 11))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(MochiTheme.textSecondary)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(12)
-            .background(Color(uiColor: .secondarySystemBackground))
+            .background(MochiTheme.surfaceAlt)
             .clipShape(RoundedRectangle(cornerRadius: 14))
         }
     }
@@ -245,7 +246,7 @@ private struct SectionHeader: View {
     var body: some View {
         Text(text)
             .font(.system(size: 12, weight: .semibold))
-            .foregroundStyle(.secondary)
+            .foregroundStyle(MochiTheme.textSecondary)
             .textCase(.uppercase)
             .tracking(0.5)
     }

@@ -160,12 +160,10 @@ struct MochiHomeView: View {
         }
         .sheet(isPresented: $showNutrition) {
             NutritionView()
-                .preferredColorScheme(.dark)
-        }
+                        }
         .sheet(isPresented: $showSearchPanel) {
             SearchLogPanel(activeMeal: activeMeal)
-                .preferredColorScheme(.dark)
-        }
+                        }
     }
 
     // MARK: - Habitat scene
@@ -368,5 +366,4 @@ private struct MacroDot: View {
     MochiHomeView()
         .environmentObject(MochiViewModel())
         .modelContainer(for: [FoodEntry.self], inMemory: true)
-        .preferredColorScheme(.dark)
-}
+        }

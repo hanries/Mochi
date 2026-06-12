@@ -25,7 +25,7 @@ struct NutritionView: View {
     var body: some View {
         NavigationStack {
             ZStack(alignment: .bottom) {
-                Theme.bg.ignoresSafeArea()
+                MochiTheme.background.ignoresSafeArea()
 
                 ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 0) {
@@ -41,14 +41,14 @@ struct NutritionView: View {
                                 } label: {
                                     Image(systemName: "chevron.left")
                                         .font(.system(size: 14, weight: .semibold))
-                                        .foregroundStyle(Theme.textSecondary)
+                                        .foregroundStyle(MochiTheme.textSecondary)
                                 }
 
                                 Button { showDatePicker = true } label: {
                                     Text(isToday ? "Today, \(vm.selectedDate.formatted(.dateTime.month(.abbreviated).day()))"
                                          : vm.selectedDate.formatted(.dateTime.weekday(.wide).month(.abbreviated).day()))
                                         .font(.system(size: 13, weight: .medium))
-                                        .foregroundStyle(Theme.textSecondary)
+                                        .foregroundStyle(MochiTheme.textSecondary)
                                 }
 
                                 Button {
@@ -58,7 +58,7 @@ struct NutritionView: View {
                                 } label: {
                                     Image(systemName: "chevron.right")
                                         .font(.system(size: 14, weight: .semibold))
-                                        .foregroundStyle(isToday ? Theme.textTertiary : Theme.textSecondary)
+                                        .foregroundStyle(isToday ? MochiTheme.textSecondary : MochiTheme.textSecondary)
                                 }
                                 .disabled(isToday)
 
@@ -69,9 +69,9 @@ struct NutritionView: View {
                                     Button { showCamera = true } label: {
                                         Image(systemName: "camera.fill")
                                             .font(.system(size: 15))
-                                            .foregroundStyle(Theme.textSecondary)
+                                            .foregroundStyle(MochiTheme.textSecondary)
                                             .frame(width: 36, height: 36)
-                                            .background(Theme.card)
+                                            .background(MochiTheme.surfaceAlt)
                                             .clipShape(Circle())
                                     }
                                 }
@@ -80,9 +80,9 @@ struct NutritionView: View {
                             .padding(.top, 12)
 
                             // Big title
-                            Text("MEALS")
-                                .font(.system(size: 52, weight: .heavy))
-                                .foregroundStyle(Theme.textPrimary)
+                            Text("Meals")
+                                .font(MochiTheme.largeTitle)
+                                .foregroundStyle(MochiTheme.textPrimary)
                                 .padding(.horizontal, 20)
                                 .padding(.top, 4)
                         }
@@ -145,17 +145,17 @@ struct NutritionView: View {
                                     HStack(spacing: 10) {
                                         Image(systemName: "plus")
                                             .font(.system(size: 14, weight: .bold))
-                                            .foregroundStyle(Theme.teal)
+                                            .foregroundStyle(MochiTheme.primary)
                                             .frame(width: 36, height: 36)
-                                            .background(Theme.tealDim)
+                                            .background(MochiTheme.primary.opacity(0.15))
                                             .clipShape(Circle())
                                         Text("Add food to \(activeMeal.rawValue.lowercased())")
                                             .font(.system(size: 15, weight: .medium))
-                                            .foregroundStyle(Theme.textSecondary)
+                                            .foregroundStyle(MochiTheme.textSecondary)
                                         Spacer()
                                     }
                                     .padding(14)
-                                    .darkCard()
+                                    .mochiCard()
                                 }
                             }
                         }
@@ -176,7 +176,7 @@ struct NutritionView: View {
                     .padding(.bottom, 24)
                     .background(
                         LinearGradient(
-                            colors: [Theme.bg.opacity(0), Theme.bg],
+                            colors: [MochiTheme.background.opacity(0), MochiTheme.background],
                             startPoint: .top, endPoint: .bottom
                         )
                         .frame(height: 100)
@@ -189,8 +189,7 @@ struct NutritionView: View {
             .task { await healthKit.fetchTodayCalories() }
             .sheet(isPresented: $showDatePicker) {
                 DatePickerSheet(selectedDate: $vm.selectedDate)
-                    .preferredColorScheme(.dark)
-            }
+                                }
             .fullScreenCover(isPresented: $showCamera) {
                 FoodCameraView(
                     onResult: { result in
@@ -212,24 +211,20 @@ struct NutritionView: View {
                     mochi.mealLogged()
                     dismiss()
                 }
-                .preferredColorScheme(.dark)
-            }
+                            }
             .sheet(isPresented: $showManual) {
                 AddFoodView(mealType: activeMeal) { entry in
                     context.insert(entry)
                     mochi.mealLogged()
                     dismiss()
                 }
-                .preferredColorScheme(.dark)
-            }
+                            }
             .sheet(item: $editingEntry) { entry in
                 EditFoodEntryView(entry: entry, onSave: { _ in }, onDelete: { e in context.delete(e) })
-                    .preferredColorScheme(.dark)
-            }
+                                }
             .sheet(isPresented: $showLogBurn) {
                 LogBurnView(healthKit: healthKit) { kcal in manualBurned += kcal }
-                    .preferredColorScheme(.dark)
-            }
+                                }
         }
     }
 }
@@ -253,11 +248,11 @@ private struct DarkCalorieSummary: View {
                 // Ring
                 ZStack {
                     Circle()
-                        .stroke(Theme.teal.opacity(0.15), lineWidth: 8)
+                        .stroke(MochiTheme.primary.opacity(0.15), lineWidth: 8)
                     Circle()
                         .trim(from: 0, to: progress)
                         .stroke(
-                            progress >= 1.0 ? Color.red : Theme.teal,
+                            progress >= 1.0 ? MochiTheme.warning : MochiTheme.primary,
                             style: StrokeStyle(lineWidth: 8, lineCap: .round)
                         )
                         .rotationEffect(.degrees(-90))
@@ -265,10 +260,10 @@ private struct DarkCalorieSummary: View {
                     VStack(spacing: 1) {
                         Text("\(Int(progress * 100))%")
                             .font(.system(size: 16, weight: .bold))
-                            .foregroundStyle(Theme.textPrimary)
+                            .foregroundStyle(MochiTheme.textPrimary)
                         Text("done")
                             .font(.system(size: 9, weight: .medium))
-                            .foregroundStyle(Theme.textSecondary)
+                            .foregroundStyle(MochiTheme.textSecondary)
                     }
                 }
                 .frame(width: 72, height: 72)
@@ -277,31 +272,31 @@ private struct DarkCalorieSummary: View {
                     HStack(alignment: .firstTextBaseline, spacing: 4) {
                         Text("\(consumed)")
                             .font(.system(size: 30, weight: .bold, design: .rounded))
-                            .foregroundStyle(Theme.textPrimary)
+                            .foregroundStyle(MochiTheme.textPrimary)
                         Text("/ \(goal) kcal")
                             .font(.system(size: 13))
-                            .foregroundStyle(Theme.textSecondary)
+                            .foregroundStyle(MochiTheme.textSecondary)
                     }
                     HStack(spacing: 16) {
-                        CalStat(label: "Left",  value: "\(remaining)", color: remaining == 0 ? .red : Theme.teal)
+                        CalStat(label: "Left",  value: "\(remaining)", color: remaining == 0 ? MochiTheme.warning : MochiTheme.primary)
                         Button(action: onLogBurn) {
-                            CalStat(label: "Burned", value: burned > 0 ? "\(burned)" : "—", color: Theme.textSecondary)
+                            CalStat(label: "Burned", value: burned > 0 ? "\(burned)" : "—", color: MochiTheme.textSecondary)
                         }
                     }
                 }
                 Spacer()
             }
             .padding(16)
-            .darkCard()
+            .mochiCard()
 
             // Macro row
             HStack(spacing: 10) {
                 DarkMacroPill(label: "Protein", value: Int(protein), goal: Int(proteinGoal),
-                              color: Color(red: 0.3, green: 0.71, blue: 0.67))
+                              color: MochiTheme.success)
                 DarkMacroPill(label: "Carbs",   value: Int(carbs),   goal: Int(carbsGoal),
-                              color: Color(red: 1.0, green: 0.72, blue: 0.3))
+                              color: MochiTheme.warning)
                 DarkMacroPill(label: "Fat",     value: Int(fat),     goal: Int(fatGoal),
-                              color: Color(red: 0.9, green: 0.35, blue: 0.35))
+                              color: MochiTheme.accent)
             }
         }
     }
@@ -311,7 +306,7 @@ private struct CalStat: View {
     let label: String; let value: String; let color: Color
     var body: some View {
         VStack(alignment: .leading, spacing: 1) {
-            Text(label).font(.system(size: 10)).foregroundStyle(Theme.textTertiary)
+            Text(label).font(.system(size: 10)).foregroundStyle(MochiTheme.textSecondary)
             Text(value).font(.system(size: 14, weight: .semibold)).foregroundStyle(color)
         }
     }
@@ -322,9 +317,9 @@ private struct DarkMacroPill: View {
     var progress: Double { goal > 0 ? min(Double(value) / Double(goal), 1.0) : 0 }
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(label).font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
-            Text("\(value)g").font(.system(size: 17, weight: .bold)).foregroundStyle(Theme.textPrimary)
-            Text("/ \(goal)g").font(.system(size: 10)).foregroundStyle(Theme.textTertiary)
+            Text(label).font(.system(size: 11)).foregroundStyle(MochiTheme.textSecondary)
+            Text("\(value)g").font(.system(size: 17, weight: .bold)).foregroundStyle(MochiTheme.textPrimary)
+            Text("/ \(goal)g").font(.system(size: 10)).foregroundStyle(MochiTheme.textSecondary)
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
                     Capsule().fill(color.opacity(0.15)).frame(height: 4)
@@ -335,7 +330,7 @@ private struct DarkMacroPill: View {
         }
         .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .darkCard(cornerRadius: 14)
+        .mochiCard(cornerRadius: 14)
     }
 }
 
@@ -360,8 +355,8 @@ private struct MealPill: View {
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
-            .background(isSelected ? Theme.teal : Theme.card)
-            .foregroundStyle(isSelected ? Color.black : Theme.textSecondary)
+            .background(isSelected ? MochiTheme.primary : MochiTheme.surfaceAlt)
+            .foregroundStyle(isSelected ? MochiTheme.surfaceAlt : MochiTheme.textSecondary)
             .clipShape(Capsule())
         }
     }
@@ -390,23 +385,23 @@ struct DarkFoodCard: View {
             Text(emoji)
                 .font(.system(size: 26))
                 .frame(width: 54, height: 54)
-                .background(Theme.cardAlt)
+                .background(MochiTheme.surface)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(entry.name)
                     .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(Theme.textPrimary)
+                    .foregroundStyle(MochiTheme.textPrimary)
                     .lineLimit(1)
                 HStack(spacing: 8) {
                     Text("\(entry.calories) kcal")
                         .font(.system(size: 13, weight: .medium))
-                        .foregroundStyle(Theme.teal)
+                        .foregroundStyle(MochiTheme.primary)
                     Text("·")
-                        .foregroundStyle(Theme.textTertiary)
+                        .foregroundStyle(MochiTheme.textSecondary)
                     Text(entry.servingSize)
                         .font(.system(size: 13))
-                        .foregroundStyle(Theme.textSecondary)
+                        .foregroundStyle(MochiTheme.textSecondary)
                         .lineLimit(1)
                 }
             }
@@ -415,13 +410,13 @@ struct DarkFoodCard: View {
 
             // Macro chips
             VStack(alignment: .trailing, spacing: 3) {
-                MiniChip(label: "P", value: Int(entry.protein), color: Color(red: 0.3, green: 0.71, blue: 0.67))
-                MiniChip(label: "C", value: Int(entry.carbs),   color: Color(red: 1.0, green: 0.72, blue: 0.3))
-                MiniChip(label: "F", value: Int(entry.fat),     color: Color(red: 0.9, green: 0.35, blue: 0.35))
+                MiniChip(label: "P", value: Int(entry.protein), color: MochiTheme.success)
+                MiniChip(label: "C", value: Int(entry.carbs),   color: MochiTheme.warning)
+                MiniChip(label: "F", value: Int(entry.fat),     color: MochiTheme.accent)
             }
         }
         .padding(14)
-        .darkCard()
+        .mochiCard()
         .contentShape(RoundedRectangle(cornerRadius: 18))
         .onTapGesture { if isEditable { onEdit() } }
         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
@@ -432,7 +427,7 @@ struct DarkFoodCard: View {
                 Button { onEdit() } label: {
                     Label("Edit", systemImage: "pencil")
                 }
-                .tint(.orange)
+                .tint(MochiTheme.warning)
             }
         }
     }
@@ -443,7 +438,7 @@ private struct MiniChip: View {
     var body: some View {
         HStack(spacing: 2) {
             Text(label).font(.system(size: 9, weight: .bold)).foregroundStyle(color)
-            Text("\(value)g").font(.system(size: 9)).foregroundStyle(Theme.textSecondary)
+            Text("\(value)g").font(.system(size: 9)).foregroundStyle(MochiTheme.textSecondary)
         }
         .padding(.horizontal, 6).padding(.vertical, 2)
         .background(color.opacity(0.12))
@@ -459,26 +454,26 @@ private struct EmptyMealCard: View {
         VStack(spacing: 12) {
             Image(systemName: "fork.knife")
                 .font(.system(size: 28))
-                .foregroundStyle(Theme.textTertiary)
+                .foregroundStyle(MochiTheme.textSecondary)
             Text("Nothing logged for \(meal.rawValue.lowercased()) yet")
                 .font(.system(size: 14))
-                .foregroundStyle(Theme.textSecondary)
+                .foregroundStyle(MochiTheme.textSecondary)
                 .multilineTextAlignment(.center)
             if isToday {
                 Button(action: onAdd) {
                     Text("Add food")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(.black)
+                        .font(.system(size: 14, weight: .semibold, design: .rounded))
+                        .foregroundStyle(MochiTheme.surfaceAlt)
                         .padding(.horizontal, 20)
                         .padding(.vertical, 10)
-                        .background(Theme.teal)
+                        .background(MochiTheme.primary)
                         .clipShape(Capsule())
                 }
             }
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 36)
-        .darkCard()
+        .mochiCard()
     }
 }
 
@@ -500,8 +495,8 @@ private struct FABButton: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
-            .background(accent ? Theme.teal : Theme.card)
-            .foregroundStyle(accent ? Color.black : Theme.textSecondary)
+            .background(accent ? MochiTheme.primary : MochiTheme.surfaceAlt)
+            .foregroundStyle(accent ? MochiTheme.surfaceAlt : MochiTheme.textSecondary)
             .clipShape(RoundedRectangle(cornerRadius: 16))
         }
     }
@@ -533,5 +528,4 @@ struct DatePickerSheet: View {
     NutritionView()
         .environmentObject(MochiViewModel())
         .modelContainer(for: FoodEntry.self, inMemory: true)
-        .preferredColorScheme(.dark)
-}
+        }

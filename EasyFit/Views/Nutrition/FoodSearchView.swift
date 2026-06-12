@@ -44,7 +44,7 @@ struct FoodSearchView: View {
             VStack(spacing: 0) {
                 // Search bar
                 HStack(spacing: 10) {
-                    Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
+                    Image(systemName: "magnifyingglass").foregroundStyle(MochiTheme.textSecondary)
                     TextField(selectedTab == .database ? "Search foods…" : "Search your foods…", text: $query)
                         .autocorrectionDisabled()
                         .submitLabel(.search)
@@ -64,12 +64,12 @@ struct FoodSearchView: View {
                         }
                     if !query.isEmpty {
                         Button { query = ""; results = []; errorMessage = nil } label: {
-                            Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary)
+                            Image(systemName: "xmark.circle.fill").foregroundStyle(MochiTheme.textSecondary)
                         }
                     }
                 }
                 .padding(12)
-                .background(Color(uiColor: .secondarySystemBackground))
+                .background(MochiTheme.surface)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
                 .padding(.horizontal, 16)
                 .padding(.vertical, 10)
@@ -114,6 +114,7 @@ struct FoodSearchView: View {
                     )
                 }
             }
+            .background(MochiTheme.background)
             .navigationTitle("Search Food")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -171,15 +172,15 @@ private struct DatabaseTab: View {
         } else if let error = errorMessage {
             Spacer()
             VStack(spacing: 16) {
-                Image(systemName: "wifi.slash").font(.system(size: 36)).foregroundStyle(.secondary)
-                Text(error).font(.system(size: 14)).foregroundStyle(.secondary)
+                Image(systemName: "wifi.slash").font(.system(size: 36)).foregroundStyle(MochiTheme.textSecondary)
+                Text(error).font(.system(size: 14)).foregroundStyle(MochiTheme.textSecondary)
                     .multilineTextAlignment(.center).padding(.horizontal, 32)
                 Button(action: onRetry) {
                     Label("Try Again", systemImage: "arrow.clockwise")
-                        .font(.system(size: 14, weight: .medium))
+                        .font(.system(size: 14, weight: .medium, design: .rounded))
                         .padding(.horizontal, 20).padding(.vertical, 10)
-                        .background(Color.primary)
-                        .foregroundStyle(Color(uiColor: .systemBackground))
+                        .background(MochiTheme.primary)
+                        .foregroundStyle(MochiTheme.surfaceAlt)
                         .clipShape(Capsule())
                 }
             }
@@ -187,10 +188,10 @@ private struct DatabaseTab: View {
         } else if results.isEmpty && !query.isEmpty {
             Spacer()
             VStack(spacing: 8) {
-                Image(systemName: "fork.knife").font(.system(size: 36)).foregroundStyle(.secondary)
+                Image(systemName: "fork.knife").font(.system(size: 36)).foregroundStyle(MochiTheme.textSecondary)
                 Text("No results for '\(query)'").font(.system(size: 15, weight: .medium))
                 Text("Try a different spelling or add it manually.")
-                    .font(.system(size: 13)).foregroundStyle(.secondary)
+                    .font(.system(size: 13)).foregroundStyle(MochiTheme.textSecondary)
             }
             Spacer()
         } else if results.isEmpty {
@@ -200,7 +201,7 @@ private struct DatabaseTab: View {
                         VStack(alignment: .leading, spacing: 10) {
                             Text("Recent")
                                 .font(.system(size: 12, weight: .semibold))
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(MochiTheme.textSecondary)
                                 .textCase(.uppercase).tracking(0.5)
                                 .padding(.horizontal, 16)
                             FlowLayout(spacing: 8) {
@@ -211,8 +212,8 @@ private struct DatabaseTab: View {
                                             Text(food).font(.system(size: 13, weight: .medium))
                                         }
                                         .padding(.horizontal, 12).padding(.vertical, 7)
-                                        .background(Color(uiColor: .secondarySystemBackground))
-                                        .foregroundStyle(.primary)
+                                        .background(MochiTheme.surface)
+                                        .foregroundStyle(MochiTheme.textPrimary)
                                         .clipShape(Capsule())
                                     }
                                 }
@@ -221,10 +222,10 @@ private struct DatabaseTab: View {
                         }
                     }
                     VStack(spacing: 12) {
-                        Image(systemName: "magnifyingglass").font(.system(size: 40)).foregroundStyle(.secondary)
+                        Image(systemName: "magnifyingglass").font(.system(size: 40)).foregroundStyle(MochiTheme.textSecondary)
                         Text("Search the food database").font(.system(size: 16, weight: .medium))
                         Text("Powered by Edamam\nMillions of foods and branded products")
-                            .font(.system(size: 13)).foregroundStyle(.secondary).multilineTextAlignment(.center)
+                            .font(.system(size: 13)).foregroundStyle(MochiTheme.textSecondary).multilineTextAlignment(.center)
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.top, recentFoods.isEmpty ? 80 : 20)
@@ -256,18 +257,18 @@ private struct CustomTab: View {
         if foods.isEmpty {
             Spacer()
             VStack(spacing: 16) {
-                Image(systemName: "square.and.pencil").font(.system(size: 44)).foregroundStyle(.secondary)
+                Image(systemName: "square.and.pencil").font(.system(size: 44)).foregroundStyle(MochiTheme.textSecondary)
                 Text(query.isEmpty ? "No custom foods yet" : "No results for '\(query)'")
                     .font(.system(size: 17, weight: .semibold))
                 Text("Foods you add manually will appear here so you can quickly log them again.")
-                    .font(.system(size: 14)).foregroundStyle(.secondary)
+                    .font(.system(size: 14)).foregroundStyle(MochiTheme.textSecondary)
                     .multilineTextAlignment(.center).padding(.horizontal, 32)
                 Button(action: onAddNew) {
                     Label("Add custom food", systemImage: "plus")
-                        .font(.system(size: 15, weight: .medium))
+                        .font(.system(size: 15, weight: .medium, design: .rounded))
                         .padding(.horizontal, 24).padding(.vertical, 12)
-                        .background(Color.primary)
-                        .foregroundStyle(Color(uiColor: .systemBackground))
+                        .background(MochiTheme.primary)
+                        .foregroundStyle(MochiTheme.surfaceAlt)
                         .clipShape(Capsule())
                 }
             }
@@ -295,7 +296,7 @@ private struct CustomTab: View {
                 Button(action: onAddNew) {
                     Label("Add new custom food", systemImage: "plus")
                         .font(.system(size: 14))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(MochiTheme.textSecondary)
                 }
                 .listRowInsets(EdgeInsets(top: 10, leading: 16, bottom: 10, trailing: 16))
             }
@@ -312,19 +313,19 @@ private struct CustomFoodRow: View {
         HStack(spacing: 12) {
             VStack(spacing: 1) {
                 Text("\(entry.calories)").font(.system(size: 15, weight: .bold))
-                Text("kcal").font(.system(size: 10)).foregroundStyle(.secondary)
+                Text("kcal").font(.system(size: 10)).foregroundStyle(MochiTheme.textSecondary)
             }
             .frame(width: 48).padding(.vertical, 8)
-            .background(Color(uiColor: .secondarySystemBackground))
+            .background(MochiTheme.surface)
             .clipShape(RoundedRectangle(cornerRadius: 10))
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(entry.name).font(.system(size: 14, weight: .medium)).lineLimit(1)
                 HStack(spacing: 8) {
-                    MacroPill(label: "P", value: entry.protein, color: Color(red: 0.3, green: 0.71, blue: 0.67))
-                    MacroPill(label: "C", value: entry.carbs,   color: Color(red: 1.0, green: 0.72, blue: 0.3))
-                    MacroPill(label: "F", value: entry.fat,     color: Color(red: 0.9, green: 0.35, blue: 0.35))
-                    Text(entry.servingSize).font(.system(size: 11)).foregroundStyle(.tertiary)
+                    MacroPill(label: "P", value: entry.protein, color: MochiTheme.success)
+                    MacroPill(label: "C", value: entry.carbs,   color: MochiTheme.warning)
+                    MacroPill(label: "F", value: entry.fat,     color: MochiTheme.accent)
+                    Text(entry.servingSize).font(.system(size: 11)).foregroundStyle(MochiTheme.textSecondary.opacity(0.6))
                 }
             }
 
@@ -333,7 +334,7 @@ private struct CustomFoodRow: View {
             Button(action: onAdd) {
                 Image(systemName: "plus.circle.fill")
                     .font(.system(size: 24))
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(MochiTheme.primary)
             }
             .buttonStyle(.plain)
         }
@@ -374,31 +375,31 @@ private struct FoodResultRow: View {
         HStack(spacing: 12) {
             VStack(spacing: 1) {
                 Text("\(food.calories)").font(.system(size: 15, weight: .bold))
-                Text("kcal").font(.system(size: 10)).foregroundStyle(.secondary)
+                Text("kcal").font(.system(size: 10)).foregroundStyle(MochiTheme.textSecondary)
             }
             .frame(width: 48).padding(.vertical, 8)
-            .background(Color(uiColor: .secondarySystemBackground))
+            .background(MochiTheme.surface)
             .clipShape(RoundedRectangle(cornerRadius: 10))
 
             VStack(alignment: .leading, spacing: 3) {
                 HStack(spacing: 6) {
                     Text(food.name).font(.system(size: 14, weight: .medium)).lineLimit(2)
                     if SearchHistoryService.shared.score(for: food.name) > 0 {
-                        Image(systemName: "clock.fill").font(.system(size: 10)).foregroundStyle(.secondary)
+                        Image(systemName: "clock.fill").font(.system(size: 10)).foregroundStyle(MochiTheme.textSecondary)
                     }
                 }
                 if let brand = food.brandName, !brand.isEmpty {
-                    Text(brand).font(.system(size: 12)).foregroundStyle(.secondary).lineLimit(1)
+                    Text(brand).font(.system(size: 12)).foregroundStyle(MochiTheme.textSecondary).lineLimit(1)
                 }
                 HStack(spacing: 8) {
-                    MacroPill(label: "P", value: food.protein, color: Color(red: 0.3, green: 0.71, blue: 0.67))
-                    MacroPill(label: "C", value: food.carbs,   color: Color(red: 1.0, green: 0.72, blue: 0.3))
-                    MacroPill(label: "F", value: food.fat,     color: Color(red: 0.9, green: 0.35, blue: 0.35))
-                    Text(food.servingSize).font(.system(size: 11)).foregroundStyle(.tertiary)
+                    MacroPill(label: "P", value: food.protein, color: MochiTheme.success)
+                    MacroPill(label: "C", value: food.carbs,   color: MochiTheme.warning)
+                    MacroPill(label: "F", value: food.fat,     color: MochiTheme.accent)
+                    Text(food.servingSize).font(.system(size: 11)).foregroundStyle(MochiTheme.textSecondary.opacity(0.6))
                 }
             }
             Spacer()
-            Image(systemName: "chevron.right").font(.system(size: 12)).foregroundStyle(.tertiary)
+            Image(systemName: "chevron.right").font(.system(size: 12)).foregroundStyle(MochiTheme.textSecondary.opacity(0.6))
         }
         .padding(.vertical, 4)
     }
@@ -409,7 +410,7 @@ private struct MacroPill: View {
     var body: some View {
         HStack(spacing: 2) {
             Text(label).font(.system(size: 10, weight: .bold)).foregroundStyle(color)
-            Text(String(format: "%.0fg", value)).font(.system(size: 10)).foregroundStyle(.secondary)
+            Text(String(format: "%.0fg", value)).font(.system(size: 10)).foregroundStyle(MochiTheme.textSecondary)
         }
     }
 }
@@ -457,13 +458,13 @@ struct FoodDetailSheet: View {
                     VStack(spacing: 4) {
                         Text(food.name).font(.system(size: 20, weight: .bold)).multilineTextAlignment(.center)
                         if let brand = food.brandName, !brand.isEmpty {
-                            Text(brand).font(.system(size: 14)).foregroundStyle(.secondary)
+                            Text(brand).font(.system(size: 14)).foregroundStyle(MochiTheme.textSecondary)
                         }
                     }.padding(.top, 8)
 
                     VStack(alignment: .leading, spacing: 6) {
                         Text("Serving unit").font(.system(size: 12, weight: .semibold))
-                            .foregroundStyle(.secondary).textCase(.uppercase).tracking(0.5)
+                            .foregroundStyle(MochiTheme.textSecondary).textCase(.uppercase).tracking(0.5)
                             .padding(.horizontal, 16).padding(.top, 12)
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 8) {
@@ -472,8 +473,8 @@ struct FoodDetailSheet: View {
                                     Button { selectedServing = option; quantity = "1" } label: {
                                         Text(option.label).font(.system(size: 14, weight: .medium))
                                             .padding(.horizontal, 14).padding(.vertical, 8)
-                                            .background(isSel ? Color.primary : Color(uiColor: .tertiarySystemBackground))
-                                            .foregroundStyle(isSel ? Color(uiColor: .systemBackground) : .primary)
+                                            .background(isSel ? MochiTheme.primary : MochiTheme.surfaceAlt)
+                                            .foregroundStyle(isSel ? MochiTheme.surfaceAlt : MochiTheme.textPrimary)
                                             .clipShape(Capsule())
                                     }
                                 }
@@ -481,7 +482,7 @@ struct FoodDetailSheet: View {
                             .padding(.horizontal, 16).padding(.bottom, 12)
                         }
                     }
-                    .background(Color(uiColor: .secondarySystemBackground))
+                    .background(MochiTheme.surface)
                     .clipShape(RoundedRectangle(cornerRadius: 16))
                     .padding(.horizontal, 16)
 
@@ -500,12 +501,12 @@ struct FoodDetailSheet: View {
                                 quantity = v.truncatingRemainder(dividingBy: 1) == 0 ? "\(Int(v))" : "\(v)"
                             } label: { Image(systemName: "plus").frame(width: 36, height: 36) }
                         }
-                        .foregroundStyle(.primary)
-                        .background(Color(uiColor: .tertiarySystemBackground))
+                        .foregroundStyle(MochiTheme.textPrimary)
+                        .background(MochiTheme.surfaceAlt)
                         .clipShape(RoundedRectangle(cornerRadius: 10))
                     }
                     .padding(.horizontal, 16).padding(.vertical, 12)
-                    .background(Color(uiColor: .secondarySystemBackground))
+                    .background(MochiTheme.surface)
                     .clipShape(RoundedRectangle(cornerRadius: 16))
                     .padding(.horizontal, 16)
 
@@ -516,13 +517,13 @@ struct FoodDetailSheet: View {
                             Text("\(scaledCalories) kcal").font(.system(size: 17, weight: .bold))
                         }.padding(.horizontal, 16).padding(.vertical, 14)
                         Divider().padding(.leading, 16)
-                        NutrientRow(label: "Protein", value: scaledProtein, color: Color(red: 0.3, green: 0.71, blue: 0.67))
+                        NutrientRow(label: "Protein", value: scaledProtein, color: MochiTheme.success)
                         Divider().padding(.leading, 16)
-                        NutrientRow(label: "Carbs",   value: scaledCarbs,   color: Color(red: 1.0, green: 0.72, blue: 0.3))
+                        NutrientRow(label: "Carbs",   value: scaledCarbs,   color: MochiTheme.warning)
                         Divider().padding(.leading, 16)
-                        NutrientRow(label: "Fat",     value: scaledFat,     color: Color(red: 0.9, green: 0.35, blue: 0.35))
+                        NutrientRow(label: "Fat",     value: scaledFat,     color: MochiTheme.accent)
                     }
-                    .background(Color(uiColor: .secondarySystemBackground))
+                    .background(MochiTheme.surface)
                     .clipShape(RoundedRectangle(cornerRadius: 16))
                     .padding(.horizontal, 16)
 
@@ -534,7 +535,7 @@ struct FoodDetailSheet: View {
                         }
                     }
                     .padding(.horizontal, 16).padding(.vertical, 4)
-                    .background(Color(uiColor: .secondarySystemBackground))
+                    .background(MochiTheme.surface)
                     .clipShape(RoundedRectangle(cornerRadius: 16))
                     .padding(.horizontal, 16)
 
@@ -547,9 +548,9 @@ struct FoodDetailSheet: View {
                         ))
                     } label: {
                         Text("Add to \(selectedMeal.rawValue)")
-                            .font(.system(size: 16, weight: .semibold)).frame(maxWidth: .infinity)
-                            .padding(.vertical, 16).background(Color.primary)
-                            .foregroundStyle(Color(uiColor: .systemBackground))
+                            .font(.system(size: 16, weight: .semibold, design: .rounded)).frame(maxWidth: .infinity)
+                            .padding(.vertical, 16).background(MochiTheme.primary)
+                            .foregroundStyle(MochiTheme.surfaceAlt)
                             .clipShape(RoundedRectangle(cornerRadius: 16))
                     }
                     .padding(.horizontal, 16).padding(.bottom, 24)
