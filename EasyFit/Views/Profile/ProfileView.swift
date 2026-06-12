@@ -19,6 +19,8 @@ struct ProfileView: View {
     @State private var showingEdit = false
 
     @StateObject private var notifications = MochiNotificationService.shared
+    @EnvironmentObject private var paywall: PaywallCoordinator
+    @ObservedObject private var premium = PremiumStore.shared
 
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
 
@@ -183,6 +185,19 @@ struct ProfileView: View {
                                 SettingsRow(icon: "scalemass.fill", iconColor: MochiTheme.accent,  label: "Weight Unit") {
                                     Text(weightUnitRaw.uppercased()).font(.system(size: 13)).foregroundStyle(MochiTheme.textSecondary)
                                 }
+                                Divider().padding(.leading, 52)
+                                Button {
+                                    if !premium.isPremium {
+                                        paywall.presentPaywall(.profile)
+                                    }
+                                } label: {
+                                    SettingsRow(icon: "sparkles", iconColor: MochiTheme.primary, label: "EasyFit Premium") {
+                                        Text(premium.isPremium ? "Active ✓" : "Unlimited scans")
+                                            .font(.system(size: 13))
+                                            .foregroundStyle(premium.isPremium ? MochiTheme.success : MochiTheme.textSecondary)
+                                    }
+                                }
+                                .buttonStyle(.plain)
                                 Divider().padding(.leading, 52)
                                 Button {
                                     Task {

@@ -13,6 +13,7 @@ struct MochiHomeView: View {
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @EnvironmentObject private var mochi: MochiViewModel
+    @EnvironmentObject private var paywall: PaywallCoordinator
     @Query(sort: \FoodEntry.date, order: .reverse) private var allEntries: [FoodEntry]
     @Query private var weightEntries: [BodyWeightEntry]
     @StateObject private var vm = NutritionViewModel()
@@ -57,7 +58,7 @@ struct MochiHomeView: View {
 
                 // Primary action — fixed 24pt below the scene's fade
                 Button {
-                        showFoodCamera = true
+                    if paywall.requestScan() { showFoodCamera = true }
                 } label: {
                     HStack(spacing: MochiTheme.Spacing.sm) {
                         Image(systemName: "camera.fill")
@@ -80,6 +81,14 @@ struct MochiHomeView: View {
                 )
                 .padding(.horizontal, MochiTheme.Spacing.xl)
                 .padding(.top, MochiTheme.Spacing.xl)
+
+                // Quota counter — interface voice, calm, free tier only
+                if let counter = paywall.remainingScansText {
+                    Text(counter)
+                        .font(MochiTheme.caption)
+                        .foregroundStyle(MochiTheme.textSecondary)
+                        .padding(.top, MochiTheme.Spacing.sm)
+                }
 
                 Button {
                     showSearchPanel = true

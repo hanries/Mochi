@@ -1,9 +1,25 @@
 import SwiftUI
 import UIKit
+import SwiftData
 
 struct ContentView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var mochi: MochiViewModel
+    @EnvironmentObject var paywall: PaywallCoordinator
+    @Environment(\.modelContext) private var context
+
+    @AppStorage("hasSeenIntroPaywall") private var hasSeenIntroPaywall = false
+    @AppStorage("pendingFirstLog") private var pendingFirstLog = false
+
+    @State private var showManualEntryFallback = false
+
+    private var currentMeal: MealType {
+        let h = Calendar.current.component(.hour, from: .now)
+        if h < 11 { return .breakfast }
+        if h < 15 { return .lunch }
+        if h < 20 { return .dinner }
+        return .snack
+    }
 
     init() {
         // Tab bar: surface background, textSecondary unselected items;
@@ -45,6 +61,30 @@ struct ContentView: View {
         .onChange(of: mochi.moment) { _, moment in
             if let moment, moment.kind != .checkIn {
                 appState.selectedTab = .home
+            }
+        }
+        // The single paywall presentation point.
+        .sheet(item: $paywall.paywallContext) { paywallContext in
+            PaywallView(
+                context: paywallContext,
+                onManualEntry: paywallContext == .scanCap
+                    ? { showManualEntryFallback = true }
+                    : nil
+            )
+        }
+        // The capped-user escape: manual logging is always one tap away.
+        .sheet(isPresented: $showManualEntryFallback) {
+            AddFoodView(mealType: currentMeal) { entry in
+                context.insert(entry)
+                mochi.mealLogged()
+            }
+        }
+        // One soft show for brand-new users only (pendingFirstLog is set by
+        // onboarding); plainly closable, never repeated, never on app open.
+        .onAppear {
+            if pendingFirstLog && !hasSeenIntroPaywall {
+                hasSeenIntroPaywall = true
+                paywall.presentPaywall(.onboarding)
             }
         }
     }

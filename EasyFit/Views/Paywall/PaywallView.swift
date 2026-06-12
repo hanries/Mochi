@@ -1,0 +1,240 @@
+import SwiftUI
+import StoreKit
+
+// MARK: - EasyFit Premium paywall
+//
+// Warm, honest, skippable. Mochi is decoration here — he never begs.
+// Prices and the trial badge come from StoreKit, never hardcoded.
+// From the scan-cap context, manual entry is one tap away: a capped
+// user can always log.
+
+struct PaywallView: View {
+    let context: PaywallContext
+    var onManualEntry: (() -> Void)? = nil
+
+    @Environment(\.dismiss) private var dismiss
+    @ObservedObject private var store = PremiumStore.shared
+
+    @State private var selectedProductID = PremiumStore.yearlyID
+    @State private var isPurchasing = false
+    @State private var purchaseError: String? = nil
+
+    private let termsURL   = URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!
+    // TODO: replace with the real privacy policy URL before submission.
+    private let privacyURL = URL(string: "https://example.com/easyfit-privacy")!
+
+    var body: some View {
+        ZStack(alignment: .topTrailing) {
+            MochiTheme.background.ignoresSafeArea()
+
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: MochiTheme.Spacing.xl) {
+                    MochiView(state: .ecstatic, size: 120)
+                        .padding(.top, MochiTheme.Spacing.xxl)
+
+                    VStack(spacing: MochiTheme.Spacing.sm) {
+                        Text("Unlimited scans, zero counting")
+                            .font(MochiTheme.title)
+                            .foregroundStyle(MochiTheme.textPrimary)
+                            .multilineTextAlignment(.center)
+                        if context == .scanCap {
+                            Text("You've used today's 3 free scans.")
+                                .font(MochiTheme.caption)
+                                .foregroundStyle(MochiTheme.textSecondary)
+                        }
+                    }
+
+                    VStack(alignment: .leading, spacing: MochiTheme.Spacing.md) {
+                        BenefitRow(text: "Unlimited AI food scans, every day")
+                        BenefitRow(text: "Everything free today stays free, forever")
+                        BenefitRow(text: "Helps keep Mochi's home warm and growing")
+                    }
+                    .padding(.horizontal, MochiTheme.Spacing.xl)
+
+                    // Plan cards — yearly first and preferred
+                    VStack(spacing: MochiTheme.Spacing.md) {
+                        if store.products.isEmpty {
+                            ProgressView()
+                                .padding(.vertical, MochiTheme.Spacing.xl)
+                        } else {
+                            ForEach(store.products, id: \.id) { product in
+                                PlanCard(
+                                    product: product,
+                                    isSelected: selectedProductID == product.id
+                                ) {
+                                    selectedProductID = product.id
+                                }
+                            }
+                        }
+                    }
+                    .padding(.horizontal, MochiTheme.Spacing.xl)
+
+                    if let purchaseError {
+                        Text(purchaseError)
+                            .font(MochiTheme.caption)
+                            .foregroundStyle(MochiTheme.danger)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, MochiTheme.Spacing.xl)
+                    }
+
+                    // Purchase
+                    Button {
+                        purchase()
+                    } label: {
+                        Group {
+                            if isPurchasing {
+                                ProgressView().tint(MochiTheme.surfaceAlt)
+                            } else {
+                                Text("Continue")
+                                    .font(.system(size: 17, weight: .semibold, design: .rounded))
+                            }
+                        }
+                        .foregroundStyle(MochiTheme.surfaceAlt)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, MochiTheme.Spacing.lg)
+                        .background(MochiTheme.primary)
+                        .clipShape(RoundedRectangle(cornerRadius: MochiTheme.buttonRadius))
+                    }
+                    .disabled(isPurchasing || store.products.isEmpty)
+                    .padding(.horizontal, MochiTheme.Spacing.xl)
+
+                    // The capped user is never blocked from logging.
+                    if context == .scanCap {
+                        Button {
+                            dismiss()
+                            onManualEntry?()
+                        } label: {
+                            Text("Or log it manually — always free")
+                                .font(.system(size: 15, weight: .semibold, design: .rounded))
+                                .foregroundStyle(MochiTheme.primary)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, MochiTheme.Spacing.md)
+                                .background(MochiTheme.surfaceAlt)
+                                .clipShape(RoundedRectangle(cornerRadius: MochiTheme.buttonRadius))
+                        }
+                        .padding(.horizontal, MochiTheme.Spacing.xl)
+                    }
+
+                    Button("Restore Purchases") {
+                        Task {
+                            await store.restore()
+                            if store.isPremium { dismiss() }
+                        }
+                    }
+                    .font(MochiTheme.caption)
+                    .foregroundStyle(MochiTheme.textSecondary)
+
+                    HStack(spacing: MochiTheme.Spacing.lg) {
+                        Link("Terms of Use", destination: termsURL)
+                        Link("Privacy Policy", destination: privacyURL)
+                    }
+                    .font(MochiTheme.caption)
+                    .foregroundStyle(MochiTheme.textSecondary)
+                    .padding(.bottom, MochiTheme.Spacing.xxl)
+                }
+            }
+
+            // Always-visible close
+            Button { dismiss() } label: {
+                Image(systemName: "xmark")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(MochiTheme.textSecondary)
+                    .frame(width: 30, height: 30)
+                    .background(MochiTheme.surface)
+                    .clipShape(Circle())
+            }
+            .padding(MochiTheme.Spacing.lg)
+            .accessibilityLabel("Close")
+        }
+    }
+
+    private func purchase() {
+        guard let product = store.products.first(where: { $0.id == selectedProductID }) else { return }
+        isPurchasing = true
+        purchaseError = nil
+        Task {
+            do {
+                let success = try await store.purchase(product)
+                isPurchasing = false
+                if success { dismiss() }
+            } catch {
+                isPurchasing = false
+                purchaseError = "The purchase didn't go through. No worries — nothing was charged."
+            }
+        }
+    }
+}
+
+// MARK: - Pieces
+
+private struct BenefitRow: View {
+    let text: String
+    var body: some View {
+        HStack(spacing: MochiTheme.Spacing.md) {
+            Image(systemName: "checkmark.circle.fill")
+                .foregroundStyle(MochiTheme.success)
+            Text(text)
+                .font(MochiTheme.body)
+                .foregroundStyle(MochiTheme.textPrimary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+}
+
+private struct PlanCard: View {
+    let product: Product
+    let isSelected: Bool
+    let onTap: () -> Void
+
+    private var periodLabel: String {
+        switch product.subscription?.subscriptionPeriod.unit {
+        case .year:  return "per year"
+        case .month: return "per month"
+        default:     return ""
+        }
+    }
+
+    private var hasFreeTrial: Bool {
+        product.subscription?.introductoryOffer?.paymentMode == .freeTrial
+    }
+
+    var body: some View {
+        Button(action: onTap) {
+            HStack {
+                VStack(alignment: .leading, spacing: MochiTheme.Spacing.xs) {
+                    HStack(spacing: MochiTheme.Spacing.sm) {
+                        Text(product.displayName)
+                            .font(.system(size: 16, weight: .semibold, design: .rounded))
+                            .foregroundStyle(MochiTheme.textPrimary)
+                        if hasFreeTrial {
+                            Text("7-day free trial")
+                                .font(.system(size: 11, weight: .semibold, design: .rounded))
+                                .foregroundStyle(MochiTheme.surfaceAlt)
+                                .padding(.horizontal, MochiTheme.Spacing.sm)
+                                .padding(.vertical, 3)
+                                .background(MochiTheme.success)
+                                .clipShape(Capsule())
+                        }
+                    }
+                    Text("\(product.displayPrice) \(periodLabel)")
+                        .font(MochiTheme.caption)
+                        .foregroundStyle(MochiTheme.textSecondary)
+                }
+                Spacer()
+                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                    .font(.system(size: 22))
+                    .foregroundStyle(isSelected ? MochiTheme.primary : MochiTheme.textSecondary.opacity(0.4))
+            }
+            .padding(MochiTheme.Spacing.lg)
+            .background(
+                RoundedRectangle(cornerRadius: MochiTheme.cardRadius)
+                    .fill(MochiTheme.surfaceAlt)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: MochiTheme.cardRadius)
+                            .strokeBorder(isSelected ? MochiTheme.primary : .clear, lineWidth: 2)
+                    )
+            )
+        }
+        .buttonStyle(.plain)
+    }
+}

@@ -5,6 +5,7 @@ struct NutritionView: View {
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var mochi: MochiViewModel
+    @EnvironmentObject private var paywall: PaywallCoordinator
     @Query(sort: \FoodEntry.date, order: .reverse) private var allEntries: [FoodEntry]
 
     @AppStorage("userName") private var userName = ""
@@ -66,7 +67,7 @@ struct NutritionView: View {
 
                                 // Camera shortcut
                                 if isToday {
-                                    Button { showCamera = true } label: {
+                                    Button { if paywall.requestScan() { showCamera = true } } label: {
                                         Image(systemName: "camera.fill")
                                             .font(.system(size: 15))
                                             .foregroundStyle(MochiTheme.textSecondary)
@@ -168,7 +169,9 @@ struct NutritionView: View {
                 // MARK: - FAB row (Scan / Search / Manual)
                 if isToday {
                     HStack(spacing: 12) {
-                        FABButton(icon: "camera.fill", label: "Scan") { showCamera = true }
+                        FABButton(icon: "camera.fill", label: "Scan") {
+                            if paywall.requestScan() { showCamera = true }
+                        }
                         FABButton(icon: "magnifyingglass", label: "Search", accent: true) { showSearch = true }
                         FABButton(icon: "square.and.pencil", label: "Manual") { showManual = true }
                     }

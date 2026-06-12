@@ -9,6 +9,7 @@ struct FoodCameraView: View {
     let onResult:  (FoodScanResult) -> Void
     let onDismiss: () -> Void
 
+    @EnvironmentObject private var paywall: PaywallCoordinator
     @StateObject private var camera = CameraModel()
     @State private var scanResult:   FoodScanResult? = nil
     @State private var isScanning    = false
@@ -164,6 +165,8 @@ struct FoodCameraView: View {
             capturedImage = image
             isScanning    = true
             errorMessage  = nil
+            // The only place an AI scan actually runs — count it here.
+            paywall.recordScanUsed()
 
             Task {
                 do {
