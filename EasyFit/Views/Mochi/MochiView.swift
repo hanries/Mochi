@@ -212,7 +212,7 @@ struct MochiView: View {
                     let i = all.firstIndex(of: state)!
                     state = all[(i + 1) % all.count]
                 }
-                Text(state.rawValue).foregroundStyle(.secondary)
+                Text(state.rawValue).foregroundStyle(MochiTheme.textSecondary)
             }
         }
     }

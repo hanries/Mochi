@@ -358,7 +358,7 @@ private struct ExerciseRow: View {
         VStack(alignment: .leading, spacing: 2) {
             Text(exercise.name).font(.system(size: 14))
             Text("\(exercise.sets) sets × \(exercise.reps) reps  \(exercise.displayWeight)")
-                .font(.system(size: 12)).foregroundStyle(.secondary)
+                .font(.system(size: 12)).foregroundStyle(MochiTheme.textSecondary)
         }
     }
 }

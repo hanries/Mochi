@@ -658,7 +658,7 @@ private struct ActivityCard: View {
             HStack(spacing: 14) {
                 Text(level.emoji).font(.system(size: 22))
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(level.rawValue).font(.system(size: 14, weight: .semibold)).foregroundStyle(.primary)
+                    Text(level.rawValue).font(.system(size: 14, weight: .semibold)).foregroundStyle(MochiTheme.textPrimary)
                     Text(level.description).font(.system(size: 12)).foregroundStyle(MochiTheme.textSecondary)
                 }
                 Spacer()

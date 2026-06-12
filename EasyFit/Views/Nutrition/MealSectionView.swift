@@ -85,7 +85,7 @@ struct EditFoodEntryView: View {
                             } label: {
                                 Image(systemName: "plus.circle.fill")
                                     .font(.system(size: 24))
-                                    .foregroundStyle(.primary)
+                                    .foregroundStyle(MochiTheme.primary)
                             }
                             .buttonStyle(.plain)
                         }
@@ -146,7 +146,7 @@ private struct NutritionInfoRow: View {
     let label: String; let value: String
     var body: some View {
         HStack {
-            Text(label).foregroundStyle(.secondary)
+            Text(label).foregroundStyle(MochiTheme.textSecondary)
             Spacer()
             Text(value).fontWeight(.medium)
         }
