@@ -12,14 +12,14 @@ struct LogView: View {
     var body: some View {
         NavigationStack {
             ZStack(alignment: .top) {
-                Theme.bg.ignoresSafeArea()
+                MochiTheme.background.ignoresSafeArea()
 
                 VStack(spacing: 0) {
                     // Header
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("LOG")
-                            .font(.system(size: 52, weight: .heavy))
-                            .foregroundStyle(Theme.textPrimary)
+                    VStack(alignment: .leading, spacing: MochiTheme.Spacing.sm) {
+                        Text("Log")
+                            .font(MochiTheme.largeTitle)
+                            .foregroundStyle(MochiTheme.textPrimary)
 
                         // Segmented picker
                         HStack(spacing: 8) {
@@ -30,11 +30,11 @@ struct LogView: View {
                                     }
                                 } label: {
                                     Text(seg.rawValue)
-                                        .font(.system(size: 14, weight: .semibold))
+                                        .font(.system(size: 14, weight: .semibold, design: .rounded))
                                         .padding(.horizontal, 20)
                                         .padding(.vertical, 9)
-                                        .background(selectedSegment == seg ? Theme.teal : Theme.card)
-                                        .foregroundStyle(selectedSegment == seg ? Color.black : Theme.textSecondary)
+                                        .background(selectedSegment == seg ? MochiTheme.primary : MochiTheme.surface)
+                                        .foregroundStyle(selectedSegment == seg ? MochiTheme.surfaceAlt : MochiTheme.textSecondary)
                                         .clipShape(Capsule())
                                 }
                             }
@@ -140,7 +140,7 @@ private struct JournalContent: View {
                         Image(systemName: "chevron.left")
                             .font(.system(size: 16, weight: .semibold))
                             .frame(width: 36, height: 36)
-                            .background(Color(uiColor: .secondarySystemBackground))
+                            .background(MochiTheme.surface)
                             .clipShape(Circle())
                     }
                     Spacer()
@@ -153,7 +153,7 @@ private struct JournalContent: View {
                         Image(systemName: "chevron.right")
                             .font(.system(size: 16, weight: .semibold))
                             .frame(width: 36, height: 36)
-                            .background(Color(uiColor: .secondarySystemBackground))
+                            .background(MochiTheme.surface)
                             .clipShape(Circle())
                     }
                     .disabled(cal.isDate(selectedMonth, equalTo: .now, toGranularity: .month))
@@ -167,7 +167,7 @@ private struct JournalContent: View {
                         ForEach(weekdaySymbols.indices, id: \.self) { i in
                             Text(weekdaySymbols[i])
                                 .font(.system(size: 11, weight: .medium))
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(MochiTheme.textSecondary)
                                 .frame(maxWidth: .infinity)
                         }
                     }
@@ -191,8 +191,7 @@ private struct JournalContent: View {
                     }
                 }
                 .padding(16)
-                .background(Color(uiColor: .secondarySystemBackground))
-                .clipShape(RoundedRectangle(cornerRadius: 20))
+                .mochiCard()
                 .padding(.horizontal)
 
                 // Entry count
@@ -200,7 +199,7 @@ private struct JournalContent: View {
                     HStack {
                         Text("\(monthEntries.count) entr\(monthEntries.count == 1 ? "y" : "ies") this month")
                             .font(.system(size: 13))
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(MochiTheme.textSecondary)
                         Spacer()
                     }
                     .padding(.horizontal)
@@ -221,12 +220,12 @@ private struct JournalContent: View {
                     VStack(spacing: 16) {
                         Image(systemName: "camera.fill")
                             .font(.system(size: 48))
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(MochiTheme.textSecondary)
                         Text("No journal entries yet")
                             .font(.system(size: 17, weight: .semibold))
                         Text("Tap the camera button to take a post-workout photo and track your visual progress.")
                             .font(.system(size: 14))
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(MochiTheme.textSecondary)
                             .multilineTextAlignment(.center)
                             .padding(.horizontal, 40)
                     }

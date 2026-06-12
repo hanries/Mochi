@@ -22,7 +22,7 @@ struct FitProgressView: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
         }
-        .background(Theme.bg)
+        .background(MochiTheme.background)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
@@ -30,13 +30,12 @@ struct FitProgressView: View {
                 } label: {
                     Image(systemName: "plus")
                         .fontWeight(.semibold)
-                        .foregroundStyle(Theme.teal)
+                        .foregroundStyle(MochiTheme.primary)
                 }
             }
         }
         .sheet(isPresented: $vm.showAddWeight) {
             AddWeightView { entry in context.insert(entry) }
-                .preferredColorScheme(.dark)
         }
     }
 }
@@ -48,7 +47,9 @@ struct StreakCard: View {
     let longestStreak: Int
 
     var flameColor: Color {
-        streak >= 7 ? .orange : streak >= 3 ? Color(red: 1, green: 0.6, blue: 0.2) : Theme.textTertiary
+        streak >= 7 ? MochiTheme.primary
+            : streak >= 3 ? MochiTheme.warning
+            : MochiTheme.textSecondary.opacity(0.4)
     }
 
     var body: some View {
@@ -57,7 +58,7 @@ struct StreakCard: View {
                 HStack(alignment: .top, spacing: 4) {
                     Text("\(streak)")
                         .font(.system(size: 52, weight: .bold, design: .rounded))
-                        .foregroundStyle(Theme.textPrimary)
+                        .foregroundStyle(MochiTheme.textPrimary)
                     Image(systemName: "flame.fill")
                         .font(.system(size: 22))
                         .foregroundStyle(flameColor)
@@ -65,26 +66,26 @@ struct StreakCard: View {
                 }
                 Text("day streak")
                     .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(Theme.textSecondary)
+                    .foregroundStyle(MochiTheme.textSecondary)
             }
             .frame(maxWidth: .infinity)
 
             Rectangle()
-                .fill(Theme.textTertiary.opacity(0.3))
+                .fill(MochiTheme.textSecondary.opacity(0.3))
                 .frame(width: 1, height: 60)
 
             VStack(spacing: 6) {
                 Text("\(longestStreak)")
                     .font(.system(size: 52, weight: .bold, design: .rounded))
-                    .foregroundStyle(Theme.textPrimary)
+                    .foregroundStyle(MochiTheme.textPrimary)
                 Text("best streak")
                     .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(Theme.textSecondary)
+                    .foregroundStyle(MochiTheme.textSecondary)
             }
             .frame(maxWidth: .infinity)
         }
         .padding(.vertical, 20)
-        .darkCard()
+        .mochiCard()
     }
 }
 
@@ -122,13 +123,13 @@ struct LogCalendarView: View {
         VStack(alignment: .leading, spacing: 14) {
             Text(monthTitle)
                 .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(Theme.textPrimary)
+                .foregroundStyle(MochiTheme.textPrimary)
 
             HStack(spacing: 0) {
                 ForEach(weekdaySymbols.indices, id: \.self) { i in
                     Text(weekdaySymbols[i])
                         .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(Theme.textTertiary)
+                        .foregroundStyle(MochiTheme.textSecondary)
                         .frame(maxWidth: .infinity)
                 }
             }
@@ -145,7 +146,7 @@ struct LogCalendarView: View {
             }
         }
         .padding(16)
-        .darkCard()
+        .mochiCard()
     }
 }
 
@@ -159,13 +160,13 @@ private struct DarkCalendarDayCell: View {
         if date != nil {
             ZStack {
                 if isLogged {
-                    Circle().fill(Theme.teal)
+                    Circle().fill(MochiTheme.primary)
                 } else if isToday {
-                    Circle().strokeBorder(Theme.teal, lineWidth: 1.5)
+                    Circle().strokeBorder(MochiTheme.primary, lineWidth: 1.5)
                 }
                 Text("\(day)")
                     .font(.system(size: 13, weight: isLogged || isToday ? .semibold : .regular))
-                    .foregroundStyle(isLogged ? Color.black : Theme.textPrimary)
+                    .foregroundStyle(isLogged ? MochiTheme.surfaceAlt : MochiTheme.textPrimary)
             }
             .frame(height: 34)
         } else {
@@ -189,25 +190,25 @@ struct WeightGraphCard: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Weight")
                         .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(Theme.textPrimary)
+                        .foregroundStyle(MochiTheme.textPrimary)
                     if let d = delta {
                         Text(String(format: "%+.1f lb this month", d))
                             .font(.system(size: 12))
-                            .foregroundStyle(d <= 0 ? .green : .red)
+                            .foregroundStyle(d <= 0 ? MochiTheme.success : MochiTheme.warning)
                     }
                 }
                 Spacer()
                 if let latest = entries.last?.weight {
                     Text(String(format: "%.1f lb", latest))
                         .font(.system(size: 22, weight: .bold, design: .rounded))
-                        .foregroundStyle(Theme.teal)
+                        .foregroundStyle(MochiTheme.primary)
                 }
             }
 
             if entries.isEmpty {
                 Text("Log your weight to see the graph")
                     .font(.system(size: 13))
-                    .foregroundStyle(Theme.textSecondary)
+                    .foregroundStyle(MochiTheme.textSecondary)
                     .frame(maxWidth: .infinity, minHeight: 120, alignment: .center)
             } else {
                 LineGraph(entries: entries, minW: minW, maxW: maxW)
@@ -217,15 +218,15 @@ struct WeightGraphCard: View {
             if entries.count > 1 {
                 HStack {
                     Text(entries.first!.date, format: .dateTime.month(.abbreviated).day())
-                        .font(.system(size: 11)).foregroundStyle(Theme.textTertiary)
+                        .font(.system(size: 11)).foregroundStyle(MochiTheme.textSecondary)
                     Spacer()
                     Text(entries.last!.date, format: .dateTime.month(.abbreviated).day())
-                        .font(.system(size: 11)).foregroundStyle(Theme.textTertiary)
+                        .font(.system(size: 11)).foregroundStyle(MochiTheme.textSecondary)
                 }
             }
         }
         .padding(16)
-        .darkCard()
+        .mochiCard()
     }
 }
 
@@ -273,7 +274,7 @@ private struct LineGraphCanvas: View {
                     p.move(to: CGPoint(x: 0, y: gridLineYs[i]))
                     p.addLine(to: CGPoint(x: w, y: gridLineYs[i]))
                 }
-                .stroke(Theme.textTertiary.opacity(0.3), lineWidth: 1)
+                .stroke(MochiTheme.textSecondary.opacity(0.3), lineWidth: 1)
             }
             if points.count > 1 {
                 Path { p in
@@ -284,7 +285,7 @@ private struct LineGraphCanvas: View {
                     p.closeSubpath()
                 }
                 .fill(LinearGradient(
-                    colors: [Theme.teal.opacity(0.18), Theme.teal.opacity(0.0)],
+                    colors: [MochiTheme.primary.opacity(0.18), MochiTheme.primary.opacity(0.0)],
                     startPoint: .top, endPoint: .bottom
                 ))
             }
@@ -293,11 +294,11 @@ private struct LineGraphCanvas: View {
                     p.move(to: points[0])
                     for pt in points.dropFirst() { p.addLine(to: pt) }
                 }
-                .stroke(Theme.teal, style: StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
+                .stroke(MochiTheme.primary, style: StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
             }
             if let last = points.last {
                 Circle()
-                    .fill(Theme.teal)
+                    .fill(MochiTheme.primary)
                     .frame(width: 8, height: 8)
                     .position(last)
             }
@@ -339,5 +340,4 @@ struct AddWeightView: View {
 #Preview {
     FitProgressView()
         .modelContainer(for: BodyWeightEntry.self, inMemory: true)
-        .preferredColorScheme(.dark)
 }

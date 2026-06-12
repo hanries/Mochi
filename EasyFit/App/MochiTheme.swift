@@ -44,6 +44,23 @@ enum MochiTheme {
     }
 }
 
+// MARK: - Card surface modifier
+
+struct MochiCard: ViewModifier {
+    var cornerRadius: CGFloat = MochiTheme.cardRadius
+    func body(content: Content) -> some View {
+        content
+            .background(MochiTheme.surfaceAlt)
+            .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
+    }
+}
+
+extension View {
+    func mochiCard(cornerRadius: CGFloat = MochiTheme.cardRadius) -> some View {
+        modifier(MochiCard(cornerRadius: cornerRadius))
+    }
+}
+
 // MARK: - Hex color helper (file-private to keep tokens the only API)
 
 private extension Color {

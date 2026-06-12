@@ -38,12 +38,9 @@ struct ProfileView: View {
                     // MARK: - Header
                     ZStack(alignment: .bottom) {
                         LinearGradient(
-                            colors: [
-                                Color(red: 0.13, green: 0.13, blue: 0.18),
-                                Color(red: 0.08, green: 0.08, blue: 0.12)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint:   .bottomTrailing
+                            colors: [MochiTheme.surface, MochiTheme.background],
+                            startPoint: .top,
+                            endPoint:   .bottom
                         )
                         .ignoresSafeArea(edges: .top)
 
@@ -53,32 +50,29 @@ struct ProfileView: View {
                                 Circle()
                                     .fill(
                                         LinearGradient(
-                                            colors: [
-                                                Color(red: 1.0, green: 0.75, blue: 0.28),
-                                                Color(red: 1.0, green: 0.5,  blue: 0.1)
-                                            ],
+                                            colors: [MochiTheme.warning, MochiTheme.primary],
                                             startPoint: .topLeading,
                                             endPoint:   .bottomTrailing
                                         )
                                     )
                                     .frame(width: 88, height: 88)
-                                    .shadow(color: Color.orange.opacity(0.4), radius: 16, x: 0, y: 8)
+                                    .shadow(color: MochiTheme.primary.opacity(0.35), radius: 16, x: 0, y: 8)
                                 Text(initials)
                                     .font(.system(size: 34, weight: .bold, design: .rounded))
-                                    .foregroundStyle(.white)
+                                    .foregroundStyle(MochiTheme.surfaceAlt)
                             }
 
                             // Name + goal badge
                             VStack(spacing: 6) {
                                 Text(userName.isEmpty ? "Set your name" : userName)
-                                    .font(.system(size: 24, weight: .bold))
-                                    .foregroundStyle(.white)
+                                    .font(.system(size: 24, weight: .bold, design: .rounded))
+                                    .foregroundStyle(MochiTheme.textPrimary)
                                 Text(editGoal.rawValue)
                                     .font(.system(size: 12, weight: .semibold))
-                                    .foregroundStyle(.white.opacity(0.7))
+                                    .foregroundStyle(MochiTheme.textSecondary)
                                     .padding(.horizontal, 12)
                                     .padding(.vertical, 5)
-                                    .background(.white.opacity(0.12))
+                                    .background(MochiTheme.surfaceAlt)
                                     .clipShape(Capsule())
                             }
 
@@ -105,12 +99,12 @@ struct ProfileView: View {
                             HStack(spacing: 16) {
                                 ZStack {
                                     Circle()
-                                        .stroke(Color.orange.opacity(0.15), lineWidth: 6)
+                                        .stroke(MochiTheme.primary.opacity(0.15), lineWidth: 6)
                                     Circle()
                                         .trim(from: 0, to: 1)
                                         .stroke(
                                             LinearGradient(
-                                                colors: [.orange, Color(red: 1, green: 0.5, blue: 0.1)],
+                                                colors: [MochiTheme.primary, MochiTheme.warning],
                                                 startPoint: .topLeading, endPoint: .bottomTrailing
                                             ),
                                             style: StrokeStyle(lineWidth: 6, lineCap: .round)
@@ -119,9 +113,10 @@ struct ProfileView: View {
                                     VStack(spacing: 0) {
                                         Text("\(goal.calories)")
                                             .font(.system(size: 20, weight: .bold, design: .rounded))
+                                            .foregroundStyle(MochiTheme.textPrimary)
                                         Text("kcal")
                                             .font(.system(size: 10, weight: .medium))
-                                            .foregroundStyle(.secondary)
+                                            .foregroundStyle(MochiTheme.textSecondary)
                                     }
                                 }
                                 .frame(width: 68, height: 68)
@@ -129,24 +124,25 @@ struct ProfileView: View {
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text("Calorie Goal")
                                         .font(.system(size: 13, weight: .semibold))
-                                        .foregroundStyle(.secondary)
+                                        .foregroundStyle(MochiTheme.textSecondary)
                                     Text("\(goal.calories) kcal / day")
-                                        .font(.system(size: 20, weight: .bold))
+                                        .font(.system(size: 20, weight: .bold, design: .rounded))
+                                        .foregroundStyle(MochiTheme.textPrimary)
                                 }
                                 Spacer()
                             }
                             .padding(16)
-                            .background(Color(uiColor: .secondarySystemBackground))
+                            .background(MochiTheme.surfaceAlt)
                             .clipShape(RoundedRectangle(cornerRadius: 16))
 
                             // Macro trio
                             HStack(spacing: 10) {
                                 MacroBlock(label: "Protein", value: Int(goal.protein),
-                                           color: Color(red: 0.3, green: 0.71, blue: 0.67), icon: "p.circle.fill")
+                                           color: MochiTheme.success, icon: "p.circle.fill")
                                 MacroBlock(label: "Carbs",   value: Int(goal.carbs),
-                                           color: Color(red: 1.0, green: 0.72, blue: 0.3),  icon: "c.circle.fill")
+                                           color: MochiTheme.warning, icon: "c.circle.fill")
                                 MacroBlock(label: "Fat",     value: Int(goal.fat),
-                                           color: Color(red: 0.9, green: 0.35, blue: 0.35), icon: "f.circle.fill")
+                                           color: MochiTheme.accent,  icon: "f.circle.fill")
                             }
                         }
                         .padding(.horizontal)
@@ -164,9 +160,9 @@ struct ProfileView: View {
                             }
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 16)
-                            .background(Color.primary)
-                            .foregroundStyle(Color(uiColor: .systemBackground))
-                            .clipShape(RoundedRectangle(cornerRadius: 16))
+                            .background(MochiTheme.primary)
+                            .foregroundStyle(MochiTheme.surfaceAlt)
+                            .clipShape(RoundedRectangle(cornerRadius: MochiTheme.cardRadius))
                         }
                         .padding(.horizontal)
 
@@ -176,16 +172,16 @@ struct ProfileView: View {
                                 .padding(.horizontal)
 
                             VStack(spacing: 0) {
-                                SettingsRow(icon: "figure.walk",   iconColor: .green,  label: "Activity Level") {
-                                    Text(editActivity.rawValue).font(.system(size: 13)).foregroundStyle(.secondary)
+                                SettingsRow(icon: "figure.walk",   iconColor: MochiTheme.success,  label: "Activity Level") {
+                                    Text(editActivity.rawValue).font(.system(size: 13)).foregroundStyle(MochiTheme.textSecondary)
                                 }
                                 Divider().padding(.leading, 52)
-                                SettingsRow(icon: "target",        iconColor: .orange, label: "Fitness Goal") {
-                                    Text(editGoal.rawValue).font(.system(size: 13)).foregroundStyle(.secondary)
+                                SettingsRow(icon: "target",        iconColor: MochiTheme.primary, label: "Fitness Goal") {
+                                    Text(editGoal.rawValue).font(.system(size: 13)).foregroundStyle(MochiTheme.textSecondary)
                                 }
                                 Divider().padding(.leading, 52)
-                                SettingsRow(icon: "scalemass.fill", iconColor: .blue,  label: "Weight Unit") {
-                                    Text(weightUnitRaw.uppercased()).font(.system(size: 13)).foregroundStyle(.secondary)
+                                SettingsRow(icon: "scalemass.fill", iconColor: MochiTheme.accent,  label: "Weight Unit") {
+                                    Text(weightUnitRaw.uppercased()).font(.system(size: 13)).foregroundStyle(MochiTheme.textSecondary)
                                 }
                                 Divider().padding(.leading, 52)
                                 Button {
@@ -202,15 +198,15 @@ struct ProfileView: View {
                                         }
                                     }
                                 } label: {
-                                    SettingsRow(icon: "bell.fill", iconColor: Theme.teal, label: "Mochi Check-ins") {
+                                    SettingsRow(icon: "bell.fill", iconColor: MochiTheme.warning, label: "Mochi Check-ins") {
                                         Text(notifications.isAuthorized ? "Once a day"
                                              : notifications.isDenied ? "Enable in Settings" : "Off")
-                                            .font(.system(size: 13)).foregroundStyle(.secondary)
+                                            .font(.system(size: 13)).foregroundStyle(MochiTheme.textSecondary)
                                     }
                                 }
                                 .buttonStyle(.plain)
                             }
-                            .background(Color(uiColor: .secondarySystemBackground))
+                            .background(MochiTheme.surfaceAlt)
                             .clipShape(RoundedRectangle(cornerRadius: 16))
                             .padding(.horizontal)
                         }
@@ -223,14 +219,14 @@ struct ProfileView: View {
                             Button {
                                 hasCompletedOnboarding = false
                             } label: {
-                                SettingsRow(icon: "arrow.counterclockwise", iconColor: .red, label: "Reset Onboarding") {
+                                SettingsRow(icon: "arrow.counterclockwise", iconColor: MochiTheme.danger, label: "Reset Onboarding") {
                                     Image(systemName: "chevron.right")
                                         .font(.system(size: 12))
-                                        .foregroundStyle(.tertiary)
+                                        .foregroundStyle(MochiTheme.textSecondary.opacity(0.6))
                                 }
                             }
                             .buttonStyle(.plain)
-                            .background(Color(uiColor: .secondarySystemBackground))
+                            .background(MochiTheme.surfaceAlt)
                             .clipShape(RoundedRectangle(cornerRadius: 16))
                             .padding(.horizontal)
                         }
@@ -343,7 +339,7 @@ struct EditStatsView: View {
                         Text("Height"); Spacer()
                         TextField("cm", text: $height)
                             .keyboardType(.decimalPad).multilineTextAlignment(.trailing).frame(width: 80)
-                        Text("cm").foregroundStyle(.secondary)
+                        Text("cm").foregroundStyle(MochiTheme.textSecondary)
                     }
                 }
                 Section("Goal") {
@@ -357,11 +353,11 @@ struct EditStatsView: View {
                             Text(level.emoji)
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(level.rawValue).font(.system(size: 14, weight: .medium))
-                                Text(level.description).font(.system(size: 12)).foregroundStyle(.secondary)
+                                Text(level.description).font(.system(size: 12)).foregroundStyle(MochiTheme.textSecondary)
                             }
                             Spacer()
                             if activityLevel == level {
-                                Image(systemName: "checkmark").foregroundStyle(.primary)
+                                Image(systemName: "checkmark").foregroundStyle(MochiTheme.primary)
                             }
                         }
                         .contentShape(Rectangle())
@@ -390,7 +386,7 @@ private struct SectionLabel: View {
     var body: some View {
         Text(text)
             .font(.system(size: 12, weight: .semibold))
-            .foregroundStyle(.secondary)
+            .foregroundStyle(MochiTheme.textSecondary)
             .textCase(.uppercase)
             .tracking(0.6)
     }
@@ -401,12 +397,12 @@ private struct StatChip: View {
     let label: String
     var body: some View {
         VStack(spacing: 4) {
-            Text(value).font(.system(size: 14, weight: .bold)).foregroundStyle(.white)
-            Text(label).font(.system(size: 10, weight: .medium)).foregroundStyle(.white.opacity(0.5))
+            Text(value).font(.system(size: 14, weight: .bold, design: .rounded)).foregroundStyle(MochiTheme.textPrimary)
+            Text(label).font(.system(size: 10, weight: .medium)).foregroundStyle(MochiTheme.textSecondary)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 10)
-        .background(.white.opacity(0.08))
+        .background(MochiTheme.surfaceAlt)
         .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 }
@@ -421,12 +417,12 @@ private struct MacroBlock: View {
             Image(systemName: icon).font(.system(size: 20)).foregroundStyle(color)
             VStack(alignment: .leading, spacing: 2) {
                 Text("\(value)g").font(.system(size: 20, weight: .bold, design: .rounded))
-                Text(label).font(.system(size: 11)).foregroundStyle(.secondary)
+                Text(label).font(.system(size: 11)).foregroundStyle(MochiTheme.textSecondary)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(14)
-        .background(Color(uiColor: .secondarySystemBackground))
+        .background(MochiTheme.surfaceAlt)
         .clipShape(RoundedRectangle(cornerRadius: 16))
     }
 }

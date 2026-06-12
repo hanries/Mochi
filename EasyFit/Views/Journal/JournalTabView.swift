@@ -47,7 +47,7 @@ struct JournalTabView: View {
                             Image(systemName: "chevron.left")
                                 .font(.system(size: 16, weight: .semibold))
                                 .frame(width: 36, height: 36)
-                                .background(Color(uiColor: .secondarySystemBackground))
+                                .background(MochiTheme.surface)
                                 .clipShape(Circle())
                         }
                         Spacer()
@@ -60,7 +60,7 @@ struct JournalTabView: View {
                             Image(systemName: "chevron.right")
                                 .font(.system(size: 16, weight: .semibold))
                                 .frame(width: 36, height: 36)
-                                .background(Color(uiColor: .secondarySystemBackground))
+                                .background(MochiTheme.surface)
                                 .clipShape(Circle())
                         }
                         .disabled(cal.isDate(selectedMonth, equalTo: .now, toGranularity: .month))
@@ -74,7 +74,7 @@ struct JournalTabView: View {
                             ForEach(weekdaySymbols.indices, id: \.self) { i in
                                 Text(weekdaySymbols[i])
                                     .font(.system(size: 11, weight: .medium))
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(MochiTheme.textSecondary)
                                     .frame(maxWidth: .infinity)
                             }
                         }
@@ -98,7 +98,7 @@ struct JournalTabView: View {
                         }
                     }
                     .padding(16)
-                    .background(Color(uiColor: .secondarySystemBackground))
+                    .background(MochiTheme.surface)
                     .clipShape(RoundedRectangle(cornerRadius: 20))
                     .padding(.horizontal)
 
@@ -107,7 +107,7 @@ struct JournalTabView: View {
                         HStack {
                             Text("\(monthEntries.count) entr\(monthEntries.count == 1 ? "y" : "ies") this month")
                                 .font(.system(size: 13))
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(MochiTheme.textSecondary)
                             Spacer()
                         }
                         .padding(.horizontal)
@@ -128,12 +128,12 @@ struct JournalTabView: View {
                         VStack(spacing: 16) {
                             Image(systemName: "camera.fill")
                                 .font(.system(size: 48))
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(MochiTheme.textSecondary)
                             Text("No journal entries yet")
                                 .font(.system(size: 17, weight: .semibold))
                             Text("Tap the camera button to take a post-workout photo and track your visual progress.")
                                 .font(.system(size: 14))
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(MochiTheme.textSecondary)
                                 .multilineTextAlignment(.center)
                                 .padding(.horizontal, 40)
                         }
@@ -191,7 +191,7 @@ struct JournalDayCell: View {
                     .clipShape(RoundedRectangle(cornerRadius: 8))
                     .overlay(
                         RoundedRectangle(cornerRadius: 8)
-                            .stroke(isToday ? Color.primary : Color.clear, lineWidth: 2)
+                            .stroke(isToday ? MochiTheme.primary : Color.clear, lineWidth: 2)
                     )
                     .overlay(alignment: .bottomTrailing) {
                         Text("\(day)")
@@ -202,19 +202,19 @@ struct JournalDayCell: View {
                     }
             } else {
                 RoundedRectangle(cornerRadius: 8)
-                    .fill(isToday ? Color.primary.opacity(0.08) : Color.clear)
+                    .fill(isToday ? MochiTheme.primary.opacity(0.08) : Color.clear)
                     .overlay(
                         RoundedRectangle(cornerRadius: 8)
-                            .stroke(isToday ? Color.primary : Color.clear, lineWidth: 1.5)
+                            .stroke(isToday ? MochiTheme.primary : Color.clear, lineWidth: 1.5)
                     )
                     .frame(height: 50)
                     .overlay {
                         VStack(spacing: 3) {
                             Text("\(day)")
                                 .font(.system(size: 13, weight: isToday ? .semibold : .regular))
-                                .foregroundStyle(.primary)
+                                .foregroundStyle(MochiTheme.textPrimary)
                             if !entries.isEmpty {
-                                Circle().fill(Color.primary).frame(width: 4, height: 4)
+                                Circle().fill(MochiTheme.primary).frame(width: 4, height: 4)
                             }
                         }
                     }
@@ -239,10 +239,10 @@ struct JournalGridCell: View {
                         .clipped()
                 } else {
                     Rectangle()
-                        .fill(Color(uiColor: .secondarySystemBackground))
+                        .fill(MochiTheme.surface)
                         .overlay {
                             Image(systemName: "note.text")
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(MochiTheme.textSecondary)
                                 .font(.system(size: 24))
                         }
                 }
@@ -286,7 +286,7 @@ struct JournalCameraView: View {
                         TextField("Add a note… (optional)", text: $note, axis: .vertical)
                             .lineLimit(3)
                             .padding(12)
-                            .background(Color(uiColor: .secondarySystemBackground))
+                            .background(MochiTheme.surface)
                             .clipShape(RoundedRectangle(cornerRadius: 12))
                             .padding(.horizontal)
 
@@ -299,8 +299,8 @@ struct JournalCameraView: View {
                                     .font(.system(size: 15, weight: .medium))
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 14)
-                                    .background(Color(uiColor: .secondarySystemBackground))
-                                    .foregroundStyle(.primary)
+                                    .background(MochiTheme.surface)
+                                    .foregroundStyle(MochiTheme.textPrimary)
                                     .clipShape(RoundedRectangle(cornerRadius: 14))
                             }
                             Button {
@@ -311,15 +311,15 @@ struct JournalCameraView: View {
                                     .font(.system(size: 15, weight: .semibold))
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 14)
-                                    .background(Color.primary)
-                                    .foregroundStyle(Color(uiColor: .systemBackground))
+                                    .background(MochiTheme.primary)
+                                    .foregroundStyle(MochiTheme.surfaceAlt)
                                     .clipShape(RoundedRectangle(cornerRadius: 14))
                             }
                         }
                         .padding(.horizontal)
                     }
                     .padding(.vertical, 20)
-                    .background(Color(uiColor: .systemBackground))
+                    .background(MochiTheme.background)
                 }
             } else {
                 Color.black.ignoresSafeArea()
@@ -405,13 +405,13 @@ struct JournalDetailView: View {
                         .font(.system(size: 15))
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(16)
-                        .background(Color(uiColor: .secondarySystemBackground))
+                        .background(MochiTheme.surface)
                         .clipShape(RoundedRectangle(cornerRadius: 14))
                         .padding(.horizontal)
                 }
                 Text(entry.date.formatted(.dateTime.weekday(.wide).month(.wide).day().year().hour().minute()))
                     .font(.system(size: 13))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(MochiTheme.textSecondary)
             }
             .padding(.vertical)
         }
@@ -420,7 +420,7 @@ struct JournalDetailView: View {
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button { showDeleteAlert = true } label: {
-                    Image(systemName: "trash").foregroundStyle(.red)
+                    Image(systemName: "trash").foregroundStyle(MochiTheme.danger)
                 }
             }
         }

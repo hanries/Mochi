@@ -47,6 +47,7 @@ struct WorkoutView: View {
                     .padding(.bottom, 24)
                 }
             }
+            .background(MochiTheme.background)
             .navigationTitle("Workout")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
@@ -107,21 +108,21 @@ struct WeekdayPicker: View {
                     VStack(spacing: 4) {
                         Text(day.short.prefix(1))
                             .font(.system(size: 11, weight: .semibold))
-                            .foregroundStyle(isSelected ? Color(uiColor: .systemBackground) : isToday ? .primary : .secondary)
+                            .foregroundStyle(isSelected ? MochiTheme.surfaceAlt : isToday ? MochiTheme.textPrimary : MochiTheme.textSecondary)
 
                         Text("\(dayNumber(for: day))")
-                            .font(.system(size: 15, weight: .bold))
-                            .foregroundStyle(isSelected ? Color(uiColor: .systemBackground) : .primary)
+                            .font(.system(size: 15, weight: .bold, design: .rounded))
+                            .foregroundStyle(isSelected ? MochiTheme.surfaceAlt : MochiTheme.textPrimary)
 
                         Circle()
-                            .fill(isSelected ? Color(uiColor: .systemBackground).opacity(0.6) : hasPlans ? Color.primary : Color.clear)
+                            .fill(isSelected ? MochiTheme.surfaceAlt.opacity(0.7) : hasPlans ? MochiTheme.primary : Color.clear)
                             .frame(width: 5, height: 5)
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 8)
                     .background(
                         RoundedRectangle(cornerRadius: 12)
-                            .fill(isSelected ? Color.primary : isToday ? Color.primary.opacity(0.08) : Color.clear)
+                            .fill(isSelected ? MochiTheme.primary : isToday ? MochiTheme.primary.opacity(0.10) : Color.clear)
                     )
                 }
                 .buttonStyle(.plain)
@@ -151,20 +152,21 @@ struct EmptyDayState: View {
         VStack(spacing: 16) {
             Image(systemName: "figure.strengthtraining.traditional")
                 .font(.system(size: 44))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(MochiTheme.textSecondary)
             Text("No workouts on \(day.short)")
-                .font(.system(size: 17, weight: .semibold))
+                .font(.system(size: 17, weight: .semibold, design: .rounded))
+                .foregroundStyle(MochiTheme.textPrimary)
             Text("Add a plan to schedule exercises for this day.")
                 .font(.system(size: 14))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(MochiTheme.textSecondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 32)
             Button(action: onAdd) {
                 Label("Add workout", systemImage: "plus")
-                    .font(.system(size: 15, weight: .medium))
+                    .font(.system(size: 15, weight: .medium, design: .rounded))
                     .padding(.horizontal, 24).padding(.vertical, 12)
-                    .background(Color.primary)
-                    .foregroundStyle(Color(uiColor: .systemBackground))
+                    .background(MochiTheme.primary)
+                    .foregroundStyle(MochiTheme.surfaceAlt)
                     .clipShape(Capsule())
             }
         }
@@ -186,14 +188,16 @@ struct WorkoutPlanCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text(plan.name).font(.system(size: 15, weight: .semibold))
+                Text(plan.name)
+                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                    .foregroundStyle(MochiTheme.textPrimary)
                 Spacer()
                 if allDone {
                     Text("Done")
                         .font(.system(size: 12, weight: .medium))
                         .padding(.horizontal, 10).padding(.vertical, 4)
-                        .background(Color.green.opacity(0.15))
-                        .foregroundStyle(.green)
+                        .background(MochiTheme.success.opacity(0.15))
+                        .foregroundStyle(MochiTheme.success)
                         .clipShape(Capsule())
                 }
                 Menu {
@@ -202,7 +206,7 @@ struct WorkoutPlanCard: View {
                 } label: {
                     Image(systemName: "ellipsis")
                         .font(.system(size: 14))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(MochiTheme.textSecondary)
                         .padding(.leading, 4)
                 }
             }
@@ -212,21 +216,20 @@ struct WorkoutPlanCard: View {
             ForEach(sortedExercises) { exercise in
                 HStack(spacing: 10) {
                     Image(systemName: exercise.isCompleted ? "checkmark.circle.fill" : "circle")
-                        .foregroundStyle(exercise.isCompleted ? .green : .secondary)
+                        .foregroundStyle(exercise.isCompleted ? MochiTheme.success : MochiTheme.textSecondary)
                         .onTapGesture { onToggle(exercise.id) }
                     Text(exercise.name)
                         .font(.system(size: 14))
-                        .foregroundStyle(exercise.isCompleted ? .secondary : .primary)
-                        .strikethrough(exercise.isCompleted, color: .secondary)
+                        .foregroundStyle(exercise.isCompleted ? MochiTheme.textSecondary : MochiTheme.textPrimary)
+                        .strikethrough(exercise.isCompleted, color: MochiTheme.textSecondary)
                     Spacer()
                     Text("\(exercise.sets)×\(exercise.reps)  \(exercise.displayWeight)")
-                        .font(.system(size: 12)).foregroundStyle(.secondary)
+                        .font(.system(size: 12)).foregroundStyle(MochiTheme.textSecondary)
                 }
             }
         }
         .padding(16)
-        .background(Color(uiColor: .secondarySystemBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .mochiCard()
     }
 }
 
@@ -330,14 +333,14 @@ struct DayPickerGrid: View {
                         VStack(spacing: 3) {
                             Text(day.short.prefix(1))
                                 .font(.system(size: 10, weight: .semibold))
-                                .foregroundStyle(isOn ? Color(uiColor: .systemBackground) : .secondary)
+                                .foregroundStyle(isOn ? MochiTheme.surfaceAlt : MochiTheme.textSecondary)
                             Text(day.short.dropFirst())
                                 .font(.system(size: 10))
-                                .foregroundStyle(isOn ? Color(uiColor: .systemBackground).opacity(0.8) : .secondary)
+                                .foregroundStyle(isOn ? MochiTheme.surfaceAlt.opacity(0.85) : MochiTheme.textSecondary)
                         }
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 10)
-                        .background(isOn ? Color.primary : Color(uiColor: .tertiarySystemBackground))
+                        .background(isOn ? MochiTheme.primary : MochiTheme.surface)
                         .clipShape(RoundedRectangle(cornerRadius: 10))
                     }
                     .buttonStyle(.plain)
