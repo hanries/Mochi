@@ -211,6 +211,37 @@ struct ProfileView: View {
                             .padding(.horizontal)
                         }
 
+                        #if DEBUG
+                        // Debug-only: simulate premium for testing the gates
+                        VStack(alignment: .leading, spacing: 8) {
+                            SectionLabel("Debug")
+                                .padding(.horizontal)
+
+                            Toggle(isOn: Binding(
+                                get: { PremiumStore.shared.debugSimulatePremium },
+                                set: { PremiumStore.shared.debugSimulatePremium = $0 }
+                            )) {
+                                HStack(spacing: 14) {
+                                    ZStack {
+                                        RoundedRectangle(cornerRadius: 8)
+                                            .fill(MochiTheme.textSecondary)
+                                            .frame(width: 32, height: 32)
+                                        Image(systemName: "hammer.fill")
+                                            .font(.system(size: 15, weight: .medium))
+                                            .foregroundStyle(MochiTheme.surfaceAlt)
+                                    }
+                                    Text("Simulate Premium").font(.system(size: 15))
+                                }
+                            }
+                            .tint(MochiTheme.primary)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 12)
+                            .background(MochiTheme.surfaceAlt)
+                            .clipShape(RoundedRectangle(cornerRadius: 16))
+                            .padding(.horizontal)
+                        }
+                        #endif
+
                         // Account
                         VStack(alignment: .leading, spacing: 8) {
                             SectionLabel("Account")
