@@ -129,9 +129,10 @@ struct JournalTabView: View {
                             Image(systemName: "camera.fill")
                                 .font(.system(size: 48))
                                 .foregroundStyle(MochiTheme.textSecondary)
-                            Text("No journal entries yet")
-                                .font(.system(size: 17, weight: .semibold))
-                            Text("Tap the camera button to take a post-workout photo and track your visual progress.")
+                            Text("No photos yet")
+                                .font(.system(size: 17, weight: .semibold, design: .rounded))
+                                .foregroundStyle(MochiTheme.textPrimary)
+                            Text("Add a photo when you feel like it — a little memory of showing up today.")
                                 .font(.system(size: 14))
                                 .foregroundStyle(MochiTheme.textSecondary)
                                 .multilineTextAlignment(.center)
@@ -142,7 +143,7 @@ struct JournalTabView: View {
                 }
                 .padding(.vertical)
             }
-            .navigationTitle("Journal")
+            .navigationTitle("Photo Journal")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {

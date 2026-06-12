@@ -6,7 +6,7 @@ struct LogView: View {
 
     enum LogSegment: String, CaseIterable {
         case progress = "Progress"
-        case journal  = "Journal"
+        case journal  = "Photo Journal"
     }
 
     var body: some View {
@@ -140,6 +140,9 @@ private struct JournalContent: View {
     @State private var selectedEntry: JournalEntry? = nil
     @State private var selectedMonth  = Date.now
 
+    /// yyyy-MM-dd of the day the prompt was dismissed; hides it until tomorrow.
+    @AppStorage("journalPromptDismissedDay") private var promptDismissedDay = ""
+
     private let cal     = Calendar.current
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 4), count: 7)
     private let weekdaySymbols = ["S","M","T","W","T","F","S"]
@@ -163,9 +166,61 @@ private struct JournalContent: View {
         entries.filter { cal.isDate($0.date, inSameDayAs: date) }
     }
 
+    private var hasPhotoToday: Bool {
+        entries.contains { cal.isDateInToday($0.date) }
+    }
+
+    private var todayKey: String {
+        Date.now.formatted(.iso8601.year().month().day())
+    }
+
     var body: some View {
         ScrollView(showsIndicators: false) {
             VStack(spacing: 20) {
+
+                // Daily prompt — once per day at most, celebrates consistency
+                // only (never appearance, body, progress, or results).
+                if hasPhotoToday {
+                    HStack(spacing: MochiTheme.Spacing.sm) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundStyle(MochiTheme.success)
+                        Text("Photo added today")
+                            .font(MochiTheme.caption)
+                            .foregroundStyle(MochiTheme.textSecondary)
+                        Spacer()
+                    }
+                    .padding(.horizontal, MochiTheme.Spacing.lg)
+                    .padding(.vertical, MochiTheme.Spacing.md)
+                    .mochiCard(cornerRadius: 14)
+                    .padding(.horizontal)
+                } else if promptDismissedDay != todayKey {
+                    HStack(spacing: MochiTheme.Spacing.lg) {
+                        VStack(alignment: .leading, spacing: MochiTheme.Spacing.xs) {
+                            Text("You showed up today — want to add a photo?")
+                                .font(MochiTheme.body)
+                                .foregroundStyle(MochiTheme.textPrimary)
+                                .fixedSize(horizontal: false, vertical: true)
+                            Button { showCamera = true } label: {
+                                Label("Take a photo", systemImage: "camera.fill")
+                                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                                    .foregroundStyle(MochiTheme.primary)
+                            }
+                        }
+                        Spacer()
+                        Button { promptDismissedDay = todayKey } label: {
+                            Image(systemName: "xmark")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundStyle(MochiTheme.textSecondary)
+                                .frame(width: 28, height: 28)
+                                .background(MochiTheme.surface)
+                                .clipShape(Circle())
+                        }
+                        .accessibilityLabel("Dismiss for today")
+                    }
+                    .padding(MochiTheme.Spacing.lg)
+                    .mochiCard()
+                    .padding(.horizontal)
+                }
 
                 // Month navigator
                 HStack {
@@ -256,9 +311,10 @@ private struct JournalContent: View {
                         Image(systemName: "camera.fill")
                             .font(.system(size: 48))
                             .foregroundStyle(MochiTheme.textSecondary)
-                        Text("No journal entries yet")
-                            .font(.system(size: 17, weight: .semibold))
-                        Text("Tap the camera button to take a post-workout photo and track your visual progress.")
+                        Text("No photos yet")
+                            .font(.system(size: 17, weight: .semibold, design: .rounded))
+                            .foregroundStyle(MochiTheme.textPrimary)
+                        Text("Add a photo when you feel like it — a little memory of showing up today.")
                             .font(.system(size: 14))
                             .foregroundStyle(MochiTheme.textSecondary)
                             .multilineTextAlignment(.center)
