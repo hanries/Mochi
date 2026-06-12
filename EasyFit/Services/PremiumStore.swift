@@ -13,8 +13,8 @@ import StoreKit
 final class PremiumStore: ObservableObject {
     static let shared = PremiumStore()
 
-    static let monthlyID = "easyfit.premium.monthly"
-    static let yearlyID  = "easyfit.premium.yearly"
+    static let monthlyID = "mochi.premium.monthly"
+    static let yearlyID  = "mochi.premium.yearly"
     static let allProductIDs: Set<String> = [monthlyID, yearlyID]
 
     @Published private(set) var isPremium: Bool
