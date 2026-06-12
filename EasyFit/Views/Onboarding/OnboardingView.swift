@@ -37,7 +37,7 @@ struct OnboardingView: View {
 
     var body: some View {
         ZStack {
-            Theme.bg.ignoresSafeArea()
+            MochiTheme.background.ignoresSafeArea()
 
             VStack(spacing: 0) {
                 TabView(selection: $currentPage) {
@@ -62,7 +62,7 @@ struct OnboardingView: View {
                     HStack(spacing: 8) {
                         ForEach(0..<totalPages, id: \.self) { i in
                             Capsule()
-                                .fill(i == currentPage ? Theme.teal : Theme.textTertiary)
+                                .fill(i == currentPage ? MochiTheme.primary : MochiTheme.textSecondary.opacity(0.5))
                                 .frame(width: i == currentPage ? 20 : 8, height: 8)
                                 .animation(.spring(response: 0.3), value: currentPage)
                         }
@@ -73,8 +73,8 @@ struct OnboardingView: View {
                             .font(.system(size: 17, weight: .semibold))
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 16)
-                            .background(canAdvance ? Theme.teal : Theme.card)
-                            .foregroundStyle(canAdvance ? Color.black : Theme.textTertiary)
+                            .background(canAdvance ? MochiTheme.primary : MochiTheme.surface)
+                            .foregroundStyle(canAdvance ? MochiTheme.surfaceAlt : MochiTheme.textSecondary)
                             .clipShape(Capsule())
                     }
                     .disabled(!canAdvance)
@@ -86,7 +86,7 @@ struct OnboardingView: View {
                             withAnimation { currentPage += 1 }
                         }
                         .font(.system(size: 14))
-                        .foregroundStyle(Theme.textSecondary)
+                        .foregroundStyle(MochiTheme.textSecondary)
                     } else {
                         // Placeholder to keep height consistent on last page
                         Color.clear.frame(height: 20)
@@ -292,10 +292,10 @@ private struct MeetMochiPage: View {
                 VStack(spacing: 10) {
                     Text("This is Mochi")
                         .font(.system(size: 30, weight: .bold))
-                        .foregroundStyle(Theme.textPrimary)
+                        .foregroundStyle(MochiTheme.textPrimary)
                     Text("Take care of Mochi by taking care of yourself.")
                         .font(.system(size: 16))
-                        .foregroundStyle(Theme.textSecondary)
+                        .foregroundStyle(MochiTheme.textSecondary)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 40)
                 }
@@ -303,13 +303,13 @@ private struct MeetMochiPage: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("What should Mochi call you?")
                         .font(.system(size: 13, weight: .medium))
-                        .foregroundStyle(Theme.textSecondary)
+                        .foregroundStyle(MochiTheme.textSecondary)
                         .padding(.leading, 4)
                     TextField("Your first name", text: $name)
                         .font(.system(size: 17))
-                        .foregroundStyle(Theme.textPrimary)
+                        .foregroundStyle(MochiTheme.textPrimary)
                         .padding(16)
-                        .background(Theme.card)
+                        .background(MochiTheme.surfaceAlt)
                         .clipShape(RoundedRectangle(cornerRadius: 14))
                 }
                 .padding(.horizontal, 32)
@@ -334,17 +334,17 @@ private struct HowItWorksPage: View {
 
                 Text("Log your meals,\nand I'll be happy")
                     .font(.system(size: 28, weight: .bold))
-                    .foregroundStyle(Theme.textPrimary)
+                    .foregroundStyle(MochiTheme.textPrimary)
                     .multilineTextAlignment(.center)
 
                 VStack(spacing: 12) {
-                    HowItWorksRow(icon: "camera.fill", color: Theme.teal,
+                    HowItWorksRow(icon: "camera.fill", color: MochiTheme.primary,
                                   title: "Snap or log any meal",
                                   detail: "Every log makes Mochi happy.")
-                    HowItWorksRow(icon: "flame.fill", color: Color(red: 1.0, green: 0.72, blue: 0.3),
+                    HowItWorksRow(icon: "flame.fill", color: MochiTheme.warning,
                                   title: "Keep a streak going",
                                   detail: "A few days in a row and Mochi is ecstatic.")
-                    HowItWorksRow(icon: "heart.fill", color: Color(red: 0.95, green: 0.55, blue: 0.6),
+                    HowItWorksRow(icon: "heart.fill", color: MochiTheme.accent,
                                   title: "Never judged",
                                   detail: "Mochi only cares that you showed up — never what or how much you ate.")
                 }
@@ -353,7 +353,7 @@ private struct HowItWorksPage: View {
                 VStack(alignment: .leading, spacing: 10) {
                     Text("YOUR GOAL")
                         .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(Theme.textSecondary)
+                        .foregroundStyle(MochiTheme.textSecondary)
                         .tracking(0.5)
                         .frame(maxWidth: .infinity, alignment: .leading)
                     LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
@@ -387,16 +387,16 @@ private struct HowItWorksRow: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
                     .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(Theme.textPrimary)
+                    .foregroundStyle(MochiTheme.textPrimary)
                 Text(detail)
                     .font(.system(size: 13))
-                    .foregroundStyle(Theme.textSecondary)
+                    .foregroundStyle(MochiTheme.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
             Spacer()
         }
         .padding(14)
-        .darkCard(cornerRadius: 14)
+        .mochiCard(cornerRadius: 14)
     }
 }
 
@@ -411,14 +411,14 @@ private struct GoalChip: View {
                 Text(goal.emoji).font(.system(size: 18))
                 Text(goal.rawValue)
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(isSelected ? Color.black : Theme.textPrimary)
+                    .foregroundStyle(isSelected ? MochiTheme.surfaceAlt : MochiTheme.textPrimary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
                 Spacer(minLength: 0)
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 14)
-            .background(isSelected ? Theme.teal : Theme.card)
+            .background(isSelected ? MochiTheme.primary : MochiTheme.surfaceAlt)
             .clipShape(RoundedRectangle(cornerRadius: 14))
         }
     }
@@ -448,7 +448,7 @@ private struct StatsPage: View {
                         .font(.system(size: 30, weight: .bold))
                     Text("Mochi uses this to set your calorie and macro targets. Skip it and friendly defaults are used instead.")
                         .font(.system(size: 16))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(MochiTheme.textSecondary)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 32)
                 }
@@ -483,12 +483,12 @@ private struct StatsPage: View {
                                             .font(.system(size: 13, weight: .semibold))
                                             .frame(maxWidth: .infinity)
                                             .padding(.vertical, 10)
-                                            .background(weightUnit == u ? Color.primary : Color.clear)
-                                            .foregroundStyle(weightUnit == u ? Color(uiColor: .systemBackground) : .secondary)
+                                            .background(weightUnit == u ? MochiTheme.primary : Color.clear)
+                                            .foregroundStyle(weightUnit == u ? MochiTheme.surfaceAlt : .secondary)
                                     }
                                 }
                             }
-                            .background(Color(uiColor: .secondarySystemBackground))
+                            .background(MochiTheme.surfaceAlt)
                             .clipShape(RoundedRectangle(cornerRadius: 12))
                             .frame(width: 90)
                         }
@@ -537,11 +537,11 @@ private struct FirstLogPage: View {
                          ? "Mochi can't wait to\nsee your first meal"
                          : "Mochi can't wait to see\nyour first meal, \(name)")
                         .font(.system(size: 28, weight: .bold))
-                        .foregroundStyle(Theme.textPrimary)
+                        .foregroundStyle(MochiTheme.textPrimary)
                         .multilineTextAlignment(.center)
                     Text("When you're in, tap “Log a meal” on the home screen and snap whatever you're eating. That's the whole habit.")
                         .font(.system(size: 16))
-                        .foregroundStyle(Theme.textSecondary)
+                        .foregroundStyle(MochiTheme.textSecondary)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 36)
                 }
@@ -549,14 +549,14 @@ private struct FirstLogPage: View {
                 HStack(spacing: 8) {
                     Image(systemName: "target")
                         .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(Theme.teal)
+                        .foregroundStyle(MochiTheme.primary)
                     Text("Daily target set to \(calories) kcal — adjust anytime in Profile.")
                         .font(.system(size: 13, weight: .medium))
-                        .foregroundStyle(Theme.textSecondary)
+                        .foregroundStyle(MochiTheme.textSecondary)
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
-                .background(Theme.card)
+                .background(MochiTheme.surfaceAlt)
                 .clipShape(Capsule())
 
                 // Optional daily check-in (max one per day, always gentle)
@@ -579,10 +579,10 @@ private struct FirstLogPage: View {
                                 .font(.system(size: 12, weight: .bold))
                         }
                     }
-                    .foregroundStyle(notifications.isAuthorized ? Theme.teal : Theme.textSecondary)
+                    .foregroundStyle(notifications.isAuthorized ? MochiTheme.primary : MochiTheme.textSecondary)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 12)
-                    .background(Theme.card)
+                    .background(MochiTheme.surfaceAlt)
                     .clipShape(Capsule())
                 }
                 .disabled(notifications.isAuthorized)
@@ -602,7 +602,7 @@ private struct SectionLabel: View {
     var body: some View {
         Text(text)
             .font(.system(size: 12, weight: .semibold))
-            .foregroundStyle(.secondary)
+            .foregroundStyle(MochiTheme.textSecondary)
             .textCase(.uppercase)
             .tracking(0.5)
     }
@@ -617,8 +617,8 @@ private struct SelectChip: View {
             Text(label)
                 .font(.system(size: 14, weight: .medium))
                 .padding(.horizontal, 20).padding(.vertical, 10)
-                .background(isSelected ? Color.primary : Color(uiColor: .secondarySystemBackground))
-                .foregroundStyle(isSelected ? Color(uiColor: .systemBackground) : .primary)
+                .background(isSelected ? MochiTheme.primary : MochiTheme.surfaceAlt)
+                .foregroundStyle(isSelected ? MochiTheme.surfaceAlt : .primary)
                 .clipShape(Capsule())
         }
     }
@@ -640,11 +640,11 @@ private struct StatInputRow: View {
                 .frame(width: 80)
             Text(unit)
                 .font(.system(size: 14))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(MochiTheme.textSecondary)
                 .frame(width: 32, alignment: .leading)
         }
         .padding(14)
-        .background(Color(uiColor: .secondarySystemBackground))
+        .background(MochiTheme.surfaceAlt)
         .clipShape(RoundedRectangle(cornerRadius: 14))
     }
 }
@@ -659,7 +659,7 @@ private struct ActivityCard: View {
                 Text(level.emoji).font(.system(size: 22))
                 VStack(alignment: .leading, spacing: 2) {
                     Text(level.rawValue).font(.system(size: 14, weight: .semibold)).foregroundStyle(.primary)
-                    Text(level.description).font(.system(size: 12)).foregroundStyle(.secondary)
+                    Text(level.description).font(.system(size: 12)).foregroundStyle(MochiTheme.textSecondary)
                 }
                 Spacer()
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
@@ -668,9 +668,9 @@ private struct ActivityCard: View {
             .padding(14)
             .background(
                 RoundedRectangle(cornerRadius: 14)
-                    .fill(Color(uiColor: .secondarySystemBackground))
+                    .fill(MochiTheme.surfaceAlt)
                     .overlay(RoundedRectangle(cornerRadius: 14)
-                        .stroke(isSelected ? Color.primary : Color.clear, lineWidth: 2))
+                        .stroke(isSelected ? MochiTheme.primary : Color.clear, lineWidth: 2))
             )
         }
     }
@@ -700,16 +700,16 @@ private struct HeightInputSection: View {
                             Text(u.rawValue)
                                 .font(.system(size: 12, weight: .semibold))
                                 .padding(.horizontal, 10).padding(.vertical, 7)
-                                .background(heightUnit == u ? Color.primary : Color.clear)
-                                .foregroundStyle(heightUnit == u ? Color(uiColor: .systemBackground) : .secondary)
+                                .background(heightUnit == u ? MochiTheme.primary : Color.clear)
+                                .foregroundStyle(heightUnit == u ? MochiTheme.surfaceAlt : .secondary)
                         }
                     }
                 }
-                .background(Color(uiColor: .tertiarySystemBackground))
+                .background(MochiTheme.surface)
                 .clipShape(Capsule())
             }
             .padding(.horizontal, 14).padding(.vertical, 10)
-            .background(Color(uiColor: .secondarySystemBackground))
+            .background(MochiTheme.surfaceAlt)
             .clipShape(RoundedRectangle(cornerRadius: 14))
 
             if heightUnit == .cm {
@@ -723,10 +723,10 @@ private struct HeightInputSection: View {
                             .font(.system(size: 16, weight: .semibold))
                             .frame(width: 44)
                             .onChange(of: feet)   { _, _ in sync() }
-                        Text("ft").font(.system(size: 14)).foregroundStyle(.secondary)
+                        Text("ft").font(.system(size: 14)).foregroundStyle(MochiTheme.textSecondary)
                     }
                     .padding(14)
-                    .background(Color(uiColor: .secondarySystemBackground))
+                    .background(MochiTheme.surfaceAlt)
                     .clipShape(RoundedRectangle(cornerRadius: 14))
 
                     HStack {
@@ -736,10 +736,10 @@ private struct HeightInputSection: View {
                             .font(.system(size: 16, weight: .semibold))
                             .frame(width: 44)
                             .onChange(of: inches) { _, _ in sync() }
-                        Text("in").font(.system(size: 14)).foregroundStyle(.secondary)
+                        Text("in").font(.system(size: 14)).foregroundStyle(MochiTheme.textSecondary)
                     }
                     .padding(14)
-                    .background(Color(uiColor: .secondarySystemBackground))
+                    .background(MochiTheme.surfaceAlt)
                     .clipShape(RoundedRectangle(cornerRadius: 14))
                 }
             }

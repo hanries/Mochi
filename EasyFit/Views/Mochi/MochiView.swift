@@ -217,7 +217,7 @@ struct MochiView: View {
         }
     }
     return ZStack {
-        Theme.bg.ignoresSafeArea()
+        MochiTheme.background.ignoresSafeArea()
         Cycler()
     }
     .preferredColorScheme(.dark)
