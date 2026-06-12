@@ -13,13 +13,17 @@ final class MochiViewModel: ObservableObject {
     private var recentLines: [String] = []
 
     // Recomputes state + streak from engagement data only.
-    // Views pass in their @Query results; calorie values are never read.
-    func refresh(entries: [FoodEntry], now: Date = .now) {
-        let dates = entries.map(\.date)
-        streak = MochiStateEngine.mealStreak(entryDates: dates, now: now)
-        loggedToday = dates.contains { Calendar.current.isDate($0, inSameDayAs: now) }
+    // Views pass in their @Query results; calorie and weight VALUES are
+    // never read — weight logging contributes dates alone.
+    func refresh(entries: [FoodEntry], weightLogDates: [Date] = [], now: Date = .now) {
+        let mealDates = entries.map(\.date)
+        // Streak rewards the food-logging habit specifically.
+        streak = MochiStateEngine.mealStreak(entryDates: mealDates, now: now)
+        // "Logged something today" / last-engagement include any check-in.
+        let engagementDates = mealDates + weightLogDates
+        loggedToday = engagementDates.contains { Calendar.current.isDate($0, inSameDayAs: now) }
         state = MochiStateEngine.computeState(
-            lastLog: dates.max(),
+            lastLog: engagementDates.max(),
             loggedToday: loggedToday,
             streak: streak,
             now: now,
@@ -35,6 +39,14 @@ final class MochiViewModel: ObservableObject {
         let kind: MochiMoment.Kind =
             (!loggedToday && newStreak >= config.ecstaticStreak) ? .ecstatic : .eating
         moment = MochiMoment(kind: kind, line: MochiDialogue.celebrationLine())
+        loggedToday = true
+        MochiNotificationService.shared.reschedule(loggedToday: true, config: config)
+    }
+
+    /// Call after a weight log. Deliberately takes NO value — the engine
+    /// is structurally unable to react to the number or its direction.
+    func weightLogged() {
+        moment = MochiMoment(kind: .checkIn, line: MochiDialogue.checkInLine())
         loggedToday = true
         MochiNotificationService.shared.reschedule(loggedToday: true, config: config)
     }

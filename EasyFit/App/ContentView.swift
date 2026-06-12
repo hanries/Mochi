@@ -41,8 +41,11 @@ struct ContentView: View {
         }
         .tint(MochiTheme.primary)
         // A food log lands the user back home, where Mochi plays the moment.
+        // Check-ins (e.g. weight logs) never hijack the current tab.
         .onChange(of: mochi.moment) { _, moment in
-            if moment != nil { appState.selectedTab = .home }
+            if let moment, moment.kind != .checkIn {
+                appState.selectedTab = .home
+            }
         }
     }
 }

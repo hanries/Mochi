@@ -61,12 +61,44 @@ struct LogView: View {
 
 private struct ProgressContent: View {
     @Environment(\.modelContext) private var context
+    @EnvironmentObject private var mochi: MochiViewModel
     @Query(sort: \BodyWeightEntry.date) private var allEntries: [BodyWeightEntry]
     @StateObject private var vm = FitProgressViewModel()
 
     var body: some View {
         ScrollView(showsIndicators: false) {
             VStack(spacing: 16) {
+                // Prominent weight-logging entry point
+                Button {
+                    vm.showAddWeight = true
+                } label: {
+                    HStack(spacing: MochiTheme.Spacing.lg) {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(MochiTheme.primary.opacity(0.15))
+                                .frame(width: 44, height: 44)
+                            Image(systemName: "scalemass.fill")
+                                .font(.system(size: 18, weight: .medium))
+                                .foregroundStyle(MochiTheme.primary)
+                        }
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Log weight")
+                                .font(.system(size: 16, weight: .semibold, design: .rounded))
+                                .foregroundStyle(MochiTheme.textPrimary)
+                            Text("A quick check-in — takes two seconds")
+                                .font(MochiTheme.caption)
+                                .foregroundStyle(MochiTheme.textSecondary)
+                        }
+                        Spacer()
+                        Image(systemName: "plus.circle.fill")
+                            .font(.system(size: 24))
+                            .foregroundStyle(MochiTheme.primary)
+                    }
+                    .padding(MochiTheme.Spacing.lg)
+                    .mochiCard()
+                }
+                .buttonStyle(.plain)
+
                 StreakCard(
                     streak:        vm.currentStreak(from: allEntries),
                     longestStreak: vm.longestStreak(from: allEntries)
@@ -90,7 +122,10 @@ private struct ProgressContent: View {
             }
         }
         .sheet(isPresented: $vm.showAddWeight) {
-            AddWeightView { entry in context.insert(entry) }
+            AddWeightView { entry in
+                context.insert(entry)
+                mochi.weightLogged()   // valueless by design — golden rule
+            }
         }
     }
 }

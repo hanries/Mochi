@@ -14,6 +14,7 @@ struct MochiHomeView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @EnvironmentObject private var mochi: MochiViewModel
     @Query(sort: \FoodEntry.date, order: .reverse) private var allEntries: [FoodEntry]
+    @Query private var weightEntries: [BodyWeightEntry]
     @StateObject private var vm = NutritionViewModel()
     @AppStorage("userName") private var userName = ""
     @AppStorage("pendingFirstLog") private var pendingFirstLog = false
@@ -103,7 +104,7 @@ struct MochiHomeView: View {
             .ignoresSafeArea(edges: .top)
         }
         .onAppear {
-            mochi.refresh(entries: allEntries)
+            mochi.refresh(entries: allEntries, weightLogDates: weightEntries.map(\.date))
             refreshHabitat(animated: false)
             if pendingFirstLog {
                 hintPulse = true
@@ -117,7 +118,7 @@ struct MochiHomeView: View {
             refreshHabitat()
         }
         .onChange(of: allEntries) { _, entries in
-            mochi.refresh(entries: entries)
+            mochi.refresh(entries: entries, weightLogDates: weightEntries.map(\.date))
             if pendingFirstLog && !entries.isEmpty {
                 pendingFirstLog = false
                 hintPulse = false
@@ -136,12 +137,12 @@ struct MochiHomeView: View {
         }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active {
-                mochi.refresh(entries: allEntries)
+                mochi.refresh(entries: allEntries, weightLogDates: weightEntries.map(\.date))
                 refreshHabitat()
             }
         }
         .onReceive(refreshTimer) { _ in
-            mochi.refresh(entries: allEntries)
+            mochi.refresh(entries: allEntries, weightLogDates: weightEntries.map(\.date))
             refreshHabitat()
         }
         .fullScreenCover(isPresented: $showFoodCamera) {

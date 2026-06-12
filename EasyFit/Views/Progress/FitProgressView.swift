@@ -310,15 +310,24 @@ private struct LineGraphCanvas: View {
 
 struct AddWeightView: View {
     @Environment(\.dismiss) private var dismiss
+    @AppStorage("preferredWeightUnit") private var weightUnitRaw = WeightUnit.lbs.rawValue
     @State private var weightText = ""
+    @State private var date = Date.now
     let onSave: (BodyWeightEntry) -> Void
+
+    private var unit: WeightUnit { WeightUnit(rawValue: weightUnitRaw) ?? .lbs }
 
     var body: some View {
         NavigationStack {
             Form {
                 Section("Body weight") {
-                    TextField("e.g. 174.5", text: $weightText)
-                        .keyboardType(.decimalPad)
+                    HStack {
+                        TextField(unit == .lbs ? "e.g. 174.5" : "e.g. 79.2", text: $weightText)
+                            .keyboardType(.decimalPad)
+                        Text(unit == .lbs ? "lb" : "kg")
+                            .foregroundStyle(MochiTheme.textSecondary)
+                    }
+                    DatePicker("Date", selection: $date, in: ...Date.now, displayedComponents: .date)
                 }
             }
             .navigationTitle("Log Weight")
@@ -327,7 +336,9 @@ struct AddWeightView: View {
                 ToolbarItem(placement: .topBarLeading)  { Button("Cancel") { dismiss() } }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Save") {
-                        if let w = Double(weightText) { onSave(BodyWeightEntry(weight: w)) }
+                        if let w = Double(weightText) {
+                            onSave(BodyWeightEntry(weight: w, unit: unit, date: date))
+                        }
                         dismiss()
                     }
                     .disabled(Double(weightText) == nil).fontWeight(.semibold)

@@ -11,7 +11,12 @@ import Foundation
 struct MochiMoment: Identifiable, Equatable {
     enum Kind {
         case eating
+        /// Streak milestones only — never routine logs.
         case ecstatic
+        /// Valueless acknowledgment (e.g. a weight log). No frame change,
+        /// no tab switch — just a warm line and a small bounce. The event
+        /// carries no value by design: Mochi cannot react to outcomes.
+        case checkIn
     }
 
     let id = UUID()

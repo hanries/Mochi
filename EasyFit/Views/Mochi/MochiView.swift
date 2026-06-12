@@ -173,14 +173,20 @@ struct MochiView: View {
     private func beginMoment(_ newMoment: MochiMoment) {
         momentTask?.cancel()
 
-        momentFrame = newMoment.kind == .eating
-            ? MochiAssetProvider.eatingImageName
-            : MochiAssetProvider.baseImageName(for: .ecstatic)
+        // Check-ins are acknowledgment only: no frame change, small bounce.
+        switch newMoment.kind {
+        case .eating:   momentFrame = MochiAssetProvider.eatingImageName
+        case .ecstatic: momentFrame = MochiAssetProvider.baseImageName(for: .ecstatic)
+        case .checkIn:  momentFrame = nil
+        }
 
         if !reduceMotion {
-            let peak = newMoment.kind == .eating
-                ? motion.momentBounceEating
-                : motion.momentBounceEcstatic
+            let peak: Double
+            switch newMoment.kind {
+            case .eating:   peak = motion.momentBounceEating
+            case .ecstatic: peak = motion.momentBounceEcstatic
+            case .checkIn:  peak = motion.tapBounceScale
+            }
             withAnimation(.spring(response: motion.momentSpringResponse,
                                   dampingFraction: motion.momentSpringDamping)) {
                 momentScale = peak

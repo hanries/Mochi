@@ -58,6 +58,17 @@ enum MochiDialogue {
         "Mochi approves! 🐹",
     ]
 
+    /// Valueless acknowledgments for check-in events (weight logs etc.).
+    /// Tone rule: never reference numbers, direction, body, or results —
+    /// only the act of showing up.
+    static let checkIns: [String] = [
+        "Thanks for checking in!",
+        "You showed up — that's the whole job.",
+        "Noted! I'm glad you're here.",
+        "Little habits, big cozy life.",
+        "Check-in received. Carry on! 🐹",
+    ]
+
     static let notifications: [String] = [
         "Mochi is wondering what you had for lunch 🐹",
         "Mochi would love to hear about your day 🐹",
@@ -75,6 +86,10 @@ enum MochiDialogue {
 
     static func celebrationLine() -> String {
         celebrations.randomElement() ?? "Yay!"
+    }
+
+    static func checkInLine() -> String {
+        checkIns.randomElement() ?? "Thanks for checking in!"
     }
 
     static func notificationLine() -> String {
