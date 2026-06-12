@@ -191,7 +191,7 @@ struct ProfileView: View {
                                         paywall.presentPaywall(.profile)
                                     }
                                 } label: {
-                                    SettingsRow(icon: "sparkles", iconColor: MochiTheme.primary, label: "EasyFit Premium") {
+                                    SettingsRow(icon: "sparkles", iconColor: MochiTheme.primary, label: "Mochi Premium") {
                                         Text(premium.isPremium ? "Active ✓" : "Unlimited scans")
                                             .font(.system(size: 13))
                                             .foregroundStyle(premium.isPremium ? MochiTheme.success : MochiTheme.textSecondary)

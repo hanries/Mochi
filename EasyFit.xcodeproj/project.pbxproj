@@ -421,9 +421,10 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = EasyFit/Info.plist;
-				INFOPLIST_KEY_NSCameraUsageDescription = "EasyFit uses your camera to scan food and estimate calories.";
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "EasyFit reads your burned calories and body weight from Apple Health.";
-				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "EasyFit saves burned calories and body weight to Apple Health.";
+				INFOPLIST_KEY_CFBundleDisplayName = Mochi;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Mochi uses your camera to scan food and estimate calories.";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Mochi reads your burned calories and body weight from Apple Health.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Mochi saves burned calories and body weight to Apple Health.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -460,9 +461,10 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = EasyFit/Info.plist;
-				INFOPLIST_KEY_NSCameraUsageDescription = "EasyFit uses your camera to scan food and estimate calories.";
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "EasyFit reads your burned calories and body weight from Apple Health.";
-				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "EasyFit saves burned calories and body weight to Apple Health.";
+				INFOPLIST_KEY_CFBundleDisplayName = Mochi;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Mochi uses your camera to scan food and estimate calories.";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Mochi reads your burned calories and body weight from Apple Health.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Mochi saves burned calories and body weight to Apple Health.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
