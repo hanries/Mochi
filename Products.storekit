@@ -1,5 +1,5 @@
 {
-  "identifier" : "E2F1A6D0-8C44-4E7B-9B1A-EASYFITSTORE",
+  "identifier" : "C9F2B7E1-4A33-4D88-A1C2-MOCHIPRODUCTS",
   "nonRenewingSubscriptions" : [
 
   ],
@@ -29,7 +29,7 @@
           "codeOffers" : [
 
           ],
-          "displayPrice" : "29.99",
+          "displayPrice" : "34.99",
           "familyShareable" : false,
           "groupNumber" : 1,
           "internalID" : "EF-PREMIUM-YEARLY",
@@ -58,7 +58,7 @@
           "codeOffers" : [
 
           ],
-          "displayPrice" : "4.99",
+          "displayPrice" : "5.99",
           "familyShareable" : false,
           "groupNumber" : 1,
           "internalID" : "EF-PREMIUM-MONTHLY",

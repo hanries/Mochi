@@ -13,6 +13,16 @@ enum PaywallContext: Identifiable {
     case onboarding   // one soft show after onboarding
 
     var id: Self { self }
+
+    /// Automatic triggers fire without the user asking, so they share a
+    /// global 24h cooldown. User-initiated triggers (a tapped scan that's
+    /// capped, the Profile row) are exempt and always show.
+    var isAutomaticTrigger: Bool {
+        switch self {
+        case .onboarding:        return true   // future automatic triggers join here
+        case .scanCap, .profile: return false
+        }
+    }
 }
 
 @MainActor
@@ -21,6 +31,10 @@ final class PaywallCoordinator: ObservableObject {
 
     let store = PremiumStore.shared
     private var cancellable: AnyCancellable? = nil
+
+    // Global cooldown for automatic triggers, persisted across launches.
+    private static let lastAutoShownKey = "paywallLastAutoShownAt"
+    private let automaticCooldown: TimeInterval = 24 * 60 * 60
 
     init() {
         // Re-publish entitlement changes so counters refresh.
@@ -52,7 +66,22 @@ final class PaywallCoordinator: ObservableObject {
         return "\(ScanQuota.remaining()) of \(ScanQuota.freeDailyLimit) free scans left today"
     }
 
-    func presentPaywall(_ context: PaywallContext) {
+    /// True if an automatic paywall may show now (cooldown elapsed).
+    var canShowAutomaticPaywall: Bool {
+        let last = UserDefaults.standard.double(forKey: Self.lastAutoShownKey)
+        return Date.now.timeIntervalSince1970 - last >= automaticCooldown
+    }
+
+    /// Present the paywall. Automatic triggers respect the 24h global
+    /// cooldown and never show to premium users; user-initiated triggers
+    /// always show. Returns whether the paywall was actually presented.
+    @discardableResult
+    func presentPaywall(_ context: PaywallContext) -> Bool {
+        if context.isAutomaticTrigger {
+            guard !store.isPremium, canShowAutomaticPaywall else { return false }
+            UserDefaults.standard.set(Date.now.timeIntervalSince1970, forKey: Self.lastAutoShownKey)
+        }
         paywallContext = context
+        return true
     }
 }

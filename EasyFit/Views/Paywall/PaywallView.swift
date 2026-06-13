@@ -51,12 +51,20 @@ struct PaywallView: View {
                     }
                     .padding(.horizontal, MochiTheme.Spacing.xl)
 
-                    // Plan cards — yearly first and preferred
-                    VStack(spacing: MochiTheme.Spacing.md) {
-                        if store.products.isEmpty {
-                            ProgressView()
-                                .padding(.vertical, MochiTheme.Spacing.xl)
-                        } else {
+                    // Plans + purchase, driven by the load state so a price
+                    // is always visible before a purchase can be initiated.
+                    switch store.loadState {
+                    case .idle, .loading:
+                        VStack(spacing: MochiTheme.Spacing.md) {
+                            PlanCardSkeleton()
+                            PlanCardSkeleton()
+                        }
+                        .padding(.horizontal, MochiTheme.Spacing.xl)
+
+                        continueButton(enabled: false, caption: nil)
+
+                    case .loaded:
+                        VStack(spacing: MochiTheme.Spacing.md) {
                             ForEach(store.products, id: \.id) { product in
                                 PlanCard(
                                     product: product,
@@ -66,37 +74,22 @@ struct PaywallView: View {
                                 }
                             }
                         }
-                    }
-                    .padding(.horizontal, MochiTheme.Spacing.xl)
+                        .padding(.horizontal, MochiTheme.Spacing.xl)
 
-                    if let purchaseError {
-                        Text(purchaseError)
-                            .font(MochiTheme.caption)
-                            .foregroundStyle(MochiTheme.danger)
-                            .multilineTextAlignment(.center)
+                        if let purchaseError {
+                            Text(purchaseError)
+                                .font(MochiTheme.caption)
+                                .foregroundStyle(MochiTheme.danger)
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal, MochiTheme.Spacing.xl)
+                        }
+
+                        continueButton(enabled: !isPurchasing, caption: selectedPriceCaption)
+
+                    case .failed:
+                        FailedToLoadCard { store.retryLoadProducts() }
                             .padding(.horizontal, MochiTheme.Spacing.xl)
                     }
-
-                    // Purchase
-                    Button {
-                        purchase()
-                    } label: {
-                        Group {
-                            if isPurchasing {
-                                ProgressView().tint(MochiTheme.surfaceAlt)
-                            } else {
-                                Text("Continue")
-                                    .font(.system(size: 17, weight: .semibold, design: .rounded))
-                            }
-                        }
-                        .foregroundStyle(MochiTheme.surfaceAlt)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, MochiTheme.Spacing.lg)
-                        .background(MochiTheme.primary)
-                        .clipShape(RoundedRectangle(cornerRadius: MochiTheme.buttonRadius))
-                    }
-                    .disabled(isPurchasing || store.products.isEmpty)
-                    .padding(.horizontal, MochiTheme.Spacing.xl)
 
                     // The capped user is never blocked from logging.
                     if context == .scanCap {
@@ -146,6 +139,63 @@ struct PaywallView: View {
             .padding(MochiTheme.Spacing.lg)
             .accessibilityLabel("Close")
         }
+        .task {
+            if store.loadState == .idle || store.loadState == .failed {
+                await store.loadProducts()
+            }
+        }
+    }
+
+    // The Continue button plus an optional price caption beneath it. The
+    // caption restates the selected plan's price and trial terms so the
+    // user sees both before checkout.
+    @ViewBuilder
+    private func continueButton(enabled: Bool, caption: String?) -> some View {
+        VStack(spacing: MochiTheme.Spacing.sm) {
+            Button {
+                purchase()
+            } label: {
+                Group {
+                    if isPurchasing {
+                        ProgressView().tint(MochiTheme.surfaceAlt)
+                    } else {
+                        Text("Continue")
+                            .font(.system(size: 17, weight: .semibold, design: .rounded))
+                    }
+                }
+                .foregroundStyle(MochiTheme.surfaceAlt)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, MochiTheme.Spacing.lg)
+                .background(enabled ? MochiTheme.primary : MochiTheme.surface)
+                .clipShape(RoundedRectangle(cornerRadius: MochiTheme.buttonRadius))
+            }
+            .disabled(!enabled)
+
+            if let caption {
+                Text(caption)
+                    .font(MochiTheme.caption)
+                    .foregroundStyle(MochiTheme.textSecondary)
+                    .multilineTextAlignment(.center)
+            }
+        }
+        .padding(.horizontal, MochiTheme.Spacing.xl)
+    }
+
+    // Price + terms for the selected plan, straight from StoreKit.
+    private var selectedPriceCaption: String? {
+        guard let product = store.products.first(where: { $0.id == selectedProductID }) else { return nil }
+        let period = product.subscription?.subscriptionPeriod.unit
+        let hasTrial = product.subscription?.introductoryOffer?.paymentMode == .freeTrial
+        switch period {
+        case .year:
+            return hasTrial
+                ? "7 days free, then \(product.displayPrice) per year"
+                : "\(product.displayPrice) per year"
+        case .month:
+            return "\(product.displayPrice) per month, cancel anytime"
+        default:
+            return product.displayPrice
+        }
     }
 
     private func purchase() {
@@ -162,6 +212,65 @@ struct PaywallView: View {
                 purchaseError = "The purchase didn't go through. No worries — nothing was charged."
             }
         }
+    }
+}
+
+// MARK: - Loading skeleton
+
+private struct PlanCardSkeleton: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var pulse = false
+
+    var body: some View {
+        RoundedRectangle(cornerRadius: MochiTheme.cardRadius)
+            .fill(MochiTheme.surfaceAlt)
+            .frame(height: 66)
+            .overlay(
+                HStack {
+                    VStack(alignment: .leading, spacing: MochiTheme.Spacing.sm) {
+                        Capsule().fill(MochiTheme.surface).frame(width: 120, height: 14)
+                        Capsule().fill(MochiTheme.surface).frame(width: 80, height: 11)
+                    }
+                    Spacer()
+                    Circle().fill(MochiTheme.surface).frame(width: 22, height: 22)
+                }
+                .padding(MochiTheme.Spacing.lg)
+            )
+            .opacity(pulse ? 0.55 : 1.0)
+            .animation(
+                reduceMotion ? nil : .easeInOut(duration: 0.9).repeatForever(autoreverses: true),
+                value: pulse
+            )
+            .onAppear { if !reduceMotion { pulse = true } }
+            .accessibilityLabel("Loading plans")
+    }
+}
+
+// MARK: - Failed to load
+
+private struct FailedToLoadCard: View {
+    let onRetry: () -> Void
+    var body: some View {
+        VStack(spacing: MochiTheme.Spacing.md) {
+            Image(systemName: "wifi.slash")
+                .font(.system(size: 30))
+                .foregroundStyle(MochiTheme.textSecondary)
+            Text("Couldn't load the plans — check your connection and try again.")
+                .font(MochiTheme.body)
+                .foregroundStyle(MochiTheme.textSecondary)
+                .multilineTextAlignment(.center)
+            Button(action: onRetry) {
+                Label("Retry", systemImage: "arrow.clockwise")
+                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                    .foregroundStyle(MochiTheme.surfaceAlt)
+                    .padding(.horizontal, MochiTheme.Spacing.xl)
+                    .padding(.vertical, MochiTheme.Spacing.md)
+                    .background(MochiTheme.primary)
+                    .clipShape(Capsule())
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, MochiTheme.Spacing.xl)
     }
 }
 

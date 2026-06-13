@@ -83,8 +83,11 @@ struct ContentView: View {
         // onboarding); plainly closable, never repeated, never on app open.
         .onAppear {
             if pendingFirstLog && !hasSeenIntroPaywall {
-                hasSeenIntroPaywall = true
-                paywall.presentPaywall(.onboarding)
+                // Only mark it seen if it actually presented — a cooldown
+                // suppression shouldn't burn the one-time intro show.
+                if paywall.presentPaywall(.onboarding) {
+                    hasSeenIntroPaywall = true
+                }
             }
         }
     }
