@@ -12,9 +12,6 @@ struct ContentView: View {
     @AppStorage("pendingFirstLog") private var pendingFirstLog = false
 
     @State private var showManualEntryFallback = false
-    // Direction the incoming tab slides from — set in the same transaction as
-    // the selection change so the first transition already has it right.
-    @State private var slideEdge: Edge = .trailing
 
     private let motion = MochiMotion.default
 
@@ -24,18 +21,6 @@ struct ContentView: View {
         if h < 15 { return .lunch }
         if h < 20 { return .dinner }
         return .snack
-    }
-
-    // Tab bar drives selection through this so we can capture slide direction
-    // (old → new index) before the value actually changes.
-    private var tabSelection: Binding<AppState.Tab> {
-        Binding(
-            get: { appState.selectedTab },
-            set: { newTab in
-                slideEdge = newTab.rawValue >= appState.selectedTab.rawValue ? .trailing : .leading
-                appState.selectedTab = newTab
-            }
-        )
     }
 
     @ViewBuilder
@@ -52,26 +37,20 @@ struct ContentView: View {
         selectedTabContent
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .id(appState.selectedTab)
-            .transition(
-                reduceMotion
-                    ? .opacity
-                    : .asymmetric(
-                        insertion: .move(edge: slideEdge).combined(with: .opacity),
-                        removal: .opacity)
-            )
+            // A calm cross-fade — no positional slide, so switching feels
+            // settled rather than shaky.
+            .transition(.opacity)
             .safeAreaInset(edge: .bottom, spacing: 0) {
-                MochiTabBar(selected: tabSelection)
+                MochiTabBar(selected: $appState.selectedTab)
             }
         // A food log lands the user back home, where Mochi plays the moment.
         // Check-ins (e.g. weight logs) never hijack the current tab.
         .onChange(of: mochi.moment) { _, moment in
             if let moment, moment.kind != .checkIn {
-                slideEdge = .leading   // home is the leftmost tab
                 if reduceMotion {
                     appState.selectedTab = .home
                 } else {
-                    withAnimation(.spring(response: motion.tabContentResponse,
-                                          dampingFraction: motion.tabContentDamping)) {
+                    withAnimation(.easeInOut(duration: motion.tabContentResponse)) {
                         appState.selectedTab = .home
                     }
                 }

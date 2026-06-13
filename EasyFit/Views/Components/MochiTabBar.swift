@@ -38,8 +38,9 @@ struct MochiTabBar: View {
                     if reduceMotion {
                         selected = item.tab
                     } else {
-                        withAnimation(.spring(response: motion.tabIndicatorResponse,
-                                              dampingFraction: motion.tabIndicatorDamping)) {
+                        // Ease (no spring overshoot) so the pill + content
+                        // cross-fade settle calmly rather than wobbling.
+                        withAnimation(.easeInOut(duration: motion.tabContentResponse)) {
                             selected = item.tab
                         }
                     }
