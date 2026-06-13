@@ -195,13 +195,10 @@ struct NutritionView: View {
                                 }
             .fullScreenCover(isPresented: $showCamera) {
                 FoodCameraView(
-                    onResult: { result in
-                        context.insert(FoodEntry(
-                            name: result.name, calories: result.calories,
-                            protein: result.protein, carbs: result.carbs, fat: result.fat,
-                            servingSize: result.servingSize, mealType: activeMeal
-                        ))
-                        mochi.mealLogged()
+                    suggestedMeal: activeMeal,
+                    onSave: { entries in
+                        entries.forEach { context.insert($0) }
+                        mochi.mealLogged()   // one celebration per save, not per item
                         dismiss()
                     },
                     onDismiss: { showCamera = false }
@@ -223,8 +220,21 @@ struct NutritionView: View {
                 }
                             }
             .sheet(item: $editingEntry) { entry in
-                EditFoodEntryView(entry: entry, onSave: { _ in }, onDelete: { e in context.delete(e) })
-                                }
+                FoodItemEditSheet(
+                    draft: FoodItemDraft(entry: entry),
+                    onSave: { updated in
+                        // Edits update the SwiftData model in place — no celebration.
+                        entry.name        = updated.name
+                        entry.calories    = updated.calories
+                        entry.protein     = updated.protein
+                        entry.carbs       = updated.carbs
+                        entry.fat         = updated.fat
+                        entry.servingSize = updated.servingSize
+                        if let meal = updated.mealType { entry.mealType = meal }
+                    },
+                    onDelete: { context.delete(entry) }
+                )
+            }
             .sheet(isPresented: $showLogBurn) {
                 LogBurnView(healthKit: healthKit) { kcal in manualBurned += kcal }
                                 }

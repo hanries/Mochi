@@ -156,13 +156,10 @@ struct MochiHomeView: View {
         }
         .fullScreenCover(isPresented: $showFoodCamera) {
             FoodCameraView(
-                onResult: { result in
-                    context.insert(FoodEntry(
-                        name: result.name, calories: result.calories,
-                        protein: result.protein, carbs: result.carbs, fat: result.fat,
-                        servingSize: result.servingSize, mealType: activeMeal
-                    ))
-                    mochi.mealLogged()
+                suggestedMeal: activeMeal,
+                onSave: { entries in
+                    entries.forEach { context.insert($0) }
+                    mochi.mealLogged()   // one celebration per save, not per item
                 },
                 onDismiss: { showFoodCamera = false }
             )

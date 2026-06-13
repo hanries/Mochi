@@ -7,7 +7,7 @@
     <key>CFBundleName</key>
     <string>$(PRODUCT_NAME)</string>
     <key>CFBundleDisplayName</key>
-    <string>EasyFit</string>
+    <string>Mochi</string>
     <key>CFBundleVersion</key>
     <string>$(CURRENT_PROJECT_VERSION)</string>
     <key>CFBundleShortVersionString</key>
@@ -29,11 +29,11 @@
         <string>UIInterfaceOrientationLandscapeRight</string>
     </array>
     <key>NSCameraUsageDescription</key>
-    <string>EasyFit uses your camera to scan food and estimate calories.</string>
+    <string>Mochi uses your camera to scan food and estimate calories.</string>
     <key>NSHealthShareUsageDescription</key>
-    <string>EasyFit reads your burned calories and body weight from Apple Health.</string>
+    <string>Mochi reads your burned calories and body weight from Apple Health.</string>
     <key>NSHealthUpdateUsageDescription</key>
-    <string>EasyFit saves burned calories and body weight to Apple Health.</string>
+    <string>Mochi saves burned calories and body weight to Apple Health.</string>
     <key>EDAMAM_APP_ID</key>
     <string>$(EDAMAM_APP_ID)</string>
     <key>EDAMAM_APP_KEY</key>

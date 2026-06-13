@@ -6,18 +6,18 @@ import UIKit
 // MARK: - Main Camera View
 
 struct FoodCameraView: View {
-    let onResult:  (FoodScanResult) -> Void
+    var suggestedMeal: MealType = .lunch
+    let onSave:    ([FoodEntry]) -> Void
     let onDismiss: () -> Void
 
     @EnvironmentObject private var paywall: PaywallCoordinator
     @StateObject private var camera = CameraModel()
-    @State private var scanResult:   FoodScanResult? = nil
+    @State private var scanItems:    [FoodScanItem]? = nil
     @State private var isScanning    = false
     @State private var errorMessage: String? = nil
     @State private var showResult    = false
     @State private var capturedImage: UIImage? = nil
     @State private var scanBoxScale: CGFloat = 1.0
-    @State private var mealType: MealType = .lunch
 
     private let service: any FoodScanServiceProtocol = ScanServiceFactory.make()
 
@@ -143,13 +143,14 @@ struct FoodCameraView: View {
             scanBoxScale = scanning ? 1.05 : 1.0
         }
         .sheet(isPresented: $showResult) {
-            if let result = scanResult, let img = capturedImage {
+            if let items = scanItems, let img = capturedImage {
                 ScanResultView(
-                    image:    img,
-                    result:   result,
-                    onAdd:    { _ in
+                    image:        img,
+                    initialItems: items,
+                    suggestedMeal: suggestedMeal,
+                    onSave:    { entries in
                         showResult = false
-                        onResult(result)
+                        onSave(entries)
                         onDismiss()
                     },
                     onRetake: { showResult = false },
@@ -160,31 +161,51 @@ struct FoodCameraView: View {
     }
 
     private func capture() {
+        #if targetEnvironment(simulator)
+        // The simulator has no camera, so synthesize a placeholder and run
+        // the scan service directly (mock data when no API key is set).
+        beginScan(with: Self.placeholderImage())
+        #else
         camera.capturePhoto { image in
             guard let image else { return }
-            capturedImage = image
-            isScanning    = true
-            errorMessage  = nil
-            // The only place an AI scan actually runs — count it here.
-            paywall.recordScanUsed()
+            beginScan(with: image)
+        }
+        #endif
+    }
 
-            Task {
-                do {
-                    let result = try await service.scan(image: image)
-                    await MainActor.run {
-                        scanResult = result
-                        isScanning = false
-                        showResult = true
-                    }
-                } catch {
-                    await MainActor.run {
-                        isScanning    = false
-                        errorMessage  = error.localizedDescription
-                    }
+    private func beginScan(with image: UIImage) {
+        capturedImage = image
+        isScanning    = true
+        errorMessage  = nil
+        // The only place an AI scan actually runs — count it here.
+        paywall.recordScanUsed()
+
+        Task {
+            do {
+                let items = try await service.scan(image: image)
+                await MainActor.run {
+                    scanItems  = items
+                    isScanning = false
+                    showResult = true
+                }
+            } catch {
+                await MainActor.run {
+                    isScanning    = false
+                    errorMessage  = error.localizedDescription
                 }
             }
         }
     }
+
+    #if targetEnvironment(simulator)
+    private static func placeholderImage() -> UIImage {
+        let size = CGSize(width: 200, height: 200)
+        return UIGraphicsImageRenderer(size: size).image { ctx in
+            UIColor(white: 0.85, alpha: 1).setFill()
+            ctx.fill(CGRect(origin: .zero, size: size))
+        }
+    }
+    #endif
 }
 
 // MARK: - Scan frame (corner brackets)
@@ -334,123 +355,5 @@ struct CameraPreview: UIViewRepresentable {
                 previewLayer.videoGravity = .resizeAspectFill
             }
         }
-    }
-}
-
-// MARK: - Result view
-
-private struct ScanResultView: View {
-    let image:    UIImage
-    let result:   FoodScanResult
-    let onAdd:    (FoodScanResult) -> Void
-    let onRetake: () -> Void
-    let onCancel: () -> Void
-
-    @State private var mealType: MealType = .lunch
-
-    var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(spacing: 20) {
-                    Image(uiImage: image)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(height: 220)
-                        .clipShape(RoundedRectangle(cornerRadius: 16))
-                        .padding(.horizontal)
-                        .padding(.top, 8)
-
-                    VStack(spacing: 0) {
-                        HStack {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(result.name).font(.system(size: 18, weight: .bold))
-                                Text(result.servingSize).font(.system(size: 13)).foregroundStyle(MochiTheme.textSecondary)
-                            }
-                            Spacer()
-                            VStack(alignment: .trailing, spacing: 2) {
-                                Text("\(result.calories)").font(.system(size: 26, weight: .bold))
-                                Text("kcal").font(.system(size: 12)).foregroundStyle(MochiTheme.textSecondary)
-                            }
-                        }
-                        .padding(16)
-
-                        Divider().padding(.horizontal)
-
-                        HStack(spacing: 0) {
-                            MacroCell(label: "Protein", value: result.protein, color: MochiTheme.success)
-                            Divider().frame(height: 40)
-                            MacroCell(label: "Carbs",   value: result.carbs,   color: MochiTheme.warning)
-                            Divider().frame(height: 40)
-                            MacroCell(label: "Fat",     value: result.fat,     color: MochiTheme.accent)
-                        }
-                        .padding(.vertical, 8)
-
-                        Divider().padding(.horizontal)
-
-                        HStack {
-                            Image(systemName: result.confidence > 0.7 ? "checkmark.seal.fill" : "exclamationmark.triangle.fill")
-                                .foregroundStyle(result.confidence > 0.7 ? MochiTheme.success : MochiTheme.warning)
-                            Text(result.confidence > 0.7 ? "High confidence" : "Low confidence — verify")
-                                .font(.system(size: 13)).foregroundStyle(MochiTheme.textSecondary)
-                            Spacer()
-                            Text("\(Int(result.confidence * 100))%")
-                                .font(.system(size: 13, weight: .medium)).foregroundStyle(MochiTheme.textSecondary)
-                        }
-                        .padding(16)
-                    }
-                    .background(MochiTheme.surfaceAlt)
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
-                    .padding(.horizontal)
-
-                    HStack {
-                        Text("Meal").font(.system(size: 15, weight: .medium))
-                        Spacer()
-                        Picker("Meal", selection: $mealType) {
-                            ForEach(MealType.allCases, id: \.self) { Text($0.rawValue).tag($0) }
-                        }
-                    }
-                    .padding(.horizontal, 16).padding(.vertical, 4)
-                    .background(MochiTheme.surfaceAlt)
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
-                    .padding(.horizontal)
-
-                    VStack(spacing: 10) {
-                        Button { onAdd(result) } label: {
-                            Text("Add to \(mealType.rawValue)")
-                                .font(.system(size: 16, weight: .semibold, design: .rounded))
-                                .frame(maxWidth: .infinity).padding(.vertical, 16)
-                                .background(MochiTheme.primary)
-                                .foregroundStyle(MochiTheme.surfaceAlt)
-                                .clipShape(RoundedRectangle(cornerRadius: 16))
-                        }
-                        Button { onRetake() } label: {
-                            Text("Retake")
-                                .font(.system(size: 15, weight: .medium))
-                                .frame(maxWidth: .infinity).padding(.vertical, 14)
-                                .background(MochiTheme.surfaceAlt)
-                                .foregroundStyle(MochiTheme.textPrimary)
-                                .clipShape(RoundedRectangle(cornerRadius: 16))
-                        }
-                    }
-                    .padding(.horizontal).padding(.bottom, 24)
-                }
-            }
-            .background(MochiTheme.background)
-            .navigationTitle("Scan Result").navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) { Button("Cancel") { onCancel() } }
-            }
-        }
-    }
-}
-
-private struct MacroCell: View {
-    let label: String; let value: Double; let color: Color
-    var body: some View {
-        VStack(spacing: 4) {
-            Text(String(format: "%.1fg", value)).font(.system(size: 16, weight: .semibold)).foregroundStyle(color)
-            Text(label).font(.system(size: 11)).foregroundStyle(MochiTheme.textSecondary)
-        }
-        .frame(maxWidth: .infinity).padding(.vertical, 8)
     }
 }

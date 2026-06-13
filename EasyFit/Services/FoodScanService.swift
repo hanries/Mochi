@@ -3,35 +3,50 @@ import UIKit
 
 // MARK: - Response shape
 
-struct FoodScanResult: Codable {
-    let name:        String
-    let servingSize: String
-    let calories:    Int
-    let protein:     Double
-    let carbs:       Double
-    let fat:         Double
-    let confidence:  Double
+// One detected food. The AI returns an array of these so a plate with
+// several items (eggs + toast + coffee) comes back as distinct rows the
+// user can correct individually before saving.
+struct FoodScanItem: Codable, Identifiable {
+    var id = UUID()
+    var name:        String
+    var servingSize: String
+    var calories:    Int
+    var protein:     Double
+    var carbs:       Double
+    var fat:         Double
+    var confidence:  Double
+
+    // id is local-only — never decoded from the API payload.
+    enum CodingKeys: String, CodingKey {
+        case name, servingSize, calories, protein, carbs, fat, confidence
+    }
+}
+
+private struct ScanItemsEnvelope: Codable {
+    let items: [FoodScanItem]
 }
 
 // MARK: - Protocol
 
 protocol FoodScanServiceProtocol {
-    func scan(image: UIImage) async throws -> FoodScanResult
+    func scan(image: UIImage) async throws -> [FoodScanItem]
 }
 
 // MARK: - Mock
 
 final class MockFoodScanService: FoodScanServiceProtocol {
-    func scan(image: UIImage) async throws -> FoodScanResult {
+    func scan(image: UIImage) async throws -> [FoodScanItem] {
         try await Task.sleep(nanoseconds: 1_500_000_000)
-        let mocks: [FoodScanResult] = [
-            FoodScanResult(name: "Grilled Chicken Breast", servingSize: "200g",    calories: 330, protein: 62, carbs: 0,  fat: 7,  confidence: 0.94),
-            FoodScanResult(name: "Avocado Toast",          servingSize: "1 slice", calories: 240, protein: 5,  carbs: 28, fat: 14, confidence: 0.88),
-            FoodScanResult(name: "Greek Yogurt",           servingSize: "1 cup",   calories: 150, protein: 20, carbs: 9,  fat: 4,  confidence: 0.91),
-            FoodScanResult(name: "Scrambled Eggs",         servingSize: "3 eggs",  calories: 280, protein: 21, carbs: 2,  fat: 20, confidence: 0.96),
-            FoodScanResult(name: "Brown Rice Bowl",        servingSize: "350g",    calories: 410, protein: 8,  carbs: 82, fat: 4,  confidence: 0.85),
+        let pool: [FoodScanItem] = [
+            FoodScanItem(name: "Grilled Chicken Breast", servingSize: "200g",    calories: 330, protein: 62, carbs: 0,  fat: 7,  confidence: 0.94),
+            FoodScanItem(name: "Avocado Toast",          servingSize: "1 slice", calories: 240, protein: 5,  carbs: 28, fat: 14, confidence: 0.88),
+            FoodScanItem(name: "Greek Yogurt",           servingSize: "1 cup",   calories: 150, protein: 20, carbs: 9,  fat: 4,  confidence: 0.91),
+            FoodScanItem(name: "Scrambled Eggs",         servingSize: "3 eggs",  calories: 280, protein: 21, carbs: 2,  fat: 20, confidence: 0.96),
+            FoodScanItem(name: "Brown Rice Bowl",        servingSize: "350g",    calories: 410, protein: 8,  carbs: 82, fat: 4,  confidence: 0.85),
         ]
-        return mocks.randomElement()!
+        // Return 1–3 distinct items so the multi-item UI is exercised.
+        let count = Int.random(in: 1...3)
+        return Array(pool.shuffled().prefix(count))
     }
 }
 
@@ -41,20 +56,20 @@ final class FoodScanService: FoodScanServiceProtocol {
     private let apiKey: String
     init(apiKey: String) { self.apiKey = apiKey }
 
-    func scan(image: UIImage) async throws -> FoodScanResult {
+    func scan(image: UIImage) async throws -> [FoodScanItem] {
         guard let jpeg = image.jpegData(compressionQuality: 0.7) else {
             throw ScanError.imageConversionFailed
         }
         let base64 = jpeg.base64EncodedString()
 
         let prompt = """
-        Analyze this food image. Return ONLY raw JSON with no markdown, no backticks, no explanation:
-        {"name":"<food name>","servingSize":"<e.g. 1 cup or 200g>","calories":<integer>,"protein":<decimal>,"carbs":<decimal>,"fat":<decimal>,"confidence":<0.0-1.0>}
+        Analyze this food image. Identify each distinct food or drink as a separate item (up to 6). Return ONLY raw JSON with no markdown, no backticks, no explanation:
+        {"items":[{"name":"<food name>","servingSize":"<e.g. 1 cup or 200g>","calories":<integer>,"protein":<decimal>,"carbs":<decimal>,"fat":<decimal>,"confidence":<0.0-1.0>}]}
         """
 
         let body: [String: Any] = [
             "model": "claude-haiku-4-5-20251001",
-            "max_tokens": 256,
+            "max_tokens": 1024,
             "messages": [[
                 "role": "user",
                 "content": [
@@ -114,12 +129,17 @@ final class FoodScanService: FoodScanServiceProtocol {
             throw ScanError.parseError
         }
 
-        do {
-            return try JSONDecoder().decode(FoodScanResult.self, from: jsonData)
-        } catch {
-            print("❌ Decode error: \(error)")
-            throw ScanError.parseError
+        let decoder = JSONDecoder()
+        // Prefer the {"items":[...]} envelope; fall back to a single item
+        // object if the model ignored the array instruction.
+        if let env = try? decoder.decode(ScanItemsEnvelope.self, from: jsonData), !env.items.isEmpty {
+            return env.items
         }
+        if let single = try? decoder.decode(FoodScanItem.self, from: jsonData) {
+            return [single]
+        }
+        print("❌ Decode error: could not parse items from \(jsonString)")
+        throw ScanError.parseError
     }
 }
 
