@@ -24,6 +24,17 @@ struct MochiMotion {
     var doubleBlinkOdds: Int        = 5       // 1 in N blinks doubles
     var doubleBlinkGap: Double      = 0.18
 
+    // Sleepy blinking — slower, heavier, longer-held than an alert blink so
+    // Mochi reads as drowsy-but-alive rather than a frozen closed frame.
+    var sleepyBlinkInterval: ClosedRange<Double> = 2.2...4.0
+    var sleepyBlinkDuration: Double = 0.6
+
+    // Drifting "z" sleep overlay (rises and fades on a slow loop)
+    var sleepyZPeriod: Double       = 3.0     // seconds per z rise/fade cycle
+    var sleepyZCount: Int           = 3       // staggered z's in flight
+    var sleepyZRise: Double         = 0.16    // fraction of size each z floats up
+    var sleepyZOpacity: Double      = 0.55    // peak opacity of a z
+
     // Tap reaction
     var tapBounceScale: Double      = 1.08
     var tapHopHeight: Double        = 10
@@ -38,6 +49,15 @@ struct MochiMotion {
     var habitatNightStartMinutes: Int = 19 * 60      // 19:00
     var habitatDayStartMinutes: Int   = 6 * 60 + 30  // 06:30
     var habitatCrossfade: Double      = 1.0
+
+    // Tab bar (custom): content swap, sliding indicator, tapped-icon bounce
+    var tabContentResponse: Double  = 0.32
+    var tabContentDamping: Double   = 0.85
+    var tabIndicatorResponse: Double = 0.35
+    var tabIndicatorDamping: Double = 0.75
+    var tabIconBounceScale: Double  = 1.18
+    var tabIconBounceResponse: Double = 0.30
+    var tabIconBounceDamping: Double = 0.45
 
     // Moments (eating after a log, ecstatic on streak milestones)
     var momentDuration: Double          = 2.5

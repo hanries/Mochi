@@ -3,7 +3,9 @@ import Combine
 
 @MainActor
 final class MochiViewModel: ObservableObject {
-    @Published private(set) var state: MochiState = .content
+    // Open-eyed, awake fallback shown the instant the view appears, before
+    // @Query engagement data resolves. Never default to a closed-eye look.
+    @Published private(set) var state: MochiState = .happy
     @Published private(set) var streak: Int = 0
     @Published private(set) var loggedToday = false
     @Published var moment: MochiMoment? = nil

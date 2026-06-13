@@ -99,6 +99,13 @@ struct MochiView: View {
                 .animation(.easeInOut(duration: motion.transitionDuration), value: anchorFrameName)
                 .scaleEffect(x: scaleX, y: scaleY, anchor: .bottom)
                 .rotationEffect(.degrees(sway), anchor: .bottom)
+
+                // Drifting "z" sleep cue — floats above his head, only when sleepy.
+                if state == .sleepy {
+                    sleepyZs(t: t)
+                        .frame(width: size, height: size, alignment: .top)
+                        .accessibilityHidden(true)
+                }
             }
         }
         .scaleEffect(pulseScale * tapScale * momentScale, anchor: .bottom)
@@ -125,26 +132,62 @@ struct MochiView: View {
             momentScale = 1.0
         }
         // Blink loop: restarts on state change, cancels on disappear.
+        // Sleepy blinks slowly and heavily (and never double-blinks) so Mochi
+        // reads as drowsy-but-alive instead of a frozen closed frame.
         .task(id: state) {
             isBlinking = false
             guard MochiAssetProvider.blinkImageName(for: state) != nil else { return }
+            let sleepy   = state == .sleepy
+            let interval = sleepy ? motion.sleepyBlinkInterval : motion.blinkInterval
+            let duration = sleepy ? motion.sleepyBlinkDuration : motion.blinkDuration
             while !Task.isCancelled {
-                try? await Task.sleep(for: .seconds(Double.random(in: motion.blinkInterval)))
+                try? await Task.sleep(for: .seconds(Double.random(in: interval)))
                 guard !Task.isCancelled else { return }
-                await blinkOnce()
-                if Int.random(in: 1...motion.doubleBlinkOdds) == 1 {
+                await blinkOnce(duration: duration)
+                if !sleepy, Int.random(in: 1...motion.doubleBlinkOdds) == 1 {
                     try? await Task.sleep(for: .seconds(motion.doubleBlinkGap))
                     guard !Task.isCancelled else { return }
-                    await blinkOnce()
+                    await blinkOnce(duration: duration)
                 }
             }
         }
     }
 
-    private func blinkOnce() async {
+    private func blinkOnce(duration: Double) async {
         isBlinking = true
-        try? await Task.sleep(for: .seconds(motion.blinkDuration))
+        try? await Task.sleep(for: .seconds(duration))
         isBlinking = false
+    }
+
+    // MARK: - Sleepy "z" overlay
+
+    /// Soft "z"s drifting up off his head. Driven by the shared TimelineView
+    /// clock so it pauses with the rest of the motion; Reduce Motion / inactive
+    /// collapses to a single static z.
+    @ViewBuilder
+    private func sleepyZs(t: TimeInterval) -> some View {
+        let baseX = size * 0.30   // up and to the right of his head
+        let baseY = -size * 0.20
+        if motionPaused {
+            Text("z")
+                .font(.system(size: size * 0.15, weight: .bold, design: .rounded))
+                .foregroundStyle(MochiTheme.textSecondary.opacity(motion.sleepyZOpacity * 0.7))
+                .offset(x: baseX, y: baseY)
+        } else {
+            ZStack {
+                ForEach(0..<motion.sleepyZCount, id: \.self) { i in
+                    let phase = ((t / motion.sleepyZPeriod) + Double(i) / Double(motion.sleepyZCount))
+                        .truncatingRemainder(dividingBy: 1)
+                    let fade = sin(.pi * phase)   // 0 → 1 → 0 over the cycle
+                    Text("z")
+                        .font(.system(size: size * (0.11 + 0.05 * (1 - phase)),
+                                      weight: .bold, design: .rounded))
+                        .foregroundStyle(MochiTheme.textSecondary.opacity(motion.sleepyZOpacity * fade))
+                        .offset(x: baseX + size * 0.06 * phase,
+                                y: baseY - size * motion.sleepyZRise * phase)
+                }
+            }
+        }
     }
 
     // MARK: - Tap reaction

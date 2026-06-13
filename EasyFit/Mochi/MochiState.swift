@@ -1,6 +1,32 @@
 import Foundation
 
 // MARK: - Mochi's emotional states
+//
+// Expression roadmap (engagement-only — never a reaction to food/weight/goals).
+// Asset naming: `mochi_<state>` for the base frame, `mochi_<state>_blink` for
+// the eyes-shut blink frame of open-eyed states; moments use `mochi_<moment>`.
+//
+//   State         Trigger                                  Art status
+//   ──────────────────────────────────────────────────────────────────────────
+//   content       brand-new user; daytime, logged          TODO: open-eyed
+//                 recently but not yet today               `mochi_content` +
+//                 (awake/calm)                             `mochi_content_blink`
+//                                                          (currently reuses the
+//                                                          happy frames)
+//   happy         logged today, streak < ecstatic          have happy + _blink
+//   ecstatic      logged today, streak ≥ ecstaticStreak    have base; TODO add
+//                                                          `mochi_ecstatic_blink`
+//   sleepy        evening, nothing logged yet              have base; blinks
+//                                                          slowly via the freed
+//                                                          eyes-shut frame; TODO
+//                                                          optional sleepy redraw
+//                                                          without baked-in "zzz"
+//   missingYou    24h+ since any log                        have missing + _blink
+//   eating        moment — every successful food log        have `mochi_eating`
+//
+// Proposed additive states (need buy-in + art before wiring):
+//   greeting (moment)  first foreground of the day          `mochi_greeting`
+//   proud              streak milestone beyond ecstatic      `mochi_proud` + _blink
 
 enum MochiState: String, CaseIterable {
     case ecstatic

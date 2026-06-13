@@ -1,5 +1,4 @@
 import SwiftUI
-import UIKit
 import SwiftData
 
 struct ContentView: View {
@@ -7,11 +6,17 @@ struct ContentView: View {
     @EnvironmentObject var mochi: MochiViewModel
     @EnvironmentObject var paywall: PaywallCoordinator
     @Environment(\.modelContext) private var context
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @AppStorage("hasSeenIntroPaywall") private var hasSeenIntroPaywall = false
     @AppStorage("pendingFirstLog") private var pendingFirstLog = false
 
     @State private var showManualEntryFallback = false
+    // Direction the incoming tab slides from — set in the same transaction as
+    // the selection change so the first transition already has it right.
+    @State private var slideEdge: Edge = .trailing
+
+    private let motion = MochiMotion.default
 
     private var currentMeal: MealType {
         let h = Calendar.current.component(.hour, from: .now)
@@ -21,46 +26,55 @@ struct ContentView: View {
         return .snack
     }
 
-    init() {
-        // Tab bar: surface background, textSecondary unselected items;
-        // the selected state comes from .tint below.
-        let appearance = UITabBarAppearance()
-        appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = UIColor(MochiTheme.surface)
-        for item in [appearance.stackedLayoutAppearance,
-                     appearance.inlineLayoutAppearance,
-                     appearance.compactInlineLayoutAppearance] {
-            item.normal.iconColor = UIColor(MochiTheme.textSecondary)
-            item.normal.titleTextAttributes = [.foregroundColor: UIColor(MochiTheme.textSecondary)]
+    // Tab bar drives selection through this so we can capture slide direction
+    // (old → new index) before the value actually changes.
+    private var tabSelection: Binding<AppState.Tab> {
+        Binding(
+            get: { appState.selectedTab },
+            set: { newTab in
+                slideEdge = newTab.rawValue >= appState.selectedTab.rawValue ? .trailing : .leading
+                appState.selectedTab = newTab
+            }
+        )
+    }
+
+    @ViewBuilder
+    private var selectedTabContent: some View {
+        switch appState.selectedTab {
+        case .home:    MochiHomeView()
+        case .log:     LogView()
+        case .workout: WorkoutView()
+        case .profile: ProfileView()
         }
-        UITabBar.appearance().standardAppearance = appearance
-        UITabBar.appearance().scrollEdgeAppearance = appearance
     }
 
     var body: some View {
-        TabView(selection: $appState.selectedTab) {
-            MochiHomeView()
-                .tabItem { Label("Home", systemImage: "pawprint.fill") }
-                .tag(AppState.Tab.home)
-
-            LogView()
-                .tabItem { Label("Log", systemImage: "chart.bar.fill") }
-                .tag(AppState.Tab.log)
-
-            WorkoutView()
-                .tabItem { Label("Workout", systemImage: "dumbbell") }
-                .tag(AppState.Tab.workout)
-
-            ProfileView()
-                .tabItem { Label("Profile", systemImage: "person.crop.circle") }
-                .tag(AppState.Tab.profile)
-        }
-        .tint(MochiTheme.primary)
+        selectedTabContent
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .id(appState.selectedTab)
+            .transition(
+                reduceMotion
+                    ? .opacity
+                    : .asymmetric(
+                        insertion: .move(edge: slideEdge).combined(with: .opacity),
+                        removal: .opacity)
+            )
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                MochiTabBar(selected: tabSelection)
+            }
         // A food log lands the user back home, where Mochi plays the moment.
         // Check-ins (e.g. weight logs) never hijack the current tab.
         .onChange(of: mochi.moment) { _, moment in
             if let moment, moment.kind != .checkIn {
-                appState.selectedTab = .home
+                slideEdge = .leading   // home is the leftmost tab
+                if reduceMotion {
+                    appState.selectedTab = .home
+                } else {
+                    withAnimation(.spring(response: motion.tabContentResponse,
+                                          dampingFraction: motion.tabContentDamping)) {
+                        appState.selectedTab = .home
+                    }
+                }
             }
         }
         // The single paywall presentation point.

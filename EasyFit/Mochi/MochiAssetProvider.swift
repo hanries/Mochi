@@ -9,21 +9,34 @@ import SwiftUI
 
 enum MochiAssetProvider {
 
+    /// The standalone closed-eye "peaceful" frame (originally drawn for
+    /// `.content`). It's no longer a base frame for any state — `.content`
+    /// is awake now — so it's reused as the eyes-shut frame for sleepy's
+    /// slow blink. Roadmap: a dedicated `mochi_sleepy_blink`.
+    static let eyesShutFrame = "mochi_content"
+
     static func baseImageName(for state: MochiState) -> String {
         switch state {
         case .ecstatic:   return "mochi_ecstatic"
         case .happy:      return "mochi_happy"
-        case .content:    return "mochi_content"
+        // `.content` is an awake, calm mood. Its original art was eyes-closed
+        // and read as "asleep" on launch (content is the default/brand-new/
+        // daytime state), so it reuses the open-eyed happy frame until
+        // dedicated open-eyed content art exists.
+        case .content:    return "mochi_happy"
         case .sleepy:     return "mochi_sleepy"
         case .missingYou: return "mochi_missing"
         }
     }
 
-    /// Only states whose art has open eyes get a blink frame; the rest
-    /// have closed or occluded eyes and never blink.
+    /// Open-eyed states get a blink frame so they feel alive. `.sleepy` blinks
+    /// too — slowly and heavily (see MochiMotion.sleepyBlink*) using the
+    /// eyes-shut frame; the rest without art return nil and never blink.
     static func blinkImageName(for state: MochiState) -> String? {
         switch state {
         case .happy:      return "mochi_happy_blink"
+        case .content:    return "mochi_happy_blink"
+        case .sleepy:     return eyesShutFrame
         case .missingYou: return "mochi_missing_blink_aligned"
         default:          return nil
         }
