@@ -282,41 +282,56 @@ enum HeightUnit: String, CaseIterable {
 
 private struct MeetMochiPage: View {
     @Binding var name: String
+    @FocusState private var nameFocused: Bool
 
     var body: some View {
-        VStack(spacing: 0) {
-            Spacer()
-            VStack(spacing: 28) {
-                MochiView(state: .happy, size: 150)
+        GeometryReader { geo in
+            // Reserve room for the title + subtitle + name field stack;
+            // Mochi takes 70% of the width but never so tall he'd collide
+            // with that header on a small screen. He shrinks while the
+            // keyboard is up so the field stays clear.
+            let headerHeight: CGFloat = 280
+            let fullSize  = min(geo.size.width * 0.70, max(150, geo.size.height - headerHeight))
+            let mochiSize = nameFocused ? fullSize * 0.6 : fullSize
 
-                VStack(spacing: 10) {
-                    Text("This is Mochi")
-                        .font(.system(size: 30, weight: .bold))
-                        .foregroundStyle(MochiTheme.textPrimary)
-                    Text("Take care of Mochi by taking care of yourself.")
-                        .font(.system(size: 16))
-                        .foregroundStyle(MochiTheme.textSecondary)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 40)
-                }
+            ZStack(alignment: .bottom) {
+                MochiView(state: .happy, size: mochiSize, showShadow: true)
+                    .frame(maxWidth: .infinity)
+                    .padding(.bottom, MochiTheme.Spacing.sm)
+                    .animation(.spring(response: 0.35, dampingFraction: 0.8), value: nameFocused)
 
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("What should Mochi call you?")
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundStyle(MochiTheme.textSecondary)
-                        .padding(.leading, 4)
-                    TextField("Your first name", text: $name)
-                        .font(.system(size: 17))
-                        .foregroundStyle(MochiTheme.textPrimary)
-                        .padding(16)
-                        .background(MochiTheme.surfaceAlt)
-                        .clipShape(RoundedRectangle(cornerRadius: 14))
+                VStack(spacing: 28) {
+                    VStack(spacing: 10) {
+                        Text("This is Mochi")
+                            .font(.system(size: 30, weight: .bold))
+                            .foregroundStyle(MochiTheme.textPrimary)
+                        Text("Take care of Mochi by taking care of yourself.")
+                            .font(.system(size: 16))
+                            .foregroundStyle(MochiTheme.textSecondary)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 40)
+                    }
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("What should Mochi call you?")
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundStyle(MochiTheme.textSecondary)
+                            .padding(.leading, 4)
+                        TextField("Your first name", text: $name)
+                            .focused($nameFocused)
+                            .font(.system(size: 17))
+                            .foregroundStyle(MochiTheme.textPrimary)
+                            .padding(16)
+                            .background(MochiTheme.surfaceAlt)
+                            .clipShape(RoundedRectangle(cornerRadius: 14))
+                    }
+                    .padding(.horizontal, 32)
                 }
-                .padding(.horizontal, 32)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                .padding(.top, MochiTheme.Spacing.xxl)
             }
-            Spacer()
-            Spacer()
         }
+        .ignoresSafeArea(.keyboard, edges: .bottom)
     }
 }
 
@@ -326,13 +341,15 @@ private struct HowItWorksPage: View {
     @Binding var selectedGoal: FitnessGoal
 
     var body: some View {
-        ScrollView(showsIndicators: false) {
-            VStack(spacing: 28) {
-                Spacer().frame(height: 70)
+        GeometryReader { geo in
+            let mochiSize = min(geo.size.width * 0.45, 180)
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 28) {
+                    Spacer().frame(height: 70)
 
-                MochiView(state: .ecstatic, size: 90)
+                    MochiView(state: .happy, size: mochiSize)
 
-                Text("Log your meals,\nand I'll be happy")
+                    Text("Log your meals,\nand I'll be happy")
                     .font(.system(size: 28, weight: .bold))
                     .foregroundStyle(MochiTheme.textPrimary)
                     .multilineTextAlignment(.center)
@@ -367,6 +384,7 @@ private struct HowItWorksPage: View {
                 .padding(.horizontal, 24)
 
                 Spacer().frame(height: 40)
+                }
             }
         }
     }
@@ -527,10 +545,12 @@ private struct FirstLogPage: View {
     @StateObject private var notifications = MochiNotificationService.shared
 
     var body: some View {
-        VStack(spacing: 0) {
-            Spacer()
-            VStack(spacing: 28) {
-                MochiView(state: .happy, size: 150)
+        GeometryReader { geo in
+            let mochiSize = min(geo.size.width * 0.45, 180)
+            VStack(spacing: 0) {
+                Spacer()
+                VStack(spacing: 28) {
+                    MochiView(state: .happy, size: mochiSize)
 
                 VStack(spacing: 10) {
                     Text(name.isEmpty
@@ -586,9 +606,11 @@ private struct FirstLogPage: View {
                     .clipShape(Capsule())
                 }
                 .disabled(notifications.isAuthorized)
+                }
+                Spacer()
+                Spacer()
             }
-            Spacer()
-            Spacer()
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .task { await notifications.refreshAuthorizationStatus() }
     }
