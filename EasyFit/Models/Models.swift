@@ -165,6 +165,18 @@ enum Weekday: Int, Codable, CaseIterable {
         case .sunday:    return "Sun"
         }
     }
+
+    var full: String {
+        switch self {
+        case .monday:    return "Monday"
+        case .tuesday:   return "Tuesday"
+        case .wednesday: return "Wednesday"
+        case .thursday:  return "Thursday"
+        case .friday:    return "Friday"
+        case .saturday:  return "Saturday"
+        case .sunday:    return "Sunday"
+        }
+    }
 }
 
 // MARK: - Progress

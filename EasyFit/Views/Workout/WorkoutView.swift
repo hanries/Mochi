@@ -153,7 +153,7 @@ struct EmptyDayState: View {
             Image(systemName: "figure.strengthtraining.traditional")
                 .font(.system(size: 44))
                 .foregroundStyle(MochiTheme.textSecondary)
-            Text("No workouts on \(day.short)")
+            Text("No workouts on \(day.full)")
                 .font(.system(size: 17, weight: .semibold, design: .rounded))
                 .foregroundStyle(MochiTheme.textPrimary)
             Text("Add a plan to schedule exercises for this day.")
@@ -330,18 +330,15 @@ struct DayPickerGrid: View {
                             else    { selectedDays.insert(day) }
                         }
                     } label: {
-                        VStack(spacing: 3) {
-                            Text(day.short.prefix(1))
-                                .font(.system(size: 10, weight: .semibold))
-                                .foregroundStyle(isOn ? MochiTheme.surfaceAlt : MochiTheme.textSecondary)
-                            Text(day.short.dropFirst())
-                                .font(.system(size: 10))
-                                .foregroundStyle(isOn ? MochiTheme.surfaceAlt.opacity(0.85) : MochiTheme.textSecondary)
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 10)
-                        .background(isOn ? MochiTheme.primary : MochiTheme.surface)
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                        Text(day.short)
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(isOn ? MochiTheme.surfaceAlt : MochiTheme.textSecondary)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .background(isOn ? MochiTheme.primary : MochiTheme.surface)
+                            .clipShape(RoundedRectangle(cornerRadius: 10))
                     }
                     .buttonStyle(.plain)
                 }
