@@ -32,10 +32,10 @@ struct FoodSearchResult: Identifiable {
     var servingSize: String { defaultServing.label }
 }
 
-// MARK: - Food Search Service (Edamam)
+// MARK: - Edamam food provider
 
-final class FoodSearchService {
-    static let shared = FoodSearchService()
+final class EdamamFoodProvider: FoodProvider {
+    let providerID = "edamam"
 
     private let appId  = "e0b226da"
     private let appKey = "e780633c293c93e5811bc6e7b69d7c88"

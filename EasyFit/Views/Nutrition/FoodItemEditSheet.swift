@@ -333,7 +333,7 @@ struct FoodItemEditSheet: View {
             try? await Task.sleep(nanoseconds: 300_000_000)
             guard !Task.isCancelled else { return }
             do {
-                let r = try await FoodSearchService.shared.search(query: trimmed)
+                let r = try await FoodSearch.provider.search(query: trimmed)
                 guard !Task.isCancelled else { return }
                 await MainActor.run { results = r; isSearching = false }
             } catch {

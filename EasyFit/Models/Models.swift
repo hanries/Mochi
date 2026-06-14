@@ -15,6 +15,10 @@ final class FoodEntry {
     var mealTypeRaw: String
     var date: Date
     var isCustom: Bool
+    // Provenance only — which provider/food a value came from. The entry is
+    // fully self-contained without these; they're for a future re-sync.
+    var sourceProvider: String?
+    var sourceProviderID: String?
 
     init(
         id: UUID = UUID(),
@@ -26,18 +30,22 @@ final class FoodEntry {
         servingSize: String = "1 serving",
         mealType: MealType,
         date: Date = .now,
-        isCustom: Bool = false
+        isCustom: Bool = false,
+        sourceProvider: String? = nil,
+        sourceProviderID: String? = nil
     ) {
-        self.id          = id
-        self.name        = name
-        self.calories    = calories
-        self.protein     = protein
-        self.carbs       = carbs
-        self.fat         = fat
-        self.servingSize = servingSize
-        self.mealTypeRaw = mealType.rawValue
-        self.date        = date
-        self.isCustom    = isCustom
+        self.id               = id
+        self.name             = name
+        self.calories         = calories
+        self.protein          = protein
+        self.carbs            = carbs
+        self.fat              = fat
+        self.servingSize      = servingSize
+        self.mealTypeRaw      = mealType.rawValue
+        self.date             = date
+        self.isCustom         = isCustom
+        self.sourceProvider   = sourceProvider
+        self.sourceProviderID = sourceProviderID
     }
 
     var mealType: MealType {

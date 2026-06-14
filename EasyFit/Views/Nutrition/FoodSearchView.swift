@@ -140,7 +140,7 @@ struct FoodSearchView: View {
         isSearching = true; errorMessage = nil
         Task {
             do {
-                let r = try await FoodSearchService.shared.search(query: query)
+                let r = try await FoodSearch.provider.search(query: query)
                 await MainActor.run { results = r; isSearching = false }
             } catch {
                 await MainActor.run {
@@ -544,7 +544,9 @@ struct FoodDetailSheet: View {
                             name: food.name, calories: scaledCalories,
                             protein: scaledProtein, carbs: scaledCarbs, fat: scaledFat,
                             servingSize: "\(quantity) × \(selectedServing.label)",
-                            mealType: selectedMeal
+                            mealType: selectedMeal,
+                            sourceProvider: FoodSearch.provider.providerID,
+                            sourceProviderID: food.id
                         ))
                     } label: {
                         Text("Add to \(selectedMeal.rawValue)")

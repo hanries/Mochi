@@ -1,0 +1,3 @@
+# USDA FoodData Central bulk CSV dump — multi-GB source data for the
+# (not-yet-integrated) offline food DB pipeline. Keep it local, never commit.
+fdc data/
