@@ -208,6 +208,9 @@
 			);
 			mainGroup = 3A54BACB2FC110CB008A6010;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				3A9924AC2FDF0E2800A92509 /* XCRemoteSwiftPackageReference "GRDB" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 3A54BAD52FC110CB008A6010 /* Products */;
 			projectDirPath = "";
@@ -619,6 +622,17 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		3A9924AC2FDF0E2800A92509 /* XCRemoteSwiftPackageReference "GRDB" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/groue/GRDB.swift";
+			requirement = {
+				branch = master;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
 	};
 	rootObject = 3A54BACC2FC110CB008A6010 /* Project object */;
 }
