@@ -10,8 +10,12 @@ struct ContentView: View {
 
     @AppStorage("hasSeenIntroPaywall") private var hasSeenIntroPaywall = false
     @AppStorage("pendingFirstLog") private var pendingFirstLog = false
+    // Independent of onboarding: the first-run tour shows once, right after
+    // onboarding, whether the user finishes or skips it.
+    @AppStorage("hasSeenTour") private var hasSeenTour = false
 
     @State private var showManualEntryFallback = false
+    @State private var showTour = false
 
     private let motion = MochiMotion.default
 
@@ -43,6 +47,18 @@ struct ContentView: View {
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 MochiTabBar(selected: $appState.selectedTab)
             }
+            // First-run guided tour — Mochi walks the user through each tab.
+            .overlay {
+                if showTour {
+                    GuidedTourView(selectedTab: $appState.selectedTab) {
+                        withAnimation(.easeInOut(duration: 0.25)) { showTour = false }
+                        hasSeenTour = true
+                        presentIntroPaywallIfNeeded()
+                    }
+                    .transition(.opacity)
+                    .zIndex(10)
+                }
+            }
         // A food log lands the user back home, where Mochi plays the moment.
         // Check-ins (e.g. weight logs) never hijack the current tab.
         .onChange(of: mochi.moment) { _, moment in
@@ -72,16 +88,26 @@ struct ContentView: View {
                 mochi.mealLogged()
             }
         }
-        // One soft show for brand-new users only (pendingFirstLog is set by
-        // onboarding); plainly closable, never repeated, never on app open.
+        // First run shows the tour first; the intro paywall waits until it's
+        // dismissed so the two never fight. Returning users skip straight to
+        // the paywall check.
         .onAppear {
-            if pendingFirstLog && !hasSeenIntroPaywall {
-                // Only mark it seen if it actually presented — a cooldown
-                // suppression shouldn't burn the one-time intro show.
-                if paywall.presentPaywall(.onboarding) {
-                    hasSeenIntroPaywall = true
-                }
+            if !hasSeenTour {
+                showTour = true
+            } else {
+                presentIntroPaywallIfNeeded()
             }
+        }
+    }
+
+    // One soft show for brand-new users only (pendingFirstLog is set by
+    // onboarding); plainly closable, never repeated, never on app open.
+    private func presentIntroPaywallIfNeeded() {
+        guard pendingFirstLog && !hasSeenIntroPaywall else { return }
+        // Only mark it seen if it actually presented — a cooldown
+        // suppression shouldn't burn the one-time intro show.
+        if paywall.presentPaywall(.onboarding) {
+            hasSeenIntroPaywall = true
         }
     }
 }
