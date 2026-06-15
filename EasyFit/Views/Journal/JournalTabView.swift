@@ -155,11 +155,11 @@ struct JournalTabView: View {
             }
             .fullScreenCover(isPresented: $showCamera) {
                 JournalCameraView(
-                    onSave: { image, note in
+                    onSave: { images, note in
                         let entry = JournalEntry(
-                            date:      .now,
-                            note:      note,
-                            imageData: image.jpegData(compressionQuality: 0.8)
+                            date:       .now,
+                            note:       note,
+                            imageDatas: images.compactMap { $0.jpegData(compressionQuality: 0.8) }
                         )
                         context.insert(entry)
                     },
@@ -252,6 +252,15 @@ struct JournalGridCell: View {
                     .foregroundStyle(.white)
                     .shadow(color: .black.opacity(0.6), radius: 2)
                     .padding(5)
+
+                if entry.photoCount > 1 {
+                    Image(systemName: "square.on.square.fill")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundStyle(.white)
+                        .shadow(color: .black.opacity(0.6), radius: 2)
+                        .padding(5)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+                }
             }
             .clipShape(Rectangle())
         }
@@ -262,28 +271,60 @@ struct JournalGridCell: View {
 // MARK: - Camera View
 
 struct JournalCameraView: View {
-    let onSave:    (UIImage, String) -> Void
+    let onSave:    ([UIImage], String) -> Void
     let onDismiss: () -> Void
 
-    @State private var capturedImage: UIImage? = nil
+    @State private var images: [UIImage] = []
     @State private var note          = ""
     @State private var showPicker    = false
 
     var body: some View {
-        ZStack {
-            Color.black.ignoresSafeArea()
+        ZStack(alignment: .top) {
+            MochiTheme.background.ignoresSafeArea()
 
-            if let img = capturedImage {
-                VStack(spacing: 0) {
-                    Image(uiImage: img)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(maxWidth: .infinity)
-                        .frame(height: UIScreen.main.bounds.height * 0.58)
-                        .clipped()
-                        .ignoresSafeArea(edges: .top)
-
+            if images.isEmpty {
+                // Nothing captured yet — open the camera immediately.
+                Color.black.ignoresSafeArea()
+                    .onAppear { showPicker = true }
+            } else {
+                ScrollView {
                     VStack(spacing: 16) {
+                        // Photo strip — swipe through; tap × to remove; "Add" for more.
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 10) {
+                                ForEach(images.indices, id: \.self) { i in
+                                    ZStack(alignment: .topTrailing) {
+                                        Image(uiImage: images[i])
+                                            .resizable()
+                                            .scaledToFill()
+                                            .frame(width: 160, height: 210)
+                                            .clipShape(RoundedRectangle(cornerRadius: 16))
+                                        Button {
+                                            images.remove(at: i)
+                                        } label: {
+                                            Image(systemName: "xmark.circle.fill")
+                                                .font(.system(size: 22))
+                                                .foregroundStyle(.white, .black.opacity(0.45))
+                                                .padding(6)
+                                        }
+                                    }
+                                }
+                                Button { showPicker = true } label: {
+                                    VStack(spacing: 8) {
+                                        Image(systemName: "plus")
+                                            .font(.system(size: 28, weight: .semibold))
+                                        Text("Add photo").font(.system(size: 13, weight: .medium))
+                                    }
+                                    .foregroundStyle(MochiTheme.primary)
+                                    .frame(width: 160, height: 210)
+                                    .background(MochiTheme.surface)
+                                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                                }
+                            }
+                            .padding(.horizontal)
+                        }
+                        .padding(.top, 64)
+
                         TextField("Add a note… (optional)", text: $note, axis: .vertical)
                             .lineLimit(3)
                             .padding(12)
@@ -291,62 +332,43 @@ struct JournalCameraView: View {
                             .clipShape(RoundedRectangle(cornerRadius: 12))
                             .padding(.horizontal)
 
-                        HStack(spacing: 12) {
-                            Button {
-                                capturedImage = nil
-                                showPicker    = true
-                            } label: {
-                                Text("Retake")
-                                    .font(.system(size: 15, weight: .medium))
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 14)
-                                    .background(MochiTheme.surface)
-                                    .foregroundStyle(MochiTheme.textPrimary)
-                                    .clipShape(RoundedRectangle(cornerRadius: 14))
-                            }
-                            Button {
-                                onSave(img, note)
-                                onDismiss()
-                            } label: {
-                                Text("Save Entry")
-                                    .font(.system(size: 15, weight: .semibold))
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 14)
-                                    .background(MochiTheme.primary)
-                                    .foregroundStyle(MochiTheme.surfaceAlt)
-                                    .clipShape(RoundedRectangle(cornerRadius: 14))
-                            }
+                        Button {
+                            onSave(images, note)
+                            onDismiss()
+                        } label: {
+                            Text(images.count > 1 ? "Save \(images.count) Photos" : "Save Entry")
+                                .font(.system(size: 16, weight: .semibold))
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 16)
+                                .background(MochiTheme.primary)
+                                .foregroundStyle(MochiTheme.surfaceAlt)
+                                .clipShape(RoundedRectangle(cornerRadius: 14))
                         }
                         .padding(.horizontal)
                     }
-                    .padding(.vertical, 20)
-                    .background(MochiTheme.background)
-                }
-            } else {
-                Color.black.ignoresSafeArea()
-                    .onAppear { showPicker = true }
-                VStack {
-                    HStack {
-                        Button(action: onDismiss) {
-                            Image(systemName: "xmark")
-                                .font(.system(size: 18, weight: .semibold))
-                                .foregroundStyle(.white)
-                                .frame(width: 40, height: 40)
-                                .background(.ultraThinMaterial)
-                                .clipShape(Circle())
-                        }
-                        Spacer()
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.top, 56)
-                    Spacer()
+                    .padding(.bottom, 24)
                 }
             }
+
+            // Always-visible close
+            HStack {
+                Button(action: onDismiss) {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(images.isEmpty ? .white : MochiTheme.textPrimary)
+                        .frame(width: 40, height: 40)
+                        .background(images.isEmpty ? AnyShapeStyle(.ultraThinMaterial) : AnyShapeStyle(MochiTheme.surfaceAlt))
+                        .clipShape(Circle())
+                }
+                Spacer()
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 56)
         }
         .fullScreenCover(isPresented: $showPicker) {
             JournalCameraPicker(
-                onImage:   { img in capturedImage = img },
-                onDismiss: { showPicker = false; if capturedImage == nil { onDismiss() } }
+                onImage:   { img in images.append(img) },
+                onDismiss: { showPicker = false; if images.isEmpty { onDismiss() } }
             )
             .ignoresSafeArea()
         }
@@ -394,7 +416,21 @@ struct JournalDetailView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 16) {
-                if let img = entry.image {
+                let photos = entry.images
+                if photos.count > 1 {
+                    // Swipeable gallery for multi-photo entries.
+                    TabView {
+                        ForEach(photos.indices, id: \.self) { i in
+                            Image(uiImage: photos[i])
+                                .resizable()
+                                .scaledToFit()
+                                .clipShape(RoundedRectangle(cornerRadius: 16))
+                                .padding(.horizontal)
+                        }
+                    }
+                    .tabViewStyle(.page)
+                    .frame(height: 360)
+                } else if let img = photos.first {
                     Image(uiImage: img)
                         .resizable()
                         .scaledToFit()

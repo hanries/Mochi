@@ -336,11 +336,11 @@ private struct JournalContent: View {
         }
         .fullScreenCover(isPresented: $showCamera) {
             JournalCameraView(
-                onSave: { image, note in
+                onSave: { images, note in
                     let entry = JournalEntry(
-                        date:      .now,
-                        note:      note,
-                        imageData: image.jpegData(compressionQuality: 0.8)
+                        date:       .now,
+                        note:       note,
+                        imageDatas: images.compactMap { $0.jpegData(compressionQuality: 0.8) }
                     )
                     context.insert(entry)
                     mochi.photoLogged()   // Mochi jumps for joy you checked in

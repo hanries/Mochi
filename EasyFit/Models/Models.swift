@@ -216,16 +216,30 @@ final class JournalEntry {
     var id:       UUID
     var date:     Date
     var note:     String
-    var imageData: Data?   // stored locally, never synced
+    var imageData: Data?          // legacy single photo (pre multi-photo); kept for old entries
+    var imageDatas: [Data] = []   // one or more photos, stored locally, never synced
 
-    init(id: UUID = UUID(), date: Date = .now, note: String = "", imageData: Data? = nil) {
-        self.id        = id
-        self.date      = date
-        self.note      = note
-        self.imageData = imageData
+    init(id: UUID = UUID(), date: Date = .now, note: String = "",
+         imageData: Data? = nil, imageDatas: [Data] = []) {
+        self.id         = id
+        self.date       = date
+        self.note       = note
+        self.imageData  = imageData
+        self.imageDatas = imageDatas
     }
 
+    /// Number of photos without decoding them (cheap, for grid badges).
+    var photoCount: Int { imageDatas.isEmpty ? (imageData == nil ? 0 : 1) : imageDatas.count }
+
+    /// All photos — the new multi-photo array, or the legacy single image.
+    var images: [UIImage] {
+        let datas = imageDatas.isEmpty ? [imageData].compactMap { $0 } : imageDatas
+        return datas.compactMap { UIImage(data: $0) }
+    }
+
+    /// First photo — used for thumbnails.
     var image: UIImage? {
+        if let first = imageDatas.first { return UIImage(data: first) }
         guard let data = imageData else { return nil }
         return UIImage(data: data)
     }
