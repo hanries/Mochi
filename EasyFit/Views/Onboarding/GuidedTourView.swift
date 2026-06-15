@@ -16,6 +16,7 @@ struct GuidedTourView: View {
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var index = 0
+    @State private var mochiHop: CGFloat = 0   // little entrance hop per step
 
     private let motion = MochiMotion.default
 
@@ -37,10 +38,10 @@ struct GuidedTourView: View {
               pose: .talk),
         .init(tab: .workout,
               line: "Planning workouts? Set your training days in the Workout tab whenever you're ready.",
-              pose: .talk),
+              pose: .point),
         .init(tab: .profile,
               line: "Your targets, units, and reminders are here in Profile. That's the tour — let's get logging together!",
-              pose: .talk),
+              pose: .wave),
     ]
 
     private var isLast: Bool { index == steps.count - 1 }
@@ -92,6 +93,7 @@ struct GuidedTourView: View {
                           size: mochiSize,
                           showShadow: true,
                           pose: current.pose)
+                    .offset(y: mochiHop)
                     .position(mochiCenter)
                     .accessibilityHidden(true)
             }
@@ -157,8 +159,24 @@ struct GuidedTourView: View {
                                   dampingFraction: motion.tourMoveDamping)) {
                 apply()
             }
+            hop()
         }
     }
+
+    /// A quick little hop as Mochi arrives at each step — keeps him lively
+    /// even when consecutive steps share a pose.
+    private func hop() {
+        withAnimation(.spring(response: 0.22, dampingFraction: 0.45)) {
+            mochiHop = -mochiHopHeight
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+            withAnimation(.spring(response: 0.28, dampingFraction: 0.6)) {
+                mochiHop = 0
+            }
+        }
+    }
+
+    private let mochiHopHeight: CGFloat = 18
 
     /// End the tour (finish or skip) — switch to Home, then `onFinish`
     /// cross-fades this overlay away onto the persistent home Mochi.
