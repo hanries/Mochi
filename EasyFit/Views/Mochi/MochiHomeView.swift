@@ -9,6 +9,10 @@ import Combine
 // driven by engagement only.
 
 struct MochiHomeView: View {
+    // Hidden while the guided tour is leading (its own Mochi stands in), so
+    // there's never two Mochis; revealed at the tour's closing hand-off.
+    var hideCharacter: Bool = false
+
     @Environment(\.modelContext) private var context
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -93,11 +97,24 @@ struct MochiHomeView: View {
                 Button {
                     showSearchPanel = true
                 } label: {
-                    Text("More ways to log")
-                        .font(MochiTheme.caption)
-                        .foregroundStyle(MochiTheme.textSecondary)
-                        .padding(.vertical, MochiTheme.Spacing.md)
+                    HStack(spacing: MochiTheme.Spacing.sm) {
+                        Image(systemName: "magnifyingglass")
+                            .font(.system(size: 13, weight: .bold))
+                        Text("More ways to log")
+                            .font(.system(size: 14, weight: .semibold, design: .rounded))
+                    }
+                    .foregroundStyle(MochiTheme.primary)
+                    .padding(.horizontal, MochiTheme.Spacing.lg)
+                    .padding(.vertical, MochiTheme.Spacing.sm)
+                    .background(
+                        Capsule()
+                            .fill(MochiTheme.surfaceAlt)
+                            .overlay(
+                                Capsule().strokeBorder(MochiTheme.primary.opacity(0.3), lineWidth: 1.5)
+                            )
+                    )
                 }
+                .padding(.top, MochiTheme.Spacing.sm)
 
                 CompactCalorieCard(
                     consumed: vm.totalCalories(from: allEntries),
@@ -192,22 +209,24 @@ struct MochiHomeView: View {
                 MochiHabitatScene(isNight: isNightHabitat)
 
                 // Mochi seated on the rug, shadow under his feet
-                MochiView(state: mochi.state,
-                          moment: mochi.moment,
-                          size: mochiSize,
-                          showShadow: true) {
-                    showBubble(mochi.dialogueLine())
-                }
-                .position(x: width / 2, y: rugCenterY - mochiSize / 2)
+                if !hideCharacter {
+                    MochiView(state: mochi.state,
+                              moment: mochi.moment,
+                              size: mochiSize,
+                              showShadow: true) {
+                        showBubble(mochi.dialogueLine())
+                    }
+                    .position(x: width / 2, y: rugCenterY - mochiSize / 2)
 
-                // Speech bubble above his head — always present, clamped
-                // below the status bar on small screens.
-                if !bubbleLine.isEmpty {
-                    MochiSpeechBubble(text: bubbleLine)
-                        .id(bubbleLine)
-                        .position(x: width / 2,
-                                  y: max(topInset + 40, rugCenterY - mochiSize - 36))
-                        .transition(.scale(scale: 0.85, anchor: .bottom).combined(with: .opacity))
+                    // Speech bubble above his head — always present, clamped
+                    // below the status bar on small screens.
+                    if !bubbleLine.isEmpty {
+                        MochiSpeechBubble(text: bubbleLine)
+                            .id(bubbleLine)
+                            .position(x: width / 2,
+                                      y: max(topInset + 40, rugCenterY - mochiSize - 36))
+                            .transition(.scale(scale: 0.85, anchor: .bottom).combined(with: .opacity))
+                    }
                 }
 
             // Streak chip floats top-right of the scene
