@@ -2,6 +2,7 @@ import SwiftUI
 import AVFoundation
 import Combine
 import UIKit
+import PhotosUI
 
 // MARK: - Main Camera View
 
@@ -18,6 +19,7 @@ struct FoodCameraView: View {
     @State private var showResult    = false
     @State private var capturedImage: UIImage? = nil
     @State private var scanBoxScale: CGFloat = 1.0
+    @State private var pickedItem:   PhotosPickerItem? = nil
 
     private let service: any FoodScanServiceProtocol = ScanServiceFactory.make()
 
@@ -104,23 +106,39 @@ struct FoodCameraView: View {
 
                 Spacer()
 
-                // Bottom: shutter button
+                // Bottom: library picker + shutter button
                 if !isScanning {
-                    Button {
-                        capture()
-                    } label: {
-                        ZStack {
-                            Circle()
-                                .strokeBorder(MochiTheme.surfaceAlt, lineWidth: 4)
-                                .frame(width: 84, height: 84)
-                            Circle()
-                                .fill(MochiTheme.primary)
-                                .frame(width: 68, height: 68)
-                            Image(systemName: "camera.fill")
-                                .font(.system(size: 24, weight: .bold))
-                                .foregroundStyle(MochiTheme.surfaceAlt)
+                    HStack {
+                        // Pick an existing photo from the album to scan.
+                        PhotosPicker(selection: $pickedItem, matching: .images) {
+                            Image(systemName: "photo.on.rectangle")
+                                .font(.system(size: 22, weight: .semibold))
+                                .foregroundStyle(MochiTheme.textPrimary)
+                                .frame(width: 54, height: 54)
+                                .background(MochiTheme.surfaceAlt)
+                                .clipShape(Circle())
                         }
+                        Spacer()
+                        Button {
+                            capture()
+                        } label: {
+                            ZStack {
+                                Circle()
+                                    .strokeBorder(MochiTheme.surfaceAlt, lineWidth: 4)
+                                    .frame(width: 84, height: 84)
+                                Circle()
+                                    .fill(MochiTheme.primary)
+                                    .frame(width: 68, height: 68)
+                                Image(systemName: "camera.fill")
+                                    .font(.system(size: 24, weight: .bold))
+                                    .foregroundStyle(MochiTheme.surfaceAlt)
+                            }
+                        }
+                        Spacer()
+                        // Balances the picker so the shutter stays centered.
+                        Color.clear.frame(width: 54, height: 54)
                     }
+                    .padding(.horizontal, 36)
                     .padding(.bottom, 50)
                 } else {
                     ProgressView()
@@ -150,6 +168,17 @@ struct FoodCameraView: View {
         .onDisappear { camera.stop() }
         .onChange(of: isScanning) { _, scanning in
             scanBoxScale = scanning ? 1.05 : 1.0
+        }
+        // A photo chosen from the album runs the same scan flow as a capture.
+        .onChange(of: pickedItem) { _, item in
+            guard let item else { return }
+            Task {
+                let image = try? await item.loadTransferable(type: Data.self).flatMap { UIImage(data: $0) }
+                await MainActor.run {
+                    pickedItem = nil
+                    if let image { beginScan(with: image) }
+                }
+            }
         }
         .sheet(isPresented: $showResult) {
             if let items = scanItems, let img = capturedImage {
