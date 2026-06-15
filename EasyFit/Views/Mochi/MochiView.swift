@@ -137,6 +137,12 @@ struct MochiView: View {
         .onChange(of: moment) { _, newMoment in
             if let newMoment { beginMoment(newMoment) }
         }
+        // A moment set before this view existed (e.g. a weight/photo log on
+        // another tab that redirects Home, recreating this view) won't fire
+        // onChange — play it on appear so the jump/eating moment still shows.
+        .onAppear {
+            if let moment { beginMoment(moment) }
+        }
         .onDisappear {
             momentTask?.cancel()
             jumpTask?.cancel()

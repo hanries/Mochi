@@ -132,7 +132,11 @@ struct MochiHomeView: View {
         .onAppear {
             mochi.refresh(entries: allEntries, weightLogDates: weightEntries.map(\.date))
             refreshHabitat(animated: false)
-            if pendingFirstLog {
+            if let moment = mochi.moment {
+                // A moment fired on another tab redirected us Home — play it,
+                // since onChange won't fire for a value set before we appeared.
+                playMoment(moment)
+            } else if pendingFirstLog {
                 hintPulse = true
                 showBubble("I can't wait to see your first meal! 🐹")
             } else if bubbleLine.isEmpty {
@@ -152,14 +156,7 @@ struct MochiHomeView: View {
         }
         .onChange(of: mochi.moment) { _, moment in
             guard let moment else { return }
-            showBubble(moment.line)
-            momentClearTask?.cancel()
-            momentClearTask = Task {
-                try? await Task.sleep(for: .seconds(MochiMotion.default.momentDuration))
-                guard !Task.isCancelled else { return }
-                mochi.moment = nil
-                showBubble(mochi.dialogueLine())
-            }
+            playMoment(moment)
         }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active {
@@ -256,6 +253,20 @@ struct MochiHomeView: View {
     private func showBubble(_ line: String) {
         withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
             bubbleLine = line
+        }
+    }
+
+    /// Show a moment's line, then clear the moment and return to a normal
+    /// dialogue line after it plays. Called from both onChange and onAppear
+    /// (the latter covers moments fired on another tab that redirect Home).
+    private func playMoment(_ moment: MochiMoment) {
+        showBubble(moment.line)
+        momentClearTask?.cancel()
+        momentClearTask = Task {
+            try? await Task.sleep(for: .seconds(MochiMotion.default.momentDuration))
+            guard !Task.isCancelled else { return }
+            mochi.moment = nil
+            showBubble(mochi.dialogueLine())
         }
     }
 
