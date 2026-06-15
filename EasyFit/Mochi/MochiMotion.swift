@@ -59,6 +59,20 @@ struct MochiMotion {
     var tabIconBounceResponse: Double = 0.30
     var tabIconBounceDamping: Double = 0.45
 
+    // Guided tour: Mochi walking between steps + the closing cross-fade
+    var tourMoveResponse: Double    = 0.55
+    var tourMoveDamping: Double     = 0.78
+    var tourFadeOut: Double         = 0.5    // overlay cross-fade onto home Mochi
+
+    // Cheer jump (weight / photo logs): Mochi springs up a few times for joy.
+    var cheerJumpFraction: Double   = 0.13   // jump height ÷ Mochi's size
+    var cheerJumpCount: Int         = 3
+    var cheerUpResponse: Double     = 0.17   // spring up
+    var cheerDownResponse: Double   = 0.22   // spring back down
+    var cheerHangTime: Double       = 0.16   // held near the apex
+    var cheerLandTime: Double       = 0.12   // pause between hops
+    var cheerScale: Double          = 1.06   // slight grow mid-air
+
     // Moments (eating after a log, ecstatic on streak milestones)
     var momentDuration: Double          = 2.5
     var momentBounceEating: Double      = 1.12

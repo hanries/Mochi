@@ -16,6 +16,9 @@ struct MochiView: View {
     var moment: MochiMoment? = nil
     var size: CGFloat = 170
     var showShadow: Bool = false
+    // Presentation pose override (guided tour). When set it replaces the
+    // state-derived frame; blinking is suppressed while a pose is held.
+    var pose: MochiAssetProvider.Pose? = nil
     var onTap: (() -> Void)? = nil
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -28,10 +31,11 @@ struct MochiView: View {
     @State private var tapScale: CGFloat = 1.0
     @State private var hopOffset: CGFloat = 0
 
-    // Moment override (eating / milestone ecstatic)
+    // Moment override (eating / milestone ecstatic / cheer jump)
     @State private var momentFrame: String? = nil
     @State private var momentScale: CGFloat = 1.0
     @State private var momentTask: Task<Void, Never>? = nil
+    @State private var jumpTask: Task<Void, Never>? = nil
 
     private let motion = MochiMotion.default
 
@@ -43,10 +47,12 @@ struct MochiView: View {
     /// override changes — those crossfade. Blinks happen inside the same
     /// identity and swap instantly.
     private var anchorFrameName: String {
-        momentFrame ?? baseImageName
+        if let pose { return MochiAssetProvider.poseImageName(pose) }
+        return momentFrame ?? baseImageName
     }
 
     private var displayedImageName: String {
+        if let pose { return MochiAssetProvider.poseImageName(pose) }
         if let momentFrame { return momentFrame }
         if isBlinking, let blink = MochiAssetProvider.blinkImageName(for: state) {
             return blink
@@ -128,8 +134,10 @@ struct MochiView: View {
         }
         .onDisappear {
             momentTask?.cancel()
+            jumpTask?.cancel()
             momentFrame = nil
             momentScale = 1.0
+            hopOffset = 0
         }
         // Blink loop: restarts on state change, cancels on disappear.
         // Sleepy blinks slowly and heavily (and never double-blinks) so Mochi
@@ -220,14 +228,18 @@ struct MochiView: View {
         switch newMoment.kind {
         case .eating:   momentFrame = MochiAssetProvider.eatingImageName
         case .ecstatic: momentFrame = MochiAssetProvider.baseImageName(for: .ecstatic)
+        case .cheer:    momentFrame = MochiAssetProvider.cheerImageName
         case .checkIn:  momentFrame = nil
         }
 
-        if !reduceMotion {
+        if newMoment.kind == .cheer {
+            beginCheerJump()
+        } else if !reduceMotion {
             let peak: Double
             switch newMoment.kind {
             case .eating:   peak = motion.momentBounceEating
             case .ecstatic: peak = motion.momentBounceEcstatic
+            case .cheer:    peak = 1.0   // handled by the jump loop
             case .checkIn:  peak = motion.tapBounceScale
             }
             withAnimation(.spring(response: motion.momentSpringResponse,
@@ -246,6 +258,31 @@ struct MochiView: View {
             try? await Task.sleep(for: .seconds(motion.momentDuration))
             guard !Task.isCancelled else { return }
             momentFrame = nil   // crossfades back via anchorFrameName change
+        }
+    }
+
+    /// Mochi gets up and springs a few times for joy (weight / photo logs).
+    private func beginCheerJump() {
+        guard !reduceMotion else { return }
+        jumpTask?.cancel()
+        jumpTask = Task {
+            let h = size * motion.cheerJumpFraction
+            for _ in 0..<motion.cheerJumpCount {
+                withAnimation(.spring(response: motion.cheerUpResponse, dampingFraction: 0.5)) {
+                    hopOffset = -h
+                    momentScale = motion.cheerScale
+                }
+                try? await Task.sleep(for: .seconds(motion.cheerUpResponse + motion.cheerHangTime))
+                guard !Task.isCancelled else { return }
+                withAnimation(.spring(response: motion.cheerDownResponse, dampingFraction: 0.65)) {
+                    hopOffset = 0
+                    momentScale = 1.0
+                }
+                try? await Task.sleep(for: .seconds(motion.cheerDownResponse + motion.cheerLandTime))
+                guard !Task.isCancelled else { return }
+            }
+            hopOffset = 0
+            momentScale = 1.0
         }
     }
 }

@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 // MARK: - Single source of truth for Mochi's artwork
 //
@@ -44,6 +45,28 @@ enum MochiAssetProvider {
 
     /// Shown briefly after a successful food log.
     static let eatingImageName = "mochi_eating"
+
+    /// The "jumping for joy" frame for cheer moments (weight / photo logs).
+    /// Prefers a dedicated `mochi_jump`; falls back to the excited frame until
+    /// you add it — no code change needed when the art lands.
+    static var cheerImageName: String {
+        UIImage(named: "mochi_jump") != nil ? "mochi_jump" : "mochi_ecstatic"
+    }
+
+    // MARK: - Presentation poses (guided tour)
+    //
+    // Poses are a PRESENTATION concern, deliberately separate from MochiState
+    // (which stays engagement-only). Each maps to its dedicated tour frame.
+    enum Pose { case wave, point, talk, sit }
+
+    static func poseImageName(_ pose: Pose) -> String {
+        switch pose {
+        case .wave:  return "mochi_wave"
+        case .point: return "mochi_point"
+        case .talk:  return "mochi_talk"
+        case .sit:   return "mochi_sit_down"
+        }
+    }
 
     /// The room illustration behind Mochi on the Home tab.
     static func habitatImageName(night: Bool) -> String {

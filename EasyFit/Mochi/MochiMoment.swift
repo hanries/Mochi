@@ -17,6 +17,9 @@ struct MochiMoment: Identifiable, Equatable {
         /// no tab switch — just a warm line and a small bounce. The event
         /// carries no value by design: Mochi cannot react to outcomes.
         case checkIn
+        /// Mochi gets up and jumps for joy — fired on weight and photo logs.
+        /// Engagement-only: he's happy you showed up, not about any value.
+        case cheer
     }
 
     let id = UUID()
