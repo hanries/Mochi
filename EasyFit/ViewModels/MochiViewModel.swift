@@ -46,9 +46,18 @@ final class MochiViewModel: ObservableObject {
     }
 
     /// Call after a weight log. Deliberately takes NO value — the engine
-    /// is structurally unable to react to the number or its direction.
+    /// is structurally unable to react to the number or its direction. Mochi
+    /// jumps for joy that you showed up, never about the number.
     func weightLogged() {
-        moment = MochiMoment(kind: .checkIn, line: MochiDialogue.checkInLine())
+        moment = MochiMoment(kind: .cheer, line: MochiDialogue.checkInLine())
+        loggedToday = true
+        MochiNotificationService.shared.reschedule(loggedToday: true, config: config)
+    }
+
+    /// Call after a photo-journal log. Like weight, it carries no value —
+    /// Mochi just jumps because you checked in.
+    func photoLogged() {
+        moment = MochiMoment(kind: .cheer, line: MochiDialogue.checkInLine())
         loggedToday = true
         MochiNotificationService.shared.reschedule(loggedToday: true, config: config)
     }

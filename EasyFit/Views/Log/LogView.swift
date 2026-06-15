@@ -134,6 +134,7 @@ private struct ProgressContent: View {
 
 private struct JournalContent: View {
     @Environment(\.modelContext) private var context
+    @EnvironmentObject private var mochi: MochiViewModel
     @Query(sort: \JournalEntry.date, order: .reverse) private var entries: [JournalEntry]
 
     @State private var showCamera     = false
@@ -342,6 +343,7 @@ private struct JournalContent: View {
                         imageData: image.jpegData(compressionQuality: 0.8)
                     )
                     context.insert(entry)
+                    mochi.photoLogged()   // Mochi jumps for joy you checked in
                 },
                 onDismiss: { showCamera = false }
             )
