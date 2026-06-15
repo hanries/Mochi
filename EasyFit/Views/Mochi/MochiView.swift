@@ -37,6 +37,10 @@ struct MochiView: View {
     @State private var momentTask: Task<Void, Never>? = nil
     @State private var jumpTask: Task<Void, Never>? = nil
 
+    // Random little reaction frame when Mochi is tapped
+    @State private var reactionFrame: String? = nil
+    @State private var reactionTask: Task<Void, Never>? = nil
+
     private let motion = MochiMotion.default
 
     private var baseImageName: String {
@@ -48,12 +52,13 @@ struct MochiView: View {
     /// identity and swap instantly.
     private var anchorFrameName: String {
         if let pose { return MochiAssetProvider.poseImageName(pose) }
-        return momentFrame ?? baseImageName
+        return momentFrame ?? reactionFrame ?? baseImageName
     }
 
     private var displayedImageName: String {
         if let pose { return MochiAssetProvider.poseImageName(pose) }
         if let momentFrame { return momentFrame }
+        if let reactionFrame { return reactionFrame }
         if isBlinking, let blink = MochiAssetProvider.blinkImageName(for: state) {
             return blink
         }
@@ -135,7 +140,9 @@ struct MochiView: View {
         .onDisappear {
             momentTask?.cancel()
             jumpTask?.cancel()
+            reactionTask?.cancel()
             momentFrame = nil
+            reactionFrame = nil
             momentScale = 1.0
             hopOffset = 0
         }
@@ -203,8 +210,13 @@ struct MochiView: View {
     private func handleTap() {
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
         onTap?()
-        guard !reduceMotion else { return }
 
+        // Don't interrupt a guided-tour pose or an in-flight moment.
+        if pose == nil, momentFrame == nil {
+            playReaction()
+        }
+
+        guard !reduceMotion else { return }
         withAnimation(.spring(response: motion.tapSpringResponse,
                               dampingFraction: motion.tapSpringDamping)) {
             tapScale = motion.tapBounceScale
@@ -216,6 +228,20 @@ struct MochiView: View {
                 tapScale = 1.0
                 hopOffset = 0
             }
+        }
+    }
+
+    /// Show a random reaction frame briefly (scratching, waving, …), then
+    /// crossfade back to the engine-driven frame. The frame swap is gentle, so
+    /// it plays under Reduce Motion too; only the hop above is suppressed.
+    private func playReaction() {
+        guard let reaction = MochiAssetProvider.availableTapReactions().randomElement() else { return }
+        reactionTask?.cancel()
+        reactionFrame = reaction.assetName
+        reactionTask = Task {
+            try? await Task.sleep(for: .seconds(motion.reactionDuration))
+            guard !Task.isCancelled else { return }
+            reactionFrame = nil
         }
     }
 

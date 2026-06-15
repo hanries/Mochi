@@ -40,6 +40,7 @@ struct MochiMotion {
     var tapHopHeight: Double        = 10
     var tapSpringResponse: Double   = 0.3
     var tapSpringDamping: Double    = 0.5
+    var reactionDuration: Double    = 1.3     // how long a tapped reaction frame holds
 
     // State transition
     var transitionDuration: Double  = 0.35

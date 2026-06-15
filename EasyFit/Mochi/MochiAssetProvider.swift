@@ -53,6 +53,30 @@ enum MochiAssetProvider {
         UIImage(named: "mochi_jump") != nil ? "mochi_jump" : "mochi_ecstatic"
     }
 
+    // MARK: - Tap reactions (a random little performance when Mochi is tapped)
+    //
+    // The pool auto-includes only reactions whose dedicated art exists, so
+    // dropping in e.g. `mochi_scratch` lights it up with zero code change.
+    // Until art lands, tapping still bounces and waves (mochi_wave exists).
+    enum Reaction: CaseIterable {
+        case wave, scratch, love, peek, munch
+
+        var assetName: String {
+            switch self {
+            case .wave:    return "mochi_wave"      // exists
+            case .scratch: return "mochi_scratch"   // TODO: scratching head
+            case .love:    return "mochi_love"      // TODO: hearts / adoring
+            case .peek:    return "mochi_peek"      // TODO: wide-eyed surprised
+            case .munch:   return "mochi_munch"     // TODO: stuffing cheeks
+            }
+        }
+    }
+
+    /// Tap reactions whose art is currently in the bundle.
+    static func availableTapReactions() -> [Reaction] {
+        Reaction.allCases.filter { UIImage(named: $0.assetName) != nil }
+    }
+
     // MARK: - Presentation poses (guided tour)
     //
     // Poses are a PRESENTATION concern, deliberately separate from MochiState
