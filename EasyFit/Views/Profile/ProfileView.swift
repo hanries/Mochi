@@ -17,6 +17,8 @@ struct ProfileView: View {
     @State private var editGoal:     FitnessGoal   = .maintain
 
     @State private var showingEdit = false
+    @State private var showNameEdit = false
+    @State private var nameDraft    = ""
 
     @StateObject private var notifications = MochiNotificationService.shared
     @EnvironmentObject private var paywall: PaywallCoordinator
@@ -34,9 +36,19 @@ struct ProfileView: View {
                     VStack(spacing: 12) {
                         MochiView(state: mochi.state, size: 120)
                         VStack(spacing: 6) {
-                            Text(userName.isEmpty ? "Set your name" : userName)
-                                .font(.system(size: 24, weight: .bold, design: .rounded))
-                                .foregroundStyle(MochiTheme.textPrimary)
+                            Button {
+                                nameDraft = userName
+                                showNameEdit = true
+                            } label: {
+                                HStack(spacing: 6) {
+                                    Text(userName.isEmpty ? "Set your name" : userName)
+                                        .font(.system(size: 24, weight: .bold, design: .rounded))
+                                    Image(systemName: "pencil")
+                                        .font(.system(size: 14, weight: .semibold))
+                                }
+                                .foregroundStyle(userName.isEmpty ? MochiTheme.primary : MochiTheme.textPrimary)
+                            }
+                            .buttonStyle(.plain)
                             Text(editGoal.rawValue)
                                 .font(.system(size: 12, weight: .semibold))
                                 .foregroundStyle(MochiTheme.textSecondary)
@@ -168,6 +180,14 @@ struct ProfileView: View {
             .background(MochiTheme.background)
             .navigationTitle("Profile")
             .navigationBarTitleDisplayMode(.inline)
+            .alert("What should Mochi call you?", isPresented: $showNameEdit) {
+                TextField("Your first name", text: $nameDraft)
+                    .textInputAutocapitalization(.words)
+                Button("Save") {
+                    userName = nameDraft.trimmingCharacters(in: .whitespaces)
+                }
+                Button("Cancel", role: .cancel) { }
+            }
             .sheet(isPresented: $showingEdit) {
                 EditStatsView(
                     age:           $editAge,
