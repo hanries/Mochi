@@ -27,44 +27,49 @@ struct FoodCameraView: View {
             CameraPreview(camera: camera)
                 .ignoresSafeArea()
 
-            // Dark vignette edges
-            Rectangle()
-                .fill(
-                    RadialGradient(
-                        colors: [.clear, .black.opacity(0.5)],
-                        center: .center,
-                        startRadius: 150,
-                        endRadius: 350
-                    )
+            // Warm legibility scrims — tinted to the app's brown, not black
+            VStack(spacing: 0) {
+                LinearGradient(
+                    colors: [MochiTheme.textPrimary.opacity(0.55), .clear],
+                    startPoint: .top, endPoint: .bottom
                 )
-                .ignoresSafeArea()
-                .allowsHitTesting(false)
+                .frame(height: 190)
+                Spacer()
+                LinearGradient(
+                    colors: [.clear, MochiTheme.textPrimary.opacity(0.7)],
+                    startPoint: .top, endPoint: .bottom
+                )
+                .frame(height: 260)
+            }
+            .ignoresSafeArea()
+            .allowsHitTesting(false)
 
             VStack {
                 // Top bar
                 HStack {
                     Button(action: onDismiss) {
                         Image(systemName: "xmark")
-                            .font(.system(size: 18, weight: .semibold))
-                            .foregroundStyle(.white)
-                            .frame(width: 40, height: 40)
-                            .background(.ultraThinMaterial)
+                            .font(.system(size: 17, weight: .bold))
+                            .foregroundStyle(MochiTheme.textPrimary)
+                            .frame(width: 42, height: 42)
+                            .background(MochiTheme.surfaceAlt)
                             .clipShape(Circle())
                     }
                     Spacer()
-                    Text("Scanner")
-                        .font(.system(size: 17, weight: .semibold))
-                        .foregroundStyle(.white)
+                    Text("Scan your meal")
+                        .font(.system(size: 18, weight: .bold, design: .rounded))
+                        .foregroundStyle(MochiTheme.surfaceAlt)
+                        .shadow(color: MochiTheme.textPrimary.opacity(0.4), radius: 4, y: 1)
                     Spacer()
                     // Flash toggle
                     Button {
                         camera.toggleFlash()
                     } label: {
                         Image(systemName: camera.flashOn ? "bolt.fill" : "bolt.slash.fill")
-                            .font(.system(size: 18, weight: .semibold))
-                            .foregroundStyle(.white)
-                            .frame(width: 40, height: 40)
-                            .background(.ultraThinMaterial)
+                            .font(.system(size: 17, weight: .bold))
+                            .foregroundStyle(camera.flashOn ? MochiTheme.primary : MochiTheme.textPrimary)
+                            .frame(width: 42, height: 42)
+                            .background(MochiTheme.surfaceAlt)
                             .clipShape(Circle())
                     }
                 }
@@ -91,9 +96,10 @@ struct FoodCameraView: View {
                 }
                 .frame(width: 260, height: 260)
 
-                Text(isScanning ? "Analyzing…" : "Point at your food")
-                    .font(.system(size: 15, weight: .medium))
-                    .foregroundStyle(.white.opacity(0.9))
+                Text(isScanning ? "Mochi's taking a look…" : "Point at your food")
+                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                    .foregroundStyle(MochiTheme.surfaceAlt)
+                    .shadow(color: MochiTheme.textPrimary.opacity(0.4), radius: 4, y: 1)
                     .padding(.top, 20)
 
                 Spacer()
@@ -105,17 +111,20 @@ struct FoodCameraView: View {
                     } label: {
                         ZStack {
                             Circle()
-                                .fill(.white.opacity(0.2))
-                                .frame(width: 80, height: 80)
+                                .strokeBorder(MochiTheme.surfaceAlt, lineWidth: 4)
+                                .frame(width: 84, height: 84)
                             Circle()
-                                .fill(.white)
-                                .frame(width: 64, height: 64)
+                                .fill(MochiTheme.primary)
+                                .frame(width: 68, height: 68)
+                            Image(systemName: "camera.fill")
+                                .font(.system(size: 24, weight: .bold))
+                                .foregroundStyle(MochiTheme.surfaceAlt)
                         }
                     }
                     .padding(.bottom, 50)
                 } else {
                     ProgressView()
-                        .tint(.white)
+                        .tint(MochiTheme.primary)
                         .scaleEffect(1.5)
                         .padding(.bottom, 70)
                 }
@@ -126,7 +135,7 @@ struct FoodCameraView: View {
                 VStack {
                     Spacer()
                     Text(error)
-                        .font(.system(size: 14))
+                        .font(.system(size: 14, weight: .medium, design: .rounded))
                         .foregroundStyle(.white)
                         .padding(14)
                         .background(MochiTheme.danger.opacity(0.9))
@@ -238,7 +247,7 @@ private struct CornerBracket: View {
                 p.move(to: CGPoint(x: 0, y: 0))
                 p.addLine(to: CGPoint(x: 0, y: length))
             }
-            .stroke(.white, style: StrokeStyle(lineWidth: thickness, lineCap: .round))
+            .stroke(MochiTheme.primary, style: StrokeStyle(lineWidth: thickness, lineCap: .round))
             .frame(width: w, height: h)
         }
     }
@@ -253,7 +262,7 @@ private struct ScanLineView: View {
         Rectangle()
             .fill(
                 LinearGradient(
-                    colors: [.clear, .white.opacity(0.6), .clear],
+                    colors: [.clear, MochiTheme.primary.opacity(0.9), .clear],
                     startPoint: .leading,
                     endPoint: .trailing
                 )
