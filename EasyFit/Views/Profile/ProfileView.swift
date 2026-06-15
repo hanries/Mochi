@@ -21,6 +21,7 @@ struct ProfileView: View {
     @StateObject private var notifications = MochiNotificationService.shared
     @EnvironmentObject private var paywall: PaywallCoordinator
     @EnvironmentObject private var mochi:   MochiViewModel
+    @EnvironmentObject private var appState: AppState
     @ObservedObject private var premium = PremiumStore.shared
 
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
@@ -137,6 +138,13 @@ struct ProfileView: View {
                             .foregroundStyle(MochiTheme.textPrimary)
                     }
                     .tint(MochiTheme.primary)
+
+                    Button {
+                        appState.replayTour = true
+                    } label: {
+                        Label("Replay Guided Tour", systemImage: "figure.walk.motion")
+                            .foregroundStyle(MochiTheme.textPrimary)
+                    }
                 }
                 .listRowBackground(MochiTheme.surfaceAlt)
                 #endif
@@ -153,6 +161,10 @@ struct ProfileView: View {
             }
             .listStyle(.insetGrouped)
             .scrollContentBackground(.hidden)
+            // Reserve scroll space for the custom tab bar (the parent's
+            // safeAreaInset doesn't reach inside this NavigationStack's List),
+            // so the last rows clear it instead of bouncing back under it.
+            .safeAreaInset(edge: .bottom) { Color.clear.frame(height: 72) }
             .background(MochiTheme.background)
             .navigationTitle("Profile")
             .navigationBarTitleDisplayMode(.inline)
@@ -305,4 +317,5 @@ struct EditStatsView: View {
     ProfileView()
         .environmentObject(MochiViewModel())
         .environmentObject(PaywallCoordinator())
+        .environmentObject(AppState())
 }

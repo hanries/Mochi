@@ -30,7 +30,7 @@ struct ContentView: View {
     @ViewBuilder
     private var selectedTabContent: some View {
         switch appState.selectedTab {
-        case .home:    MochiHomeView()
+        case .home:    MochiHomeView(hideCharacter: showTour)
         case .log:     LogView()
         case .workout: WorkoutView()
         case .profile: ProfileView()
@@ -38,27 +38,39 @@ struct ContentView: View {
     }
 
     var body: some View {
-        selectedTabContent
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .id(appState.selectedTab)
-            // A calm cross-fade — no positional slide, so switching feels
-            // settled rather than shaky.
-            .transition(.opacity)
-            .safeAreaInset(edge: .bottom, spacing: 0) {
-                MochiTabBar(selected: $appState.selectedTab)
-            }
-            // First-run guided tour — Mochi walks the user through each tab.
-            .overlay {
-                if showTour {
-                    GuidedTourView(selectedTab: $appState.selectedTab) {
-                        withAnimation(.easeInOut(duration: 0.25)) { showTour = false }
-                        hasSeenTour = true
-                        presentIntroPaywallIfNeeded()
-                    }
-                    .transition(.opacity)
-                    .zIndex(10)
+        // The tour is a ZStack sibling — NOT an overlay on the .id(selectedTab)
+        // content. As a sibling it keeps its own identity/state when the tour
+        // switches tabs; as an overlay the .id change would tear it down and
+        // reset it to step 0, snapping back to Home.
+        ZStack {
+            selectedTabContent
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .id(appState.selectedTab)
+                // A calm cross-fade — no positional slide, so switching feels
+                // settled rather than shaky.
+                .transition(.opacity)
+                .safeAreaInset(edge: .bottom, spacing: 0) {
+                    MochiTabBar(selected: $appState.selectedTab)
                 }
+
+            // First-run (and replayable) guided tour — Mochi leads each tab.
+            if showTour {
+                GuidedTourView(selectedTab: $appState.selectedTab) {
+                    withAnimation(.easeInOut(duration: motion.tourFadeOut)) { showTour = false }
+                    hasSeenTour = true
+                    presentIntroPaywallIfNeeded()
+                }
+                .transition(.opacity)
+                .zIndex(10)
             }
+        }
+        // Debug/replay: re-present the walkthrough on request.
+        .onChange(of: appState.replayTour) { _, want in
+            guard want else { return }
+            appState.replayTour = false
+            appState.selectedTab = .home
+            withAnimation(.easeInOut(duration: 0.25)) { showTour = true }
+        }
         // A food log lands the user back home, where Mochi plays the moment.
         // Check-ins (e.g. weight logs) never hijack the current tab.
         .onChange(of: mochi.moment) { _, moment in
