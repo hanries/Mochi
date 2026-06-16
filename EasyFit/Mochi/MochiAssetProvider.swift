@@ -63,11 +63,11 @@ enum MochiAssetProvider {
 
         var assetName: String {
             switch self {
-            case .wave:    return "mochi_wave"      // exists
-            case .scratch: return "mochi_scratch"   // TODO: scratching head
-            case .love:    return "mochi_love"      // TODO: hearts / adoring
-            case .peek:    return "mochi_peek"      // TODO: wide-eyed surprised
-            case .munch:   return "mochi_munch"     // TODO: stuffing cheeks
+            case .wave:    return "mochi_wave"      // waving
+            case .scratch: return "mochi_scratch"   // scratching head
+            case .love:    return "mochi_love"      // hearts / adoring
+            case .peek:    return "mochi_peek"      // wide-eyed surprised
+            case .munch:   return "mochi_munch"     // stuffing cheeks
             }
         }
     }
