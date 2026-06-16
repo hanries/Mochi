@@ -189,6 +189,11 @@ private struct JournalContent: View {
                             .font(MochiTheme.caption)
                             .foregroundStyle(MochiTheme.textSecondary)
                         Spacer()
+                        Button { showCamera = true } label: {
+                            Label("Add another", systemImage: "plus")
+                                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                                .foregroundStyle(MochiTheme.primary)
+                        }
                     }
                     .padding(.horizontal, MochiTheme.Spacing.lg)
                     .padding(.vertical, MochiTheme.Spacing.md)
@@ -302,6 +307,21 @@ private struct JournalContent: View {
                         columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())],
                         spacing: 3
                     ) {
+                        // Always-present add tile — log as many photos a day as you like.
+                        Button { showCamera = true } label: {
+                            ZStack {
+                                Rectangle().fill(MochiTheme.surface)
+                                VStack(spacing: 6) {
+                                    Image(systemName: "plus").font(.system(size: 26, weight: .semibold))
+                                    Text("Add").font(.system(size: 12, weight: .medium, design: .rounded))
+                                }
+                                .foregroundStyle(MochiTheme.primary)
+                            }
+                            .aspectRatio(1, contentMode: .fit)
+                            .clipShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+
                         ForEach(entries) { entry in
                             JournalGridCell(entry: entry)
                                 .onTapGesture { selectedEntry = entry }
