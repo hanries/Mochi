@@ -37,8 +37,11 @@ struct FoodSearchResult: Identifiable {
 final class EdamamFoodProvider: FoodProvider {
     let providerID = "edamam"
 
-    private let appId  = "e0b226da"
-    private let appKey = "e780633c293c93e5811bc6e7b69d7c88"
+    // From Config.xcconfig (gitignored) — no longer hardcoded in source.
+    // NOTE: these still ship inside the app's Info.plist; a server-side proxy
+    // is the real fix. Rotate the old hardcoded key that's in git history.
+    private let appId  = Config.edamamAppId
+    private let appKey = Config.edamamAppKey
     private let baseURL   = "https://api.edamam.com/api/food-database/v2/parser"
     private let maxRetries = 2
     private var cache: [String: [FoodSearchResult]] = [:]
