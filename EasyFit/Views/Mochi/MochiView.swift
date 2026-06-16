@@ -36,6 +36,8 @@ struct MochiView: View {
     @State private var momentScale: CGFloat = 1.0
     @State private var momentTask: Task<Void, Never>? = nil
     @State private var jumpTask: Task<Void, Never>? = nil
+    // Cheer-jump squash & stretch (+ stretches tall, − squashes wide)
+    @State private var jumpStretch: CGFloat = 0
 
     // Random little reaction frame when Mochi is tapped
     @State private var reactionFrame: String? = nil
@@ -120,6 +122,8 @@ struct MochiView: View {
             }
         }
         .scaleEffect(pulseScale * tapScale * momentScale, anchor: .bottom)
+        // Squash & stretch for the cheer jump (feet stay planted).
+        .scaleEffect(x: 1 - jumpStretch * 0.4, y: 1 + jumpStretch, anchor: .bottom)
         .offset(y: hopOffset)
         .contentShape(Rectangle())
         .onTapGesture { handleTap() }
@@ -151,6 +155,7 @@ struct MochiView: View {
             reactionFrame = nil
             momentScale = 1.0
             hopOffset = 0
+            jumpStretch = 0
         }
         // Blink loop: restarts on state change, cancels on disappear.
         // Sleepy blinks slowly and heavily (and never double-blinks) so Mochi
@@ -260,7 +265,9 @@ struct MochiView: View {
         switch newMoment.kind {
         case .eating:   momentFrame = MochiAssetProvider.eatingImageName
         case .ecstatic: momentFrame = MochiAssetProvider.baseImageName(for: .ecstatic)
-        case .cheer:    momentFrame = MochiAssetProvider.cheerImageName
+        // The jump owns its own frame timing (airborne only while in the air).
+        // Reduce Motion gets a brief static jump frame instead.
+        case .cheer:    momentFrame = reduceMotion ? MochiAssetProvider.cheerImageName : nil
         case .checkIn:  momentFrame = nil
         }
 
@@ -293,28 +300,48 @@ struct MochiView: View {
         }
     }
 
-    /// Mochi gets up and springs a few times for joy (weight / photo logs).
+    /// Mochi gets up and jumps for joy (weight / photo logs) — one smooth arc:
+    /// crouch → launch (stretch, airborne frame) → fall → land squash → settle.
     private func beginCheerJump() {
         guard !reduceMotion else { return }
         jumpTask?.cancel()
         jumpTask = Task {
             let h = size * motion.cheerJumpFraction
-            for _ in 0..<motion.cheerJumpCount {
-                withAnimation(.spring(response: motion.cheerUpResponse, dampingFraction: 0.5)) {
-                    hopOffset = -h
-                    momentScale = motion.cheerScale
-                }
-                try? await Task.sleep(for: .seconds(motion.cheerUpResponse + motion.cheerHangTime))
-                guard !Task.isCancelled else { return }
-                withAnimation(.spring(response: motion.cheerDownResponse, dampingFraction: 0.65)) {
-                    hopOffset = 0
-                    momentScale = 1.0
-                }
-                try? await Task.sleep(for: .seconds(motion.cheerDownResponse + motion.cheerLandTime))
-                guard !Task.isCancelled else { return }
+
+            // 1. Anticipation crouch (grounded frame).
+            withAnimation(.easeOut(duration: motion.cheerAnticipation)) {
+                jumpStretch = -motion.cheerSquash
             }
-            hopOffset = 0
-            momentScale = 1.0
+            try? await Task.sleep(for: .seconds(motion.cheerAnticipation))
+            guard !Task.isCancelled else { return }
+
+            // 2. Launch — rise decelerating, body stretches, airborne frame.
+            momentFrame = MochiAssetProvider.cheerImageName
+            withAnimation(.easeOut(duration: motion.cheerRise)) {
+                hopOffset = -h
+                jumpStretch = motion.cheerStretch
+            }
+            try? await Task.sleep(for: .seconds(motion.cheerRise + motion.cheerHang))
+            guard !Task.isCancelled else { return }
+
+            // 3. Fall — accelerate back to the ground, ease out the stretch.
+            withAnimation(.easeIn(duration: motion.cheerFall)) {
+                hopOffset = 0
+                jumpStretch = 0
+            }
+            try? await Task.sleep(for: .seconds(motion.cheerFall))
+            guard !Task.isCancelled else { return }
+
+            // 4. Landing squash + drop the airborne frame, then settle.
+            momentFrame = nil
+            withAnimation(.easeOut(duration: motion.cheerLand)) {
+                jumpStretch = -motion.cheerSquash
+            }
+            try? await Task.sleep(for: .seconds(motion.cheerLand))
+            guard !Task.isCancelled else { return }
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.55)) {
+                jumpStretch = 0
+            }
         }
     }
 }

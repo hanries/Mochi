@@ -65,14 +65,15 @@ struct MochiMotion {
     var tourMoveDamping: Double     = 0.78
     var tourFadeOut: Double         = 0.5    // overlay cross-fade onto home Mochi
 
-    // Cheer jump (weight / photo logs): Mochi springs up a few times for joy.
-    var cheerJumpFraction: Double   = 0.13   // jump height ÷ Mochi's size
-    var cheerJumpCount: Int         = 3
-    var cheerUpResponse: Double     = 0.17   // spring up
-    var cheerDownResponse: Double   = 0.22   // spring back down
-    var cheerHangTime: Double       = 0.16   // held near the apex
-    var cheerLandTime: Double       = 0.12   // pause between hops
-    var cheerScale: Double          = 1.06   // slight grow mid-air
+    // Cheer jump (weight / photo logs): one smooth arc with squash & stretch.
+    var cheerJumpFraction: Double   = 0.20   // jump height ÷ Mochi's size
+    var cheerAnticipation: Double   = 0.13   // crouch wind-up
+    var cheerRise: Double           = 0.30   // launch → apex (decelerating)
+    var cheerHang: Double           = 0.06   // brief float at the top
+    var cheerFall: Double           = 0.26   // apex → ground (accelerating)
+    var cheerLand: Double           = 0.10   // landing squash
+    var cheerStretch: Double        = 0.13   // body stretch on the way up
+    var cheerSquash: Double         = 0.12   // body squash on crouch / land
 
     // Moments (eating after a log, ecstatic on streak milestones)
     var momentDuration: Double          = 2.5
