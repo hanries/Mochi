@@ -210,8 +210,13 @@ struct MochiHomeView: View {
                     MochiView(state: mochi.state,
                               moment: mochi.moment,
                               size: mochiSize,
-                              showShadow: true) {
-                        showBubble(mochi.dialogueLine())
+                              showShadow: true) { reaction in
+                        // Match the bubble to the reaction Mochi just played.
+                        if let reaction {
+                            showBubble(MochiDialogue.line(for: reaction))
+                        } else {
+                            showBubble(mochi.dialogueLine())
+                        }
                     }
                     .position(x: width / 2, y: rugCenterY - mochiSize / 2)
 

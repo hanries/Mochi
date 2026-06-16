@@ -69,6 +69,40 @@ enum MochiDialogue {
         "Check-in received. Carry on! 🐹",
     ]
 
+    /// Tap reactions — each line matches the pose Mochi strikes when tapped.
+    static let reactions: [MochiAssetProvider.Reaction: [String]] = [
+        .wave: [
+            "Oh, hi there! 👋",
+            "*waves a little paw*",
+            "Hellooo! Fancy seeing you here.",
+            "Hi hi! You found me!",
+        ],
+        .scratch: [
+            "Hmm… now what was I doing?",
+            "*scratches head* Big thoughts happening.",
+            "Wait, did I bury that seed somewhere?",
+            "Thinking cap: officially on. 🤔",
+        ],
+        .love: [
+            "I love you THIS much! 💕",
+            "You're my favorite human, you know.",
+            "*heart eyes* Just looking at my pal.",
+            "Squish! Consider yourself hugged.",
+        ],
+        .peek: [
+            "Eep! You startled me! 👀",
+            "Oh! Didn't see you there.",
+            "What's that?! …oh, it's just you. Phew.",
+            "Peekaboo! Caught me mid-snoop.",
+        ],
+        .munch: [
+            "Nom nom nom… 🌰",
+            "Cheeks at maximum capacity!",
+            "Just a little snack, don't mind me.",
+            "*muffled* …want some? No? More for me!",
+        ],
+    ]
+
     static let notifications: [String] = [
         "Mochi is wondering what you had for lunch 🐹",
         "Mochi would love to hear about your day 🐹",
@@ -90,6 +124,11 @@ enum MochiDialogue {
 
     static func checkInLine() -> String {
         checkIns.randomElement() ?? "Thanks for checking in!"
+    }
+
+    /// A line that matches the reaction pose Mochi just played when tapped.
+    static func line(for reaction: MochiAssetProvider.Reaction) -> String {
+        (reactions[reaction] ?? []).randomElement() ?? "Hi there!"
     }
 
     static func notificationLine() -> String {

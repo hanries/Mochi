@@ -19,7 +19,9 @@ struct MochiView: View {
     // Presentation pose override (guided tour). When set it replaces the
     // state-derived frame; blinking is suppressed while a pose is held.
     var pose: MochiAssetProvider.Pose? = nil
-    var onTap: (() -> Void)? = nil
+    // Reports the reaction Mochi played on tap (nil if none), so the caller
+    // can show a matching line.
+    var onTap: ((MochiAssetProvider.Reaction?) -> Void)? = nil
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
@@ -220,12 +222,13 @@ struct MochiView: View {
 
     private func handleTap() {
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
-        onTap?()
 
         // Don't interrupt a guided-tour pose or an in-flight moment.
+        var played: MochiAssetProvider.Reaction? = nil
         if pose == nil, momentFrame == nil {
-            playReaction()
+            played = playReaction()
         }
+        onTap?(played)
 
         guard !reduceMotion else { return }
         withAnimation(.spring(response: motion.tapSpringResponse,
@@ -245,8 +248,9 @@ struct MochiView: View {
     /// Show a random reaction frame briefly (scratching, waving, …), then
     /// crossfade back to the engine-driven frame. The frame swap is gentle, so
     /// it plays under Reduce Motion too; only the hop above is suppressed.
-    private func playReaction() {
-        guard let reaction = MochiAssetProvider.availableTapReactions().randomElement() else { return }
+    @discardableResult
+    private func playReaction() -> MochiAssetProvider.Reaction? {
+        guard let reaction = MochiAssetProvider.availableTapReactions().randomElement() else { return nil }
         reactionTask?.cancel()
         reactionFrame = reaction.assetName
         reactionTask = Task {
@@ -254,6 +258,7 @@ struct MochiView: View {
             guard !Task.isCancelled else { return }
             reactionFrame = nil
         }
+        return reaction
     }
 
     // MARK: - Moments
