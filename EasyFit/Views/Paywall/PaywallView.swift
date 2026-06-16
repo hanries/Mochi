@@ -20,8 +20,8 @@ struct PaywallView: View {
     @State private var purchaseError: String? = nil
 
     private let termsURL   = URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!
-    // TODO: replace with the real privacy policy URL before submission.
-    private let privacyURL = URL(string: "https://example.com/easyfit-privacy")!
+    // Policy source lives at docs/privacy-policy.html. Update this if you host it elsewhere.
+    private let privacyURL = URL(string: "https://hanries.github.io/EasyFit/privacy-policy.html")!
 
     var body: some View {
         ZStack(alignment: .topTrailing) {
