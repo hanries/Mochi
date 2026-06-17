@@ -21,7 +21,7 @@ struct PaywallView: View {
 
     private let termsURL   = URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!
     // Policy source lives at docs/privacy-policy.html. Update this if you host it elsewhere.
-    private let privacyURL = URL(string: "https://hanries.github.io/mochi/privacy-policy.html")!
+    private let privacyURL = URL(string: "https://hanries.github.io/Mochi/privacy-policy.html")!
 
     var body: some View {
         ZStack(alignment: .topTrailing) {
