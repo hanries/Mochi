@@ -83,12 +83,23 @@ final class FoodScanService: FoodScanServiceProtocol {
             ]]
         ]
 
-        var request = URLRequest(url: URL(string: "https://api.anthropic.com/v1/messages")!)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue(apiKey,             forHTTPHeaderField: "x-api-key")
-        request.setValue("2023-06-01",       forHTTPHeaderField: "anthropic-version")
-        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        let bodyData = try JSONSerialization.data(withJSONObject: body)
+        var request: URLRequest
+        let proxy = Config.proxyBaseURL
+        if !proxy.isEmpty {
+            // Proxy injects the Anthropic key server-side; the app ships none.
+            let base = proxy.hasSuffix("/") ? String(proxy.dropLast()) : proxy
+            request = URLRequest(url: URL(string: "\(base)/scan")!)
+            request.httpMethod = "POST"
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        } else {
+            request = URLRequest(url: URL(string: "https://api.anthropic.com/v1/messages")!)
+            request.httpMethod = "POST"
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.setValue(apiKey,             forHTTPHeaderField: "x-api-key")
+            request.setValue("2023-06-01",       forHTTPHeaderField: "anthropic-version")
+        }
+        request.httpBody = bodyData
 
         let (data, response) = try await URLSession.shared.data(for: request)
         let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
@@ -147,12 +158,17 @@ final class FoodScanService: FoodScanServiceProtocol {
 
 enum ScanServiceFactory {
     static func make() -> any FoodScanServiceProtocol {
+        // Prefer the proxy (no key on device). Else fall back to a direct key.
+        if !Config.proxyBaseURL.isEmpty {
+            print("✅ FoodScan: using proxy")
+            return FoodScanService(apiKey: "")
+        }
         let key = Config.anthropicAPIKey
         if key.isEmpty {
-            print("⚠️ FoodScan: No Anthropic key — using mock data")
+            print("⚠️ FoodScan: no proxy or key — using mock data")
             return MockFoodScanService()
         }
-        print("✅ FoodScan: Using real Anthropic API (key: \(key.prefix(10))...)")
+        print("✅ FoodScan: using Anthropic directly (key: \(key.prefix(10))...)")
         return FoodScanService(apiKey: key)
     }
 }

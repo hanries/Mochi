@@ -61,15 +61,26 @@ final class EdamamFoodProvider: FoodProvider {
     // MARK: - Fetch
 
     private func fetchEdamam(query: String) async throws -> [FoodSearchResult] {
-        var comps = URLComponents(string: baseURL)!
-        comps.queryItems = [
-            URLQueryItem(name: "app_id",         value: appId),
-            URLQueryItem(name: "app_key",        value: appKey),
-            URLQueryItem(name: "ingr",           value: query),
-            URLQueryItem(name: "nutrition-type", value: "logging"),
-        ]
+        let url: URL
+        let proxy = Config.proxyBaseURL
+        if !proxy.isEmpty {
+            // Proxy adds the Edamam keys server-side; the app sends only the query.
+            let base = proxy.hasSuffix("/") ? String(proxy.dropLast()) : proxy
+            var comps = URLComponents(string: "\(base)/foods")!
+            comps.queryItems = [URLQueryItem(name: "ingr", value: query)]
+            url = comps.url!
+        } else {
+            var comps = URLComponents(string: baseURL)!
+            comps.queryItems = [
+                URLQueryItem(name: "app_id",         value: appId),
+                URLQueryItem(name: "app_key",        value: appKey),
+                URLQueryItem(name: "ingr",           value: query),
+                URLQueryItem(name: "nutrition-type", value: "logging"),
+            ]
+            url = comps.url!
+        }
 
-        var request = URLRequest(url: comps.url!, timeoutInterval: 10)
+        var request = URLRequest(url: url, timeoutInterval: 10)
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         request.cachePolicy = .returnCacheDataElseLoad
 
