@@ -1,3 +1,14 @@
 # USDA FoodData Central bulk CSV dump — multi-GB source data for the
 # (not-yet-integrated) offline food DB pipeline. Keep it local, never commit.
 fdc data/
+
+# Local Claude Code settings
+.claude/settings.local.json
+
+# Cloudflare Wrangler build cache
+proxy/.wrangler/
+
+# Marketing render pipeline: bundled Apple system font (do not redistribute)
+# and the size file generated per-render.
+marketing/build/SFRounded.ttf
+marketing/build/_size.css

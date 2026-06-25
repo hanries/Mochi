@@ -1,0 +1,78 @@
+/* ===== Mochi App Store screenshot design system ===== */
+@import '_size.css';   /* output size, written by render.sh (falls back to :root below) */
+@font-face{ font-family:'MochiRounded'; src:url('SFRounded.ttf'); font-weight:100 900; font-display:block; }
+
+:root{
+  /* App palette (MochiTheme) */
+  --bg:#FAF5EC; --surface:#F3E9DA; --surfaceAlt:#FFFFFF;
+  --primary:#F29D45; --accent:#F2697D;
+  --textPrimary:#4A2A12; --textSecondary:#9A7B5F;
+  --success:#7FA86F; --warning:#E8A21F; --danger:#C75C4A;
+  --charcoal:#241B14;
+}
+
+/* Output (export) size. Design canvas stays 1290x2796; the stage is scaled
+   to this on render so text re-rasterizes crisply at the target resolution.
+   6.5" App Store slot: 1284x2778 (or 1242x2688). 6.9"/6.7": 1290x2796. */
+:root{ --ow:1284; --oh:2778; }
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{ width:calc(var(--ow) * 1px); height:calc(var(--oh) * 1px); }
+body{
+  font-family:'MochiRounded',-apple-system,system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+  overflow:hidden;
+}
+.stage{ position:relative; width:1290px; height:2796px; overflow:hidden;
+  transform-origin:top left; transform:scale(calc(var(--ow)/1290), calc(var(--oh)/2796)); }
+
+/* ---- marketing typography ---- */
+.eyebrow{
+  display:inline-flex; align-items:center; gap:14px;
+  font-size:34px; font-weight:700; letter-spacing:.5px;
+  padding:18px 38px; border-radius:100px;
+}
+.headline{ font-weight:800; letter-spacing:-2.5px; line-height:.98; }
+.sub{ font-weight:500; letter-spacing:-.3px; line-height:1.2; }
+
+/* ---- iPhone mockup ---- */
+.phone{
+  position:relative; width:804px; height:1690px;
+  background:linear-gradient(150deg,#3a3a3c,#1c1c1e 40%,#2c2c2e);
+  border-radius:118px; padding:22px;
+  box-shadow:
+    0 2px 0 2px rgba(255,255,255,.08) inset,
+    0 50px 90px -30px rgba(74,42,18,.55),
+    0 20px 40px -20px rgba(74,42,18,.4);
+}
+.phone-screen{
+  position:relative; width:760px; height:1646px;
+  border-radius:96px; overflow:hidden;
+  background:var(--bg);
+  /* in-screen scaled tokens */
+  --fs-cap:25px; --fs-body:31px; --fs-title:43px; --fs-large:62px;
+  --r-card:42px; --r-btn:54px;
+  color:var(--textPrimary);
+}
+.island{
+  position:absolute; top:34px; left:50%; transform:translateX(-50%);
+  width:230px; height:60px; background:#000; border-radius:40px; z-index:50;
+}
+.statusbar{
+  position:absolute; top:0; left:0; right:0; height:130px; z-index:40;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:54px 64px 0;
+  font-weight:600; font-size:32px; color:var(--textPrimary);
+}
+.statusbar.light{ color:#fff; }
+.sb-icons{ display:flex; align-items:center; gap:14px; }
+.sb-icons svg{ height:30px; }
+
+/* ---- in-screen building blocks ---- */
+.card{ background:var(--surfaceAlt); border-radius:var(--r-card);
+  box-shadow:0 18px 36px -24px rgba(74,42,18,.30); }
+.appbar-title{ font-size:var(--fs-large); font-weight:800; letter-spacing:-1.5px; color:var(--textPrimary); }
+.muted{ color:var(--textSecondary); }
+
+/* ---- helpers ---- */
+.shadow-soft{ box-shadow:0 40px 80px -30px rgba(74,42,18,.45); }
+.doodle{ position:absolute; pointer-events:none; }

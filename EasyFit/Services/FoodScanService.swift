@@ -103,21 +103,15 @@ final class FoodScanService: FoodScanServiceProtocol {
 
         let (data, response) = try await URLSession.shared.data(for: request)
         let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
-        print("🔍 Anthropic status: \(statusCode)")
 
         guard statusCode == 200 else {
-            let body = String(data: data, encoding: .utf8) ?? ""
-            print("❌ Anthropic error: \(body)")
             throw ScanError.apiError
         }
 
         let envelope = try JSONDecoder().decode(AnthropicResponse.self, from: data)
         guard let rawText = envelope.content.first(where: { $0.type == "text" })?.text else {
-            print("❌ Empty response from Anthropic")
             throw ScanError.emptyResponse
         }
-
-        print("📦 Raw response: \(rawText)")
 
         // Strip markdown backticks if Claude wraps the JSON anyway
         let cleaned = rawText
@@ -129,12 +123,10 @@ final class FoodScanService: FoodScanServiceProtocol {
         // Extract just the JSON object in case there's surrounding text
         guard let jsonStart = cleaned.firstIndex(of: "{"),
               let jsonEnd   = cleaned.lastIndex(of: "}") else {
-            print("❌ No JSON object found in: \(cleaned)")
             throw ScanError.parseError
         }
 
         let jsonString = String(cleaned[jsonStart...jsonEnd])
-        print("✅ Parsed JSON: \(jsonString)")
 
         guard let jsonData = jsonString.data(using: .utf8) else {
             throw ScanError.parseError
@@ -149,7 +141,6 @@ final class FoodScanService: FoodScanServiceProtocol {
         if let single = try? decoder.decode(FoodScanItem.self, from: jsonData) {
             return [single]
         }
-        print("❌ Decode error: could not parse items from \(jsonString)")
         throw ScanError.parseError
     }
 }
@@ -160,15 +151,12 @@ enum ScanServiceFactory {
     static func make() -> any FoodScanServiceProtocol {
         // Prefer the proxy (no key on device). Else fall back to a direct key.
         if !Config.proxyBaseURL.isEmpty {
-            print("✅ FoodScan: using proxy")
             return FoodScanService(apiKey: "")
         }
         let key = Config.anthropicAPIKey
         if key.isEmpty {
-            print("⚠️ FoodScan: no proxy or key — using mock data")
             return MockFoodScanService()
         }
-        print("✅ FoodScan: using Anthropic directly (key: \(key.prefix(10))...)")
         return FoodScanService(apiKey: key)
     }
 }

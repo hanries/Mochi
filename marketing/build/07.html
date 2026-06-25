@@ -1,0 +1,48 @@
+<!doctype html><meta charset="utf-8">
+<link rel="stylesheet" href="shared.css">
+<style>
+  .stage{ background:
+    radial-gradient(110% 60% at 85% 6%, #FBC178 0%, rgba(251,193,120,0) 55%),
+    linear-gradient(160deg,#F6A748 0%, #EF8E3A 100%); }
+  .top{ position:absolute; top:160px; left:90px; right:90px; }
+  .eyebrow{ background:rgba(255,255,255,.22); color:#fff; }
+  .headline{ font-size:138px; color:#fff; margin-top:40px; }
+  .sub{ font-size:44px; color:rgba(255,255,255,.92); margin-top:34px; max-width:1040px; }
+  .grid{ position:absolute; top:880px; left:80px; right:80px; display:grid; grid-template-columns:1fr 1fr; gap:44px; }
+  .moodcard{ background:rgba(255,255,255,.96); border-radius:60px; padding:48px 40px 44px; text-align:center;
+    box-shadow:0 40px 70px -36px rgba(74,42,18,.5); }
+  .moodcard img{ width:300px; filter:drop-shadow(0 18px 18px rgba(74,42,18,.18)); }
+  .moodcard .mood{ font-size:40px; font-weight:800; color:var(--textPrimary); margin-top:18px; letter-spacing:-.5px; }
+  .moodcard .line{ font-size:30px; color:var(--textSecondary); font-weight:500; margin-top:14px; line-height:1.28; min-height:108px; }
+  .moodcard .tag{ display:inline-block; margin-top:6px; font-size:24px; font-weight:700; padding:8px 22px; border-radius:100px; }
+</style>
+<div class="stage">
+  <div class="top">
+    <span class="eyebrow">🐹 &nbsp;Meet your buddy</span>
+    <div class="headline">A little pal<br>with big feelings.</div>
+    <div class="sub">Log a meal and Mochi lights up. Six cozy moods, and lots of little surprises.</div>
+  </div>
+
+  <div class="grid">
+    <div class="moodcard"><img src="img/mochi_happy.png">
+      <div class="mood">Happy</div>
+      <div class="line">“You logged today — that makes me happy!”</div>
+      <span class="tag" style="background:rgba(127,168,111,.18);color:#5E8A4E">logged today</span>
+    </div>
+    <div class="moodcard"><img src="img/mochi_eating.png">
+      <div class="mood">Munching</div>
+      <div class="line">“Nom nom — got it! Cheeks at maximum capacity.”</div>
+      <span class="tag" style="background:rgba(242,157,69,.18);color:#B96E22">on every log</span>
+    </div>
+    <div class="moodcard"><img src="img/mochi_ecstatic.png">
+      <div class="mood">Ecstatic</div>
+      <div class="line">“Best streak buddies ever! I'm so proud of you.”</div>
+      <span class="tag" style="background:rgba(242,105,125,.18);color:#C9456A">milestones</span>
+    </div>
+    <div class="moodcard"><img src="img/mochi_sleepy.png">
+      <div class="mood">Sleepy</div>
+      <div class="line">“Winding down… still time for a quick log if you like.”</div>
+      <span class="tag" style="background:rgba(154,123,95,.2);color:#7A6048">cozy evenings</span>
+    </div>
+  </div>
+</div>

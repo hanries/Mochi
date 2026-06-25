@@ -425,6 +425,7 @@
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = EasyFit/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Mochi;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Mochi uses your camera to scan food and estimate calories.";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "Mochi reads your burned calories and body weight from Apple Health.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Mochi saves burned calories and body weight to Apple Health.";
@@ -446,7 +447,7 @@
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = "1";
 			};
 			name = Debug;
 		};
@@ -465,6 +466,7 @@
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = EasyFit/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Mochi;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Mochi uses your camera to scan food and estimate calories.";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "Mochi reads your burned calories and body weight from Apple Health.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Mochi saves burned calories and body weight to Apple Health.";
@@ -486,7 +488,7 @@
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = "1";
 			};
 			name = Release;
 		};
@@ -509,7 +511,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = "1";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/EasyFit.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/EasyFit";
 			};
 			name = Debug;
@@ -533,7 +535,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = "1";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/EasyFit.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/EasyFit";
 			};
 			name = Release;
@@ -555,7 +557,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = "1";
 				TEST_TARGET_NAME = EasyFit;
 			};
 			name = Debug;
@@ -577,7 +579,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = "1";
 				TEST_TARGET_NAME = EasyFit;
 			};
 			name = Release;

@@ -1,0 +1,92 @@
+<!doctype html><meta charset="utf-8">
+<link rel="stylesheet" href="shared.css">
+<style>
+  .stage{ background:
+    radial-gradient(110% 70% at 80% 6%, #FCA8B6 0%, rgba(252,168,182,0) 55%),
+    linear-gradient(160deg,#F4798A 0%, #F2697D 55%, #E2587E 100%); }
+  .top{ position:absolute; top:150px; left:96px; right:96px; }
+  .eyebrow{ background:rgba(255,255,255,.22); color:#fff; }
+  .headline{ font-size:140px; color:#fff; margin-top:40px; }
+  .sub{ font-size:44px; color:rgba(255,255,255,.92); margin-top:34px; max-width:1000px; }
+  .phone-wrap{ position:absolute; left:50%; top:900px; transform:translateX(-50%); }
+
+  .scr{ position:absolute; inset:0; background:var(--bg); padding:140px 0 0; }
+  .navbar{ display:flex; align-items:center; justify-content:center; position:relative; margin-bottom:26px; padding:0 36px; }
+  .navbar .cancel{ position:absolute; left:36px; font-size:30px; color:var(--primary); }
+  .navbar .title{ font-size:32px; font-weight:600; }
+  .searchbar{ margin:0 36px; display:flex; align-items:center; gap:18px; background:var(--surface); border-radius:24px; padding:28px 30px; }
+  .searchbar .q{ font-size:32px; color:var(--textPrimary); font-weight:500; }
+  .searchbar .x{ margin-left:auto; color:var(--textSecondary); font-size:34px; }
+  .seg{ display:flex; gap:6px; margin:26px 36px 0; background:rgba(154,123,95,.14); border-radius:20px; padding:7px; }
+  .seg div{ flex:1; text-align:center; font-size:28px; font-weight:600; padding:16px; border-radius:14px; color:var(--textSecondary); }
+  .seg div.on{ background:#fff; color:var(--textPrimary); box-shadow:0 4px 10px -4px rgba(74,42,18,.3); }
+  .hr{ height:1.5px; background:rgba(154,123,95,.15); margin:28px 0 8px; }
+  .res{ display:flex; align-items:center; gap:24px; padding:26px 36px; }
+  .res .kc{ width:96px; flex:none; text-align:center; background:var(--surface); border-radius:18px; padding:16px 0; }
+  .res .kc .n{ font-size:32px; font-weight:700; } .res .kc .u{ font-size:19px; color:var(--textSecondary); }
+  .res .nm{ font-size:31px; font-weight:600; }
+  .res .br{ font-size:25px; color:var(--textSecondary); margin-top:5px; }
+  .res .mac{ display:flex; gap:22px; margin-top:11px; font-size:24px; color:var(--textSecondary); }
+  .res .mac b{ font-weight:700; }
+  .res .chev{ margin-left:auto; color:rgba(154,123,95,.6); font-size:30px; }
+  .rowline{ height:1.5px; background:rgba(154,123,95,.1); margin-left:156px; }
+</style>
+<div class="stage">
+  <div class="top">
+    <span class="eyebrow">🔎 &nbsp;Millions of foods</span>
+    <div class="headline">Log it<br>your way.</div>
+    <div class="sub">Snap a photo, search a huge food database, or add your own in seconds.</div>
+  </div>
+
+  <div class="phone-wrap">
+    <div class="phone"><div class="phone-screen">
+      <div class="statusbar"><span>9:41</span>
+        <span class="sb-icons">
+          <svg viewBox="0 0 30 22" fill="currentColor"><rect x="0" y="14" width="5" height="8" rx="1.5"/><rect x="8" y="9" width="5" height="13" rx="1.5"/><rect x="16" y="4" width="5" height="18" rx="1.5"/><rect x="24" y="0" width="5" height="22" rx="1.5"/></svg>
+          <svg viewBox="0 0 28 22" fill="currentColor"><path d="M14 5c4.5 0 8.6 1.8 11.6 4.7l-2.4 2.5C20.9 9.9 17.6 8.5 14 8.5S7.1 9.9 4.8 12.2L2.4 9.7C5.4 6.8 9.5 5 14 5z"/></svg>
+          <svg viewBox="0 0 38 22" fill="none"><rect x="1" y="3" width="30" height="16" rx="5" stroke="currentColor" stroke-width="2" opacity=".5"/><rect x="3.5" y="5.5" width="22" height="11" rx="3" fill="currentColor"/><rect x="33" y="8" width="3" height="6" rx="1.5" fill="currentColor" opacity=".5"/></svg>
+        </span>
+      </div>
+      <div class="scr">
+        <div class="navbar"><span class="cancel">Cancel</span><span class="title">Search Food</span></div>
+        <div class="searchbar">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--textSecondary)" stroke-width="2.5"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3" stroke-linecap="round"/></svg>
+          <span class="q">chicken</span><span class="x">✕</span>
+        </div>
+        <div class="seg"><div class="on">Database</div><div>Custom (3)</div></div>
+        <div class="hr"></div>
+
+        <div class="res"><div class="kc"><div class="n">231</div><div class="u">kcal</div></div>
+          <div><div class="nm">Grilled Chicken Breast</div><div class="br">Generic</div>
+            <div class="mac"><span><b style="color:var(--success)">P</b> 43g</span><span><b style="color:var(--warning)">C</b> 0g</span><span><b style="color:var(--accent)">F</b> 5g</span><span>· 140 g</span></div></div>
+          <span class="chev">›</span></div>
+        <div class="rowline"></div>
+        <div class="res"><div class="kc"><div class="n">165</div><div class="u">kcal</div></div>
+          <div><div class="nm">Chicken, roasted</div><div class="br">USDA</div>
+            <div class="mac"><span><b style="color:var(--success)">P</b> 31g</span><span><b style="color:var(--warning)">C</b> 0g</span><span><b style="color:var(--accent)">F</b> 4g</span><span>· 100 g</span></div></div>
+          <span class="chev">›</span></div>
+        <div class="rowline"></div>
+        <div class="res"><div class="kc"><div class="n">284</div><div class="u">kcal</div></div>
+          <div><div class="nm">Chicken Caesar Wrap</div><div class="br">Trader Joe's</div>
+            <div class="mac"><span><b style="color:var(--success)">P</b> 22g</span><span><b style="color:var(--warning)">C</b> 28g</span><span><b style="color:var(--accent)">F</b> 11g</span><span>· 1 wrap</span></div></div>
+          <span class="chev">›</span></div>
+        <div class="rowline"></div>
+        <div class="res"><div class="kc"><div class="n">190</div><div class="u">kcal</div></div>
+          <div><div class="nm">Grilled Chicken Salad</div><div class="br">Sweetgreen</div>
+            <div class="mac"><span><b style="color:var(--success)">P</b> 26g</span><span><b style="color:var(--warning)">C</b> 9g</span><span><b style="color:var(--accent)">F</b> 6g</span><span>· 1 bowl</span></div></div>
+          <span class="chev">›</span></div>
+        <div class="rowline"></div>
+        <div class="res"><div class="kc"><div class="n">312</div><div class="u">kcal</div></div>
+          <div><div class="nm">Chicken Tikka Masala</div><div class="br">Generic</div>
+            <div class="mac"><span><b style="color:var(--success)">P</b> 24g</span><span><b style="color:var(--warning)">C</b> 14g</span><span><b style="color:var(--accent)">F</b> 18g</span><span>· 1 cup</span></div></div>
+          <span class="chev">›</span></div>
+        <div class="rowline"></div>
+        <div class="res"><div class="kc"><div class="n">148</div><div class="u">kcal</div></div>
+          <div><div class="nm">Chicken Noodle Soup</div><div class="br">Campbell's</div>
+            <div class="mac"><span><b style="color:var(--success)">P</b> 8g</span><span><b style="color:var(--warning)">C</b> 18g</span><span><b style="color:var(--accent)">F</b> 4g</span><span>· 1 can</span></div></div>
+          <span class="chev">›</span></div>
+      </div>
+      <div class="island"></div>
+    </div></div>
+  </div>
+</div>

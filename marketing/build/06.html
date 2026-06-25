@@ -1,0 +1,44 @@
+<!doctype html><meta charset="utf-8">
+<link rel="stylesheet" href="shared.css">
+<style>
+  .stage{ background:
+    radial-gradient(90% 60% at 50% 78%, #FBD3DC 0%, rgba(251,211,220,0) 60%),
+    radial-gradient(120% 80% at 80% 6%, #FFE7D2 0%, rgba(255,231,210,0) 55%),
+    linear-gradient(170deg,#FFF4EE 0%, #FBE3E3 60%, #F6CBD3 100%); }
+  .top{ position:absolute; top:200px; left:0; right:0; text-align:center; padding:0 90px; }
+  .eyebrow{ background:rgba(242,105,125,.16); color:#C9456A; }
+  .headline{ font-size:152px; color:var(--textPrimary); margin-top:46px; }
+  .headline .accent{ color:var(--accent); }
+  .sub{ font-size:46px; color:var(--textSecondary); margin-top:44px; max-width:980px; margin-left:auto; margin-right:auto; }
+  .mochi{ position:absolute; bottom:300px; left:50%; transform:translateX(-50%); width:720px;
+    filter:drop-shadow(0 40px 40px rgba(74,42,18,.22)); }
+  .bubble{ position:absolute; bottom:1010px; left:50%; transform:translateX(-50%);
+    background:#fff; border:2px solid rgba(242,105,125,.22); border-radius:46px; padding:34px 50px;
+    font-size:42px; font-weight:600; color:var(--textPrimary); box-shadow:0 24px 44px -24px rgba(74,42,18,.34); white-space:nowrap; }
+  .bubble:after{ content:""; position:absolute; bottom:-24px; left:50%; transform:translateX(-50%);
+    border-left:26px solid transparent; border-right:26px solid transparent; border-top:26px solid #fff; }
+  .badges{ position:absolute; bottom:120px; left:0; right:0; display:flex; gap:26px; justify-content:center; flex-wrap:wrap; padding:0 80px; }
+  .badge{ background:rgba(255,255,255,.85); border:2px solid rgba(242,105,125,.18); border-radius:100px;
+    padding:26px 42px; font-size:34px; font-weight:600; color:var(--textPrimary); display:flex; align-items:center; gap:16px; }
+  .heart{ position:absolute; color:#F2697D; opacity:.5; }
+</style>
+<div class="stage">
+  <div class="top">
+    <span class="eyebrow">💗 &nbsp;Kind by design</span>
+    <div class="headline">No guilt.<br>No judgment.<br><span class="accent">Ever.</span></div>
+    <div class="sub">Mochi reacts to <i>you</i> showing up — never to what you ate, your weight, or a missed goal.</div>
+  </div>
+
+  <div class="heart" style="bottom:1280px; left:230px; font-size:90px; transform:rotate(-15deg)">♥</div>
+  <div class="heart" style="bottom:1180px; right:210px; font-size:64px; transform:rotate(12deg)">♥</div>
+  <div class="heart" style="bottom:760px; left:170px; font-size:54px; transform:rotate(8deg)">♥</div>
+
+  <div class="bubble">You showed up. That's what counts! 🐹</div>
+  <img class="mochi" src="img/mochi_love.png">
+
+  <div class="badges">
+    <div class="badge">🚫 No “bad food” labels</div>
+    <div class="badge">🌿 No streak shaming</div>
+    <div class="badge">☀️ Just gentle nudges</div>
+  </div>
+</div>
